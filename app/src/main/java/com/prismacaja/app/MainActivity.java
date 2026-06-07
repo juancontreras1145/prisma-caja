@@ -13,6 +13,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebChromeClient.FileChooserParams;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -23,6 +24,7 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
@@ -49,7 +51,17 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleExternalUrl(url);
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleExternalUrl(request.getUrl().toString());
+            }
+        });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -104,51 +116,83 @@ public class MainActivity extends Activity {
     }
 
     private void setupBars() {
-        // Dejamos visible la barra inferior de Android.
         getWindow().setStatusBarColor(Color.parseColor("#07111f"));
         getWindow().setNavigationBarColor(Color.parseColor("#07111f"));
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent dataIntent) {
-        super.onActivityResult(requestCode, resultCode, dataIntent);
+    private boolean handleExternalUrl(String url) {
+        if (url == null) return false;
 
-        if (requestCode == FILE_CHOOSER_REQUEST) {
-            if (filePathCallback == null) return;
+        if (
+                url.startsWith("https://wa.me/")
+                        || url.startsWith("http://wa.me/")
+                        || url.startsWith("https://api.whatsapp.com/")
+                        || url.startsWith("whatsapp://")
+        ) {
+            openExternalWhatsapp(Uri.parse(url));
+            return true;
+        }
 
-            Uri[] results = null;
+        return false;
+    }
 
-            if (resultCode == Activity.RESULT_OK && dataIntent != null) {
-                Uri uri = dataIntent.getData();
-                if (uri != null) {
-                    results = new Uri[]{uri};
-                    getContentResolver().takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    );
-                }
+    private boolean tryOpenPackage(Uri uri, String packageName) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.setPackage(packageName);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+                return true;
             }
+        } catch (Exception ignored) {
+        }
 
-            filePathCallback.onReceiveValue(results);
-            filePathCallback = null;
+        return false;
+    }
+
+    private void openExternalWhatsapp(Uri uri) {
+        if (tryOpenPackage(uri, "com.whatsapp")) return;
+        if (tryOpenPackage(uri, "com.whatsapp.w4b")) return;
+
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView == null) {
-            super.onBackPressed();
-            return;
-        }
+    private String normalizePhone(String phone) {
+        String digits = phone == null ? "" : phone.replaceAll("[^0-9]", "");
 
-        webView.evaluateJavascript(
-                "(window.appBack ? window.appBack() : 'handled')",
-                value -> {
-                    // Por seguridad, Prisma no se cierra con un toque accidental en Atrás.
-                    // La navegación interna la maneja appBack() en JavaScript.
-                }
-        );
+        if (digits.length() == 8) return "569" + digits;
+        if (digits.length() == 9 && digits.startsWith("9")) return "56" + digits;
+        if (digits.startsWith("56")) return digits;
+
+        return digits;
+    }
+
+    private void openWhatsappNumber(String phone, String text) {
+        try {
+            String digits = normalizePhone(phone);
+            if (digits.isEmpty()) {
+                Toast.makeText(this, "Cliente sin WhatsApp", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            String encoded = "";
+            if (text != null && !text.trim().isEmpty()) {
+                encoded = "?text=" + URLEncoder.encode(text, "UTF-8").replace("+", "%20");
+            }
+
+            Uri uri = Uri.parse("https://wa.me/" + digits + encoded);
+            openExternalWhatsapp(uri);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
+        }
     }
 
     private boolean openShareTarget(Intent baseIntent, Uri uri, String packageName) {
@@ -174,14 +218,53 @@ public class MainActivity extends Activity {
         baseIntent.putExtra(Intent.EXTRA_STREAM, uri);
         baseIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        // Evita el panel inferior genérico: primero intenta WhatsApp directo.
         if (openShareTarget(baseIntent, uri, "com.whatsapp")) return;
-
-        // Si usa WhatsApp Business.
         if (openShareTarget(baseIntent, uri, "com.whatsapp.w4b")) return;
 
-        // Último recurso: panel normal de Android.
         startActivity(Intent.createChooser(baseIntent, "Compartir boleta"));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent dataIntent) {
+        super.onActivityResult(requestCode, resultCode, dataIntent);
+
+        if (requestCode == FILE_CHOOSER_REQUEST) {
+            if (filePathCallback == null) return;
+
+            Uri[] results = null;
+
+            if (resultCode == Activity.RESULT_OK && dataIntent != null) {
+                Uri uri = dataIntent.getData();
+                if (uri != null) {
+                    results = new Uri[]{uri};
+                    try {
+                        getContentResolver().takePersistableUriPermission(
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView == null) {
+            super.onBackPressed();
+            return;
+        }
+
+        webView.evaluateJavascript(
+                "(window.appBack ? window.appBack() : 'handled')",
+                value -> {
+                    // Prisma maneja atrás dentro de la app.
+                }
+        );
     }
 
     public static class AndroidBridge {
@@ -189,6 +272,11 @@ public class MainActivity extends Activity {
 
         AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public void openWhatsapp(String phone, String text) {
+            activity.runOnUiThread(() -> activity.openWhatsappNumber(phone, text));
         }
 
         @JavascriptInterface

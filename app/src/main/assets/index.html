@@ -567,6 +567,24 @@
       word-break: break-all;
     }
 
+
+    .wa-link-mini {
+      display: block;
+      margin-top: 5px;
+      color: #7dd3fc;
+      font-size: 11px;
+      word-break: break-all;
+    }
+    .phone-pretty {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+      color: #dff7ff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
 </style>
 </head>
 <body>
@@ -682,10 +700,10 @@
           <h2>Clientes</h2>
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
-        <p class="edit-help">Agrega clientes con WhatsApp: 8 dígitos.</p>
+        <p class="edit-help">Agrega clientes con WhatsApp: 8 dígitos o +56 9 9945 6548.</p>
         <div class="form">
           <input id="newName" placeholder="Nombre del cliente" autocomplete="off" />
-          <input id="newPhone" placeholder="WhatsApp: escribe 8 dígitos. Ej: 12345678" autocomplete="off" />
+          <input id="newPhone" placeholder="WhatsApp: 8 dígitos o +56 9 9945 6548 o +56 9 9945 6548" autocomplete="off" />
           <button class="big-action" onclick="addClient()">Agregar cliente</button>
         </div>
         <div class="label">Clientes guardados</div>
@@ -1101,21 +1119,37 @@
     function sanitizePhone(value) {
       const digits = String(value || "").replace(/[^\d]/g, "");
 
-      // Si escribes solo los 8 dígitos después de +569, completa automáticamente.
+      // Si escribes solo los 8 dígitos después de +56 9, completa automáticamente.
       if (digits.length === 8) return "569" + digits;
 
       // Si escribes 9 + 8 dígitos, completa +56.
       if (digits.length === 9 && digits.startsWith("9")) return "56" + digits;
 
-      // Si escribes 56... o 569..., lo deja como viene.
+      // Si escribes +56 9 XXXX XXXX, queda 569XXXXXXXX.
       if (digits.startsWith("56")) return digits;
 
-      // Si escribes algo más corto, lo guarda igual para no perder datos.
       return digits;
     }
 
     function formatWhatsappPhone(phone) {
       const digits = sanitizePhone(phone);
+      return digits ? "+" + digits : "";
+    }
+
+    function formatWhatsappPhonePretty(phone) {
+      const digits = sanitizePhone(phone);
+
+      // Formato chileno: +56 9 9945 6548
+      if (digits.length === 11 && digits.startsWith("569")) {
+        const rest = digits.slice(3);
+        return "+56 9 " + rest.slice(0, 4) + " " + rest.slice(4);
+      }
+
+      if (digits.length === 9 && digits.startsWith("9")) {
+        const rest = digits.slice(1);
+        return "+56 9 " + rest.slice(0, 4) + " " + rest.slice(4);
+      }
+
       return digits ? "+" + digits : "";
     }
 
@@ -1126,6 +1160,56 @@
       return "https://wa.me/" + digits + msg;
     }
 
+    async function copyClientPhone(id) {
+      const client = data.clients.find(c => c.id === id);
+      if (!client || !client.phone) {
+        alert("Este cliente no tiene WhatsApp guardado.");
+        return;
+      }
+
+      const pretty = formatWhatsappPhonePretty(client.phone);
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(pretty);
+          alert("Copiado: " + pretty);
+          return;
+        }
+      } catch (err) {
+        console.log(err);
+      }
+
+      prompt("Copia el número:", pretty);
+    }
+
+    function editClient(id) {
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      const currentPhone = client.phone ? formatWhatsappPhonePretty(client.phone) : "";
+      const name = prompt("Nombre del cliente", client.name);
+      if (name === null) return;
+
+      const phone = prompt("WhatsApp. Puedes poner 8 dígitos o formato +56 9 9945 6548", currentPhone);
+      if (phone === null) return;
+
+      const cleanName = name.trim();
+      if (!cleanName) {
+        alert("El nombre no puede quedar vacío.");
+        return;
+      }
+
+      client.name = cleanName;
+      client.phone = sanitizePhone(phone);
+
+      persist();
+      renderEditClients();
+      renderNamesPage && renderNamesPage();
+      renderAbonoList && renderAbonoList();
+
+      alert("Cliente actualizado.");
+    }
+
     function openClientWhatsappTest(id) {
       const client = data.clients.find(c => c.id === id);
       if (!client || !client.phone) {
@@ -1133,12 +1217,15 @@
         return;
       }
 
-      const link = whatsappLinkForPhone(
-        client.phone,
-        "Prueba de contacto desde Prisma"
-      );
+      const text = "Prueba de contacto desde Prisma";
+      const digits = sanitizePhone(client.phone);
 
-      window.open(link, "_blank");
+      if (window.AndroidBridge && typeof window.AndroidBridge.openWhatsapp === "function") {
+        window.AndroidBridge.openWhatsapp(digits, text);
+        return;
+      }
+
+      window.open(whatsappLinkForPhone(client.phone, text), "_blank");
     }
 
     function go(id, skipHistory = false) {
@@ -1383,7 +1470,7 @@
         const row = document.createElement("div");
         row.className = "name-row";
         row.onclick = () => callback(client);
-        row.innerHTML = `<div><strong>${escapeHtml(client.name)}</strong><small>${client.phone ? escapeHtml(client.phone) : "sin WhatsApp"}</small></div><small>${label}</small>`;
+        row.innerHTML = `<div><strong>${escapeHtml(client.name)}</strong><small>${client.phone ? escapeHtml(formatWhatsappPhonePretty(client.phone)) : "sin WhatsApp"}</small></div><small>${label}</small>`;
         target.appendChild(row);
       });
     }
@@ -1902,17 +1989,20 @@
       }
 
       target.innerHTML = list.map(client => {
-        const phone = formatWhatsappPhone(client.phone);
+        const phonePretty = client.phone ? formatWhatsappPhonePretty(client.phone) : "";
         const link = client.phone ? whatsappLinkForPhone(client.phone) : "";
+
         return `
           <div class="compact-row">
             <div>
               <strong>${escapeHtml(client.name)}</strong>
-              <small>${phone ? "WhatsApp: " + escapeHtml(phone) : "Sin WhatsApp"}</small>
+              ${phonePretty ? `<span class="phone-pretty">${escapeHtml(phonePretty)}</span>` : `<small>Sin WhatsApp</small>`}
               ${link ? `<span class="wa-link-mini">${escapeHtml(link)}</span>` : ""}
             </div>
             <div class="compact-actions">
               ${client.phone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
+              ${client.phone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
+              <button class="icon-btn" onclick="editClient('${escapeJs(client.id)}')">Editar</button>
               <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
             </div>
           </div>
