@@ -40,7 +40,7 @@
 
     header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
     h1, h2, p { margin: 0; }
-    h1 { font-size: 24px; letter-spacing: -0.8px; line-height: 1.05; }
+    h1 { font-size: clamp(42px, 11vw, 58px); letter-spacing: -1.8px; line-height: .95; }
     .subtitle { color: var(--muted); font-size: 13px; margin-top: 5px; line-height: 1.35; }
     .head-actions { display: flex; gap: 8px; }
     .mini-btn { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px; min-width: 42px; height: 42px; padding: 0 12px; font-weight: 950; cursor: pointer; }
@@ -416,6 +416,7 @@
     .edit-tile.clients { background: linear-gradient(135deg, rgba(0,163,255,.22), rgba(15,28,48,.82)); }
     .edit-tile.products { background: linear-gradient(135deg, rgba(0,230,118,.20), rgba(15,28,48,.82)); }
     .edit-tile.backup { background: linear-gradient(135deg, rgba(139,92,246,.22), rgba(15,28,48,.82)); }
+    .edit-tile.settings { background: linear-gradient(135deg, rgba(0,229,255,.20), rgba(15,28,48,.82)); }
     .edit-tile.danger { background: linear-gradient(135deg, rgba(255,77,109,.22), rgba(15,28,48,.82)); }
     .edit-panel { margin-top: 14px; display: none; }
     .edit-panel.active { display: block; }
@@ -763,14 +764,28 @@
       display: none !important;
     }
 
+
+    #profitPinModal.modal.show,
+    #setProfitPinModal.modal.show {
+      align-items: center !important;
+      justify-content: center !important;
+      padding-top: 16px !important;
+      padding-bottom: 16px !important;
+    }
+
+    #profitPinModal .sheet,
+    #setProfitPinModal .sheet {
+      width: min(430px, 100%) !important;
+      margin: auto !important;
+    }
+
 </style>
 </head>
 <body>
   <main class="app">
     <header>
       <div>
-        <h1 class="rainbow-title">Prisma</h1>
-        <p class="subtitle">Ventas · boletas · abonos · ganancias</p>
+        <h1 id="appTitle" class="rainbow-title">Prisma</h1>
       </div>
     </header>
 
@@ -861,6 +876,11 @@
           Productos
           <small>Precios, costos y colores</small>
         </button>
+        <button class="edit-tile settings" onclick="openEditPanel('settings')">
+          <span>⚙️</span>
+          Ajustes
+          <small>Clave, título y datos</small>
+        </button>
         <button class="edit-tile backup" onclick="openEditPanel('backup')">
           <span>💾</span>
           Respaldo
@@ -912,6 +932,31 @@
         </div>
         <div class="label">Productos guardados</div>
         <div id="editProducts" class="compact-list"></div>
+      </div>
+
+      <div id="editPanelSettings" class="edit-panel">
+        <div class="panel-head">
+          <h2>Ajustes</h2>
+          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+        </div>
+
+        <div class="label">Título principal</div>
+        <p class="edit-help">Cambia el nombre grande que aparece al inicio.</p>
+        <div class="form">
+          <input id="settingsAppTitle" placeholder="Prisma" autocomplete="off" />
+          <button class="secondary-action" onclick="saveAppTitleSetting()">Guardar título</button>
+        </div>
+
+        <div class="label">Clave de Ganancias</div>
+        <p class="edit-help">La app ya no trae clave fija. Guarda una clave numérica de 4 dígitos.</p>
+        <div class="form">
+          <input id="settingsProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Nueva clave de 4 números" autocomplete="new-password" />
+          <button class="secondary-action" onclick="saveProfitPinFromSettings()">Guardar clave</button>
+        </div>
+
+        <div class="label">Borrar datos</div>
+        <p class="edit-help">Reinicia clientes, productos, historial, título y clave.</p>
+        <button class="danger-action" onclick="resetAll()">Borrar datos</button>
       </div>
 
       <div id="editPanelBackup" class="edit-panel">
@@ -1065,6 +1110,24 @@
     </div>
   </div>
 
+  <div id="setProfitPinModal" class="modal">
+    <div class="sheet">
+      <h2>Crear clave de Ganancias</h2>
+      <p class="muted">Primero crea una clave numérica de 4 dígitos. No viene una clave por defecto.</p>
+
+      <div class="label">Nueva clave</div>
+      <input id="initialProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Ej: 1234" autocomplete="new-password" />
+
+      <div class="label">Repetir clave</div>
+      <input id="initialProfitPinConfirm" type="password" inputmode="numeric" maxlength="4" placeholder="Repite la clave" autocomplete="new-password" />
+
+      <div class="ticket-actions">
+        <button class="big-action" onclick="saveInitialProfitPin()">Guardar clave</button>
+        <button class="secondary-action" onclick="closeModal('setProfitPinModal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="profitModal" class="modal">
     <div class="sheet">
       <h2>Ganancias</h2>
@@ -1146,7 +1209,11 @@
       clients: [],
       products: [],
       movements: [],
-      nextReceiptNumber: 1
+      nextReceiptNumber: 1,
+      settings: {
+        appTitle: "Prisma",
+        profitPin: ""
+      }
     };
 
     let data = loadData();
@@ -1228,12 +1295,43 @@
 
       movements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+      const settings = normalizeSettings(imported.settings || {});
+
       return {
         clients,
         products,
         movements,
-        nextReceiptNumber
+        nextReceiptNumber,
+        settings
       };
+    }
+
+    function normalizeSettings(settings = {}) {
+      const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
+      const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
+      return { appTitle, profitPin };
+    }
+
+    function getSettings() {
+      if (!data.settings) data.settings = normalizeSettings({});
+      data.settings = normalizeSettings(data.settings);
+      return data.settings;
+    }
+
+    function renderAppTitle() {
+      const settings = getSettings();
+      const title = settings.appTitle || "Prisma";
+      const titleEl = document.getElementById("appTitle");
+      if (titleEl) titleEl.textContent = title;
+      document.title = title;
+    }
+
+    function normalizePin(value) {
+      return String(value || "").replace(/\D/g, "").slice(0, 4);
+    }
+
+    function getProfitPin() {
+      return normalizePin(getSettings().profitPin);
     }
 
     function normalizeMovement(m) {
@@ -1300,7 +1398,9 @@
     }
 
     function persist() {
+      data.settings = normalizeSettings(data.settings || {});
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderAppTitle();
       renderHomeStats();
     }
 
@@ -1476,6 +1576,17 @@
 
     function formatDateTime(value) {
       return new Date(value).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function formatCsvDateTime(value) {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
     }
 
     function formatDateOnly(value) {
@@ -2225,6 +2336,7 @@
       const map = {
         clients: "editPanelClients",
         products: "editPanelProducts",
+        settings: "editPanelSettings",
         backup: "editPanelBackup",
         data: "editPanelData"
       };
@@ -2233,15 +2345,51 @@
       document.getElementById(id).classList.add("active");
       if (panel === "clients") renderEditClients();
       if (panel === "products") renderEditProducts();
+      if (panel === "settings") renderSettingsPanel();
     }
 
     function closeEditPanels() {
-      ["editPanelClients", "editPanelProducts", "editPanelBackup", "editPanelData"].forEach(id => {
+      ["editPanelClients", "editPanelProducts", "editPanelSettings", "editPanelBackup", "editPanelData"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
       });
     }
 
+
+
+    function renderSettingsPanel() {
+      const settings = getSettings();
+      const titleInput = document.getElementById("settingsAppTitle");
+      const pinInput = document.getElementById("settingsProfitPin");
+      if (titleInput) titleInput.value = settings.appTitle || "Prisma";
+      if (pinInput) pinInput.value = "";
+    }
+
+    function saveAppTitleSetting() {
+      const input = document.getElementById("settingsAppTitle");
+      const title = input ? input.value.trim() : "";
+      if (!title) {
+        toast("Escribe un título");
+        return;
+      }
+      getSettings().appTitle = title;
+      persist();
+      renderSettingsPanel();
+      toast("Título actualizado");
+    }
+
+    function saveProfitPinFromSettings() {
+      const input = document.getElementById("settingsProfitPin");
+      const pin = normalizePin(input ? input.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      getSettings().profitPin = pin;
+      persist();
+      renderSettingsPanel();
+      toast("Clave guardada");
+    }
 
 
     function openClientEdit(id) {
@@ -2494,7 +2642,7 @@
           rows.push([
             "venta",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             formatReceiptNumber(m.boletaNumber),
             plainMovementProducts(m),
             Number(m.total || 0),
@@ -2509,7 +2657,7 @@
           rows.push([
             "abono",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             (m.applied || []).map(a => formatReceiptNumber(a.boletaNumber)).join(", "),
             "",
             "",
@@ -2523,7 +2671,7 @@
         }
       });
 
-      const csv = rows.map(row => row.map(csvCell).join(";")).join("\n");
+      const csv = "sep=;\r\n" + rows.map(row => row.map(csvCell).join(";")).join("\r\n");
       const csvContent = "\ufeff" + csv;
       const filename = "prisma-historial.csv";
 
@@ -2537,7 +2685,13 @@
     }
 
     function csvCell(value) {
-      return `"${String(value ?? "").replaceAll('"', '""')}"`;
+      const clean = String(value ?? "")
+        .replace(/\uFEFF/g, "")
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim()
+        .replaceAll('"', '""');
+      return `"${clean}"`;
     }
 
     function crearPayloadRespaldo() {
@@ -2549,7 +2703,8 @@
           clients: data.clients,
           products: data.products,
           movements: data.movements,
-          nextReceiptNumber: data.nextReceiptNumber
+          nextReceiptNumber: data.nextReceiptNumber,
+          settings: getSettings()
         }
       };
     }
@@ -2642,6 +2797,14 @@
 
     function openProfitPin() {
       profitPinValue = "";
+      if (!getProfitPin()) {
+        const pin = document.getElementById("initialProfitPin");
+        const confirmPin = document.getElementById("initialProfitPinConfirm");
+        if (pin) pin.value = "";
+        if (confirmPin) confirmPin.value = "";
+        openModal("setProfitPinModal");
+        return;
+      }
       updateProfitPinDisplay();
       openModal("profitPinModal");
     }
@@ -2667,7 +2830,7 @@
     }
 
     function submitProfitPin() {
-      if (profitPinValue !== "1145") {
+      if (profitPinValue !== getProfitPin()) {
         profitPinValue = "";
         updateProfitPinDisplay();
         toast("Clave incorrecta");
@@ -2679,6 +2842,30 @@
       const profitRange = document.getElementById("profitRange");
       if (profitRange) profitRange.value = "all";
       renderProfitDashboard();
+    }
+
+    function saveInitialProfitPin() {
+      const pinInput = document.getElementById("initialProfitPin");
+      const confirmInput = document.getElementById("initialProfitPinConfirm");
+      const pin = normalizePin(pinInput ? pinInput.value : "");
+      const confirmPin = normalizePin(confirmInput ? confirmInput.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      if (pin !== confirmPin) {
+        toast("Las claves no coinciden");
+        return;
+      }
+
+      getSettings().profitPin = pin;
+      persist();
+      closeModal("setProfitPinModal");
+      openModal("profitModal");
+      const profitRange = document.getElementById("profitRange");
+      if (profitRange) profitRange.value = "all";
+      renderProfitDashboard();
+      toast("Clave creada");
     }
 
 
@@ -3502,6 +3689,7 @@
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
+    renderAppTitle();
     renderHomeStats();
     renderProducts();
   </script>

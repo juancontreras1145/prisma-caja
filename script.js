@@ -3,15 +3,14 @@
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
 
     const defaultData = {
-      clients: [
-        { id: "c1", name: "Ana", phone: "" },
-        { id: "c2", name: "Camila", phone: "" },
-        { id: "c3", name: "Claudio Otaiza", phone: "" },
-        { id: "c4", name: "Juan", phone: "" }
-      ],
+      clients: [],
       products: [],
       movements: [],
-      nextReceiptNumber: 1
+      nextReceiptNumber: 1,
+      settings: {
+        appTitle: "Prisma",
+        profitPin: ""
+      }
     };
 
     let data = loadData();
@@ -75,6 +74,7 @@
       movements.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
       products = removeLegacyDefaultProducts(products);
+      clients = removeLegacyDefaultClients(clients, movements);
 
       let maxBoleta = 0;
       movements.forEach(m => {
@@ -92,12 +92,43 @@
 
       movements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+      const settings = normalizeSettings(imported.settings || {});
+
       return {
-        clients: clients.length ? clients : base.clients,
+        clients,
         products,
         movements,
-        nextReceiptNumber
+        nextReceiptNumber,
+        settings
       };
+    }
+
+    function normalizeSettings(settings = {}) {
+      const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
+      const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
+      return { appTitle, profitPin };
+    }
+
+    function getSettings() {
+      if (!data.settings) data.settings = normalizeSettings({});
+      data.settings = normalizeSettings(data.settings);
+      return data.settings;
+    }
+
+    function renderAppTitle() {
+      const settings = getSettings();
+      const title = settings.appTitle || "Prisma";
+      const titleEl = document.getElementById("appTitle");
+      if (titleEl) titleEl.textContent = title;
+      document.title = title;
+    }
+
+    function normalizePin(value) {
+      return String(value || "").replace(/\D/g, "").slice(0, 4);
+    }
+
+    function getProfitPin() {
+      return normalizePin(getSettings().profitPin);
     }
 
     function normalizeMovement(m) {
@@ -164,7 +195,9 @@
     }
 
     function persist() {
+      data.settings = normalizeSettings(data.settings || {});
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderAppTitle();
       renderHomeStats();
     }
 
@@ -342,6 +375,17 @@
       return new Date(value).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
     }
 
+    function formatCsvDateTime(value) {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+    }
+
     function formatDateOnly(value) {
       return new Date(value).toLocaleDateString("es-CL");
     }
@@ -424,6 +468,31 @@
     function removeLegacyDefaultProducts(products) {
       if (!Array.isArray(products)) return [];
       return products.filter(product => !isLegacyDefaultProduct(product));
+    }
+
+    function isLegacyDefaultClient(client) {
+      const legacy = {
+        c1: "ana",
+        c2: "camila",
+        c3: "claudio otaiza",
+        c4: "juan"
+      };
+      const id = String(client.id || "").toLowerCase();
+      const expectedName = legacy[id];
+      if (!expectedName) return false;
+      return normalize(client.name || "") === expectedName && !sanitizePhone(client.phone || "");
+    }
+
+    function removeLegacyDefaultClients(clients, movements = []) {
+      if (!Array.isArray(clients)) return [];
+      const usedClientIds = new Set((movements || [])
+        .map(m => String(m.clientId || ""))
+        .filter(Boolean));
+
+      return clients.filter(client => {
+        if (!isLegacyDefaultClient(client)) return true;
+        return usedClientIds.has(String(client.id || ""));
+      });
     }
 
     function renderProducts() {
@@ -1064,6 +1133,7 @@
       const map = {
         clients: "editPanelClients",
         products: "editPanelProducts",
+        settings: "editPanelSettings",
         backup: "editPanelBackup",
         data: "editPanelData"
       };
@@ -1072,15 +1142,51 @@
       document.getElementById(id).classList.add("active");
       if (panel === "clients") renderEditClients();
       if (panel === "products") renderEditProducts();
+      if (panel === "settings") renderSettingsPanel();
     }
 
     function closeEditPanels() {
-      ["editPanelClients", "editPanelProducts", "editPanelBackup", "editPanelData"].forEach(id => {
+      ["editPanelClients", "editPanelProducts", "editPanelSettings", "editPanelBackup", "editPanelData"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
       });
     }
 
+
+
+    function renderSettingsPanel() {
+      const settings = getSettings();
+      const titleInput = document.getElementById("settingsAppTitle");
+      const pinInput = document.getElementById("settingsProfitPin");
+      if (titleInput) titleInput.value = settings.appTitle || "Prisma";
+      if (pinInput) pinInput.value = "";
+    }
+
+    function saveAppTitleSetting() {
+      const input = document.getElementById("settingsAppTitle");
+      const title = input ? input.value.trim() : "";
+      if (!title) {
+        toast("Escribe un título");
+        return;
+      }
+      getSettings().appTitle = title;
+      persist();
+      renderSettingsPanel();
+      toast("Título actualizado");
+    }
+
+    function saveProfitPinFromSettings() {
+      const input = document.getElementById("settingsProfitPin");
+      const pin = normalizePin(input ? input.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      getSettings().profitPin = pin;
+      persist();
+      renderSettingsPanel();
+      toast("Clave guardada");
+    }
 
 
     function openClientEdit(id) {
@@ -1154,7 +1260,7 @@
               ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
               ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
               <button class="icon-btn" onclick="openClientEdit('${escapeJs(client.id)}')">${editLabel}</button>
-              <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button></span>
+              <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">Borrar</button>
             </div>
           </div>
         `;
@@ -1185,9 +1291,28 @@
     }
 
     function removeClient(id) {
-      data.clients = data.clients.filter(client => client.id !== id);
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      const pendingSales = data.movements.filter(m => m.type === "venta" && m.clientId === id && getSaleRemaining(m) > 0);
+      const message = pendingSales.length
+        ? `¿Borrar a ${client.name}? Tiene ${pendingSales.length} boleta(s) pendiente(s). El historial queda guardado, pero ya no aparecerá para nuevos abonos.`
+        : `¿Borrar a ${client.name}? No borra ventas antiguas.`;
+
+      if (!confirm(message)) return;
+
+      data.clients = data.clients.filter(c => c.id !== id);
+      if (selectedClient && selectedClient.id === id) selectedClient = null;
+
       persist();
       renderEditClients();
+
+      const namesScreen = document.getElementById("nombres");
+      if (namesScreen && namesScreen.classList.contains("active")) renderNamesPage();
+
+      const abonoScreen = document.getElementById("abono");
+      if (abonoScreen && abonoScreen.classList.contains("active")) renderAbonoList();
+
       toast("Cliente eliminado");
     }
 
@@ -1253,7 +1378,7 @@
           </div>
           <div class="compact-actions">
             <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">×</button></span>
+            <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
           </div>
         </div>
       `).join("");
@@ -1314,7 +1439,7 @@
           rows.push([
             "venta",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             formatReceiptNumber(m.boletaNumber),
             plainMovementProducts(m),
             Number(m.total || 0),
@@ -1329,7 +1454,7 @@
           rows.push([
             "abono",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             (m.applied || []).map(a => formatReceiptNumber(a.boletaNumber)).join(", "),
             "",
             "",
@@ -1343,7 +1468,7 @@
         }
       });
 
-      const csv = rows.map(row => row.map(csvCell).join(";")).join("\n");
+      const csv = "sep=;\r\n" + rows.map(row => row.map(csvCell).join(";")).join("\r\n");
       const csvContent = "\ufeff" + csv;
       const filename = "prisma-historial.csv";
 
@@ -1357,7 +1482,13 @@
     }
 
     function csvCell(value) {
-      return `"${String(value ?? "").replaceAll('"', '""')}"`;
+      const clean = String(value ?? "")
+        .replace(/\uFEFF/g, "")
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim()
+        .replaceAll('"', '""');
+      return `"${clean}"`;
     }
 
     function crearPayloadRespaldo() {
@@ -1369,7 +1500,8 @@
           clients: data.clients,
           products: data.products,
           movements: data.movements,
-          nextReceiptNumber: data.nextReceiptNumber
+          nextReceiptNumber: data.nextReceiptNumber,
+          settings: getSettings()
         }
       };
     }
@@ -1462,6 +1594,14 @@
 
     function openProfitPin() {
       profitPinValue = "";
+      if (!getProfitPin()) {
+        const pin = document.getElementById("initialProfitPin");
+        const confirmPin = document.getElementById("initialProfitPinConfirm");
+        if (pin) pin.value = "";
+        if (confirmPin) confirmPin.value = "";
+        openModal("setProfitPinModal");
+        return;
+      }
       updateProfitPinDisplay();
       openModal("profitPinModal");
     }
@@ -1487,7 +1627,7 @@
     }
 
     function submitProfitPin() {
-      if (profitPinValue !== "1145") {
+      if (profitPinValue !== getProfitPin()) {
         profitPinValue = "";
         updateProfitPinDisplay();
         toast("Clave incorrecta");
@@ -1499,6 +1639,30 @@
       const profitRange = document.getElementById("profitRange");
       if (profitRange) profitRange.value = "all";
       renderProfitDashboard();
+    }
+
+    function saveInitialProfitPin() {
+      const pinInput = document.getElementById("initialProfitPin");
+      const confirmInput = document.getElementById("initialProfitPinConfirm");
+      const pin = normalizePin(pinInput ? pinInput.value : "");
+      const confirmPin = normalizePin(confirmInput ? confirmInput.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      if (pin !== confirmPin) {
+        toast("Las claves no coinciden");
+        return;
+      }
+
+      getSettings().profitPin = pin;
+      persist();
+      closeModal("setProfitPinModal");
+      openModal("profitModal");
+      const profitRange = document.getElementById("profitRange");
+      if (profitRange) profitRange.value = "all";
+      renderProfitDashboard();
+      toast("Clave creada");
     }
 
 
@@ -2322,6 +2486,7 @@
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
+    renderAppTitle();
     renderHomeStats();
     renderProducts();
   
