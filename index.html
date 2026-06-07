@@ -837,6 +837,8 @@
 
       <div class="after-sale-actions">
         <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir imagen</button>
+        <button class="secondary-action" onclick="compartirImagenClienteDirecto()">Enviar al cliente</button>
+        <button class="secondary-action" onclick="compartirImagenClienteDirecto()">Enviar al cliente</button>
         <button class="big-action" onclick="closeModal('afterSaleModal'); go('home')">Volver al inicio</button>
       </div>
     </div>
@@ -2737,6 +2739,64 @@
         reader.readAsDataURL(blob);
       });
     }
+
+
+    function phoneForSale(sale) {
+      if (!sale) return "";
+
+      const direct = sale.clientPhone || "";
+      if (direct) return sanitizePhone(direct);
+
+      const client = data.clients.find(c =>
+        c.id === sale.clientId ||
+        normalize(c.name) === normalize(sale.clientName || "")
+      );
+
+      return client && client.phone ? sanitizePhone(client.phone) : "";
+    }
+
+    async function compartirImagenClienteDirecto() {
+      if (shareBusy) return;
+
+      const sale = currentSale();
+      if (!sale) {
+        alert("No hay boleta seleccionada.");
+        return;
+      }
+
+      const phone = phoneForSale(sale);
+      if (!phone) {
+        alert("Este cliente no tiene WhatsApp guardado. Agrégalo en Editar → Clientes.");
+        return;
+      }
+
+      if (!(window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function")) {
+        alert("Esta versión del APK todavía no tiene envío experimental al cliente.");
+        return;
+      }
+
+      shareBusy = true;
+      setShareBusy(true);
+
+      try {
+        const blob = await buildReceiptImageCanvas(sale);
+        const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
+        const dataUrl = await blobToDataUrl(blob);
+
+        window.AndroidBridge.shareImageToPhone(dataUrl, filename, phone);
+
+        setTimeout(() => {
+          shareBusy = false;
+          setShareBusy(false);
+        }, 1800);
+      } catch (err) {
+        console.error(err);
+        shareBusy = false;
+        setShareBusy(false);
+        alert("No se pudo intentar el envío directo. Usa Compartir imagen.");
+      }
+    }
+
 
     async function buildReceiptImageCanvas(sale) {
       const scale = window.AndroidBridge ? 1.35 : 2;
