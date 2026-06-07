@@ -142,10 +142,43 @@ public class MainActivity extends Activity {
         super.onBackPressed();
     }
 
-    public static class AndroidBridge {
-        private final Activity activity;
+    private boolean openShareTarget(Intent baseIntent, Uri uri, String packageName) {
+        try {
+            Intent target = new Intent(baseIntent);
+            target.setPackage(packageName);
+            target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        AndroidBridge(Activity activity) {
+            if (target.resolveActivity(getPackageManager()) != null) {
+                startActivity(target);
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+
+        return false;
+    }
+
+    private void openImageShare(Uri uri) {
+        Intent baseIntent = new Intent(Intent.ACTION_SEND);
+        baseIntent.setType("image/png");
+        baseIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        baseIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        // Evita el panel inferior genérico: primero intenta WhatsApp directo.
+        if (openShareTarget(baseIntent, uri, "com.whatsapp")) return;
+
+        // Si usa WhatsApp Business.
+        if (openShareTarget(baseIntent, uri, "com.whatsapp.w4b")) return;
+
+        // Último recurso: panel normal de Android.
+        startActivity(Intent.createChooser(baseIntent, "Compartir boleta"));
+    }
+
+    public static class AndroidBridge {
+        private final MainActivity activity;
+
+        AndroidBridge(MainActivity activity) {
             this.activity = activity;
         }
 
@@ -181,19 +214,9 @@ public class MainActivity extends Activity {
 
                     activity.runOnUiThread(() -> {
                         try {
-                            Intent intent = new Intent(Intent.ACTION_SEND);
-                            intent.setType("image/png");
-                            intent.putExtra(Intent.EXTRA_STREAM, uri);
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-                            // Permiso explícito para WhatsApp normal y Business si están instalados.
-                            activity.grantUriPermission("com.whatsapp", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            activity.grantUriPermission("com.whatsapp.w4b", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-                            Intent chooser = Intent.createChooser(intent, "Compartir boleta");
-                            activity.startActivity(chooser);
+                            activity.openImageShare(uri);
                         } catch (Exception e) {
-                            Toast.makeText(activity, "No se pudo abrir compartir", Toast.LENGTH_LONG).show();
+                            Toast.makeText(activity, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (Exception e) {

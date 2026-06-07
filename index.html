@@ -2410,7 +2410,7 @@
     function setShareBusy(isBusy) {
       document.querySelectorAll('button[onclick="compartirImagenWhatsApp()"]').forEach(button => {
         button.classList.toggle("share-busy", isBusy);
-        button.textContent = isBusy ? "Preparando imagen..." : "Compartir imagen";
+        button.textContent = isBusy ? "Abriendo WhatsApp..." : "Compartir imagen";
       });
     }
 
@@ -2437,7 +2437,7 @@
           setTimeout(() => {
             shareBusy = false;
             setShareBusy(false);
-          }, 3200);
+          }, 1600);
 
           return;
         }
