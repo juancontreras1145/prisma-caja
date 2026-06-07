@@ -713,6 +713,33 @@
       padding-bottom: 0;
     }
 
+
+    /* Borrado seguro de boletas */
+    .safe-delete-zone {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+
+    .safe-delete-btn {
+      width: 100%;
+      border: 1px solid rgba(255,77,109,.28);
+      background: rgba(255,77,109,.10);
+      color: #ffb4c2;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .history-delete-hidden {
+      display: none !important;
+    }
+
+    #history button.danger:has(+ .nothing) {
+      display: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -1919,6 +1946,23 @@
       go("historial");
     }
 
+
+    function hideHistoryDeleteButtons() {
+      const history = document.getElementById("historial") || document.getElementById("history");
+      if (!history) return;
+
+      history.querySelectorAll("button").forEach(button => {
+        const text = (button.textContent || "").trim();
+        const action = button.getAttribute("onclick") || "";
+        if (text === "×" || /delete|remove|borrar/i.test(action)) {
+          if (!/showReceipt|Boleta/i.test(action)) {
+            button.classList.add("history-delete-hidden");
+          }
+        }
+      });
+    }
+
+
     function renderHistory() {
       const target = document.getElementById("historyList");
       if (!target) return;
@@ -1959,6 +2003,8 @@
       if (!target.innerHTML) {
         target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
       }
+      setTimeout(hideHistoryDeleteButtons, 0);
+
     }
 
     function renderHistoryGroup(group, movements) {
@@ -2865,6 +2911,51 @@
       const margin = product.revenue > 0 ? (product.profit / product.revenue) * 100 : 0;
       const width = Math.max(4, Math.min(100, (Math.max(0, product.profit) / maxProfit) * 100));
       return `<div class="profit-row"><div><strong>${escapeHtml(product.name)}</strong><small>${product.qty} un. · Venta ${formatMoney(product.revenue)} · Costo ${formatMoney(product.cost)} · Margen ${margin.toFixed(1)}%</small><div class="profit-bar"><span style="width:${width}%"></span></div></div><div class="profit-money">${formatMoney(product.profit)}</div></div>`;
+    }
+
+
+
+    function safeDeleteReceiptFromList(id) {
+      // El borrado desde la lista queda desactivado para evitar toques accidentales.
+      alert("Para borrar una boleta, abre la boleta y usa el botón Eliminar boleta al final.");
+    }
+
+    function safeDeleteCurrentReceipt() {
+      const sale = currentSale && currentSale();
+      if (!sale) {
+        alert("No hay boleta seleccionada.");
+        return;
+      }
+
+      const number = sale.boletaNumber ? formatReceiptNumber(sale.boletaNumber) : "";
+      const client = sale.clientName || "cliente";
+
+      const ok = confirm(
+        "¿Eliminar esta boleta?\\n\\n" +
+        "Boleta " + number + " · " + client + "\\n\\n" +
+        "Esta acción quitará la venta del historial y recalculará las boletas."
+      );
+
+      if (!ok) return;
+
+      if (Array.isArray(data.movements)) {
+        data.movements = data.movements.filter(m => m.id !== sale.id);
+      }
+
+      if (Array.isArray(data.sales)) {
+        data.sales = data.sales.filter(m => m.id !== sale.id);
+      }
+
+      if (typeof renumberReceipts === "function") renumberReceipts();
+      persist();
+
+      closeModal("receiptModal");
+      closeModal("afterSaleModal");
+
+      if (typeof renderHistory === "function") renderHistory();
+      if (typeof renderHomeStats === "function") renderHomeStats();
+
+      alert("Boleta eliminada.");
     }
 
 
