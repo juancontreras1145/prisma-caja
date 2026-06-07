@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0e1015" />
-  <link rel="manifest" href="manifest.webmanifest">
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Prisma Caja" />
@@ -546,10 +545,6 @@
         <h1>Prisma Caja</h1>
         <p class="subtitle">Ventas · boletas · abonos · ganancias</p>
       </div>
-      <div class="head-actions">
-        <button class="mini-btn" onclick="openInstallModal()" title="Instalar como app">App</button>
-        <button class="mini-btn" onclick="toggleFullscreen()" title="Pantalla completa">⛶</button>
-      </div>
     </header>
 
     <section id="home" class="screen active">
@@ -700,7 +695,6 @@
         <p class="edit-help">Guarda un JSON para recuperar clientes, productos, costos, boletas y abonos.</p>
         <button class="secondary-action" onclick="guardarRespaldoJSON()">Guardar respaldo JSON</button>
         <button class="secondary-action" onclick="compartirRespaldoJSON()">Compartir respaldo JSON</button>
-        <button class="secondary-action" onclick="document.getElementById('importJsonInput').click()">Cargar respaldo JSON</button>
         <input id="importJsonInput" type="file" accept="application/json,.json" style="display:none" onchange="cargarRespaldoJSON(event)" />
       </div>
 
@@ -859,6 +853,17 @@
       </div>
 
       <div id="profitDashboard"></div>
+
+      <div id="initialImportBox" class="profit-section">
+        <h3>Importación inicial</h3>
+        <div class="profit-row">
+          <div>
+            <strong>Importar JSON una sola vez</strong>
+            <small>Usa esto para pasar los datos antiguos al APK. Después quedará bloqueado.</small>
+          </div>
+        </div>
+        <button id="initialImportBtn" class="secondary-action" onclick="openInitialJsonImport()">Importar JSON inicial</button>
+      </div>
 
       <button class="secondary-action" onclick="closeModal('profitModal')">Cerrar</button>
     </div>
@@ -2053,30 +2058,73 @@
       }
     }
 
+
+    function refreshInitialImportBox() {
+      const box = document.getElementById("initialImportBox");
+      const btn = document.getElementById("initialImportBtn");
+      if (!box || !btn) return;
+
+      const used = localStorage.getItem("prismaCajaJsonImportado") === "1";
+      if (used) {
+        btn.disabled = true;
+        btn.textContent = "JSON inicial ya importado";
+        box.style.opacity = "0.6";
+      } else {
+        btn.disabled = false;
+        btn.textContent = "Importar JSON inicial";
+        box.style.opacity = "1";
+      }
+    }
+
+    function openInitialJsonImport() {
+      if (localStorage.getItem("prismaCajaJsonImportado") === "1") {
+        alert("La importación inicial ya fue usada en esta app.");
+        return;
+      }
+
+      const input = document.getElementById("importJsonInput");
+      if (input) input.click();
+    }
+
+
     function cargarRespaldoJSON(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
 
+      if (localStorage.getItem("prismaCajaJsonImportado") === "1") {
+        alert("La importación inicial ya fue usada. Los datos nuevos quedan guardados dentro de la app.");
+        event.target.value = "";
+        return;
+      }
+
       const reader = new FileReader();
+
       reader.onload = function() {
         try {
           const parsed = JSON.parse(String(reader.result || "{}"));
           const imported = parsed.data || parsed;
+
           data = normalizeLoadedData(imported);
-          renumberReceipts();
+          if (typeof renumberReceipts === "function") renumberReceipts();
           persist();
-          renderEditClients();
-          renderEditProducts();
-          renderHistory();
-          toast("Respaldo cargado");
+
+          localStorage.setItem("prismaCajaJsonImportado", "1");
+          refreshInitialImportBox();
+
+          if (typeof renderEditClients === "function") renderEditClients();
+          if (typeof renderEditProducts === "function") renderEditProducts();
+          if (typeof renderHistory === "function") renderHistory();
+          if (typeof renderProfitDashboard === "function") renderProfitDashboard();
+
+          alert("Datos importados correctamente. Desde ahora la app guardará todo dentro del APK.");
         } catch (err) {
           console.error(err);
-          alert("No se pudo cargar el respaldo. Revisa que sea un JSON de Prisma Caja.");
-          toast("JSON inválido");
+          alert("No se pudo cargar el respaldo. Revisa que sea un JSON válido de Prisma Caja.");
         } finally {
           event.target.value = "";
         }
       };
+
       reader.readAsText(file, "utf-8");
     }
 
@@ -2111,7 +2159,7 @@
     }
 
     function submitProfitPin() {
-      if (profitPinValue !== "1145") {
+      if (profitPinValue !== "4511") {
         profitPinValue = "";
         updateProfitPinDisplay();
         toast("Clave incorrecta");
@@ -2121,6 +2169,7 @@
       closeModal("profitPinModal");
       openModal("profitModal");
       renderProfitDashboard();
+      refreshInitialImportBox();
     }
 
 
@@ -2413,7 +2462,6 @@
         }
 
         const file = new File([blob], filename, { type: "image/png" });
-
         if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file] });
           return;
@@ -2667,59 +2715,6 @@
     }
 
 
-    let deferredInstallPrompt = null;
-
-    window.addEventListener("beforeinstallprompt", event => {
-      event.preventDefault();
-      deferredInstallPrompt = event;
-    });
-
-    function openInstallModal() {
-      openModal("installModal");
-    }
-
-    async function tryNativeInstall() {
-      if (deferredInstallPrompt) {
-        try {
-          deferredInstallPrompt.prompt();
-          await deferredInstallPrompt.userChoice;
-          deferredInstallPrompt = null;
-          closeModal("installModal");
-          return;
-        } catch (err) {
-          console.log("No se pudo instalar", err);
-        }
-      }
-
-      alert("En este modo local el navegador no permite instalar como app real. Para instalarlo, súbelo a una página HTTPS y usa: Menú ⋮ → Agregar a pantalla principal.");
-    }
-
-    function setupPwaManifest() {
-      try {
-        const manifest = {
-          name: "Prisma Caja",
-          short_name: "Prisma",
-          start_url: ".",
-          scope: ".",
-          display: "standalone",
-          background_color: "#07111f",
-          theme_color: "#07111f"
-        };
-
-        const blob = new Blob([JSON.stringify(manifest)], {
-          type: "application/manifest+json"
-        });
-
-        const link = document.createElement("link");
-        link.rel = "manifest";
-        link.href = URL.createObjectURL(blob);
-        document.head.appendChild(link);
-      } catch (err) {
-        console.log("Manifest no disponible", err);
-      }
-    }
-
-
     function safeFileName(text) {
       return String(text || "boleta").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\-]+/g, "-");
     }
@@ -2741,10 +2736,6 @@
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
-    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js").catch(err => console.log("SW error", err));
-    }
-    setupPwaManifest();
     renderHomeStats();
     renderProducts();
   </script>
