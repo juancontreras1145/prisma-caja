@@ -1143,12 +1143,7 @@
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
 
     const defaultData = {
-      clients: [
-        { id: "c1", name: "Ana", phone: "" },
-        { id: "c2", name: "Camila", phone: "" },
-        { id: "c3", name: "Claudio Otaiza", phone: "" },
-        { id: "c4", name: "Juan", phone: "" }
-      ],
+      clients: [],
       products: [],
       movements: [],
       nextReceiptNumber: 1
@@ -1215,6 +1210,7 @@
       movements.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
       products = removeLegacyDefaultProducts(products);
+      clients = removeLegacyDefaultClients(clients, movements);
 
       let maxBoleta = 0;
       movements.forEach(m => {
@@ -1233,7 +1229,7 @@
       movements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       return {
-        clients: clients.length ? clients : base.clients,
+        clients,
         products,
         movements,
         nextReceiptNumber
@@ -1564,6 +1560,31 @@
     function removeLegacyDefaultProducts(products) {
       if (!Array.isArray(products)) return [];
       return products.filter(product => !isLegacyDefaultProduct(product));
+    }
+
+    function isLegacyDefaultClient(client) {
+      const legacy = {
+        c1: "ana",
+        c2: "camila",
+        c3: "claudio otaiza",
+        c4: "juan"
+      };
+      const id = String(client.id || "").toLowerCase();
+      const expectedName = legacy[id];
+      if (!expectedName) return false;
+      return normalize(client.name || "") === expectedName && !sanitizePhone(client.phone || "");
+    }
+
+    function removeLegacyDefaultClients(clients, movements = []) {
+      if (!Array.isArray(clients)) return [];
+      const usedClientIds = new Set((movements || [])
+        .map(m => String(m.clientId || ""))
+        .filter(Boolean));
+
+      return clients.filter(client => {
+        if (!isLegacyDefaultClient(client)) return true;
+        return usedClientIds.has(String(client.id || ""));
+      });
     }
 
     function renderProducts() {
@@ -2294,7 +2315,7 @@
               ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
               ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
               <button class="icon-btn" onclick="openClientEdit('${escapeJs(client.id)}')">${editLabel}</button>
-              <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button></span>
+              <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">Borrar</button>
             </div>
           </div>
         `;
@@ -2325,9 +2346,28 @@
     }
 
     function removeClient(id) {
-      data.clients = data.clients.filter(client => client.id !== id);
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      const pendingSales = data.movements.filter(m => m.type === "venta" && m.clientId === id && getSaleRemaining(m) > 0);
+      const message = pendingSales.length
+        ? `¿Borrar a ${client.name}? Tiene ${pendingSales.length} boleta(s) pendiente(s). El historial queda guardado, pero ya no aparecerá para nuevos abonos.`
+        : `¿Borrar a ${client.name}? No borra ventas antiguas.`;
+
+      if (!confirm(message)) return;
+
+      data.clients = data.clients.filter(c => c.id !== id);
+      if (selectedClient && selectedClient.id === id) selectedClient = null;
+
       persist();
       renderEditClients();
+
+      const namesScreen = document.getElementById("nombres");
+      if (namesScreen && namesScreen.classList.contains("active")) renderNamesPage();
+
+      const abonoScreen = document.getElementById("abono");
+      if (abonoScreen && abonoScreen.classList.contains("active")) renderAbonoList();
+
       toast("Cliente eliminado");
     }
 
@@ -2393,7 +2433,7 @@
           </div>
           <div class="compact-actions">
             <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">×</button></span>
+            <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
           </div>
         </div>
       `).join("");
