@@ -135,10 +135,19 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
+        if (webView == null) {
+            super.onBackPressed();
             return;
         }
+
+        webView.evaluateJavascript(
+                "(window.appBack ? window.appBack() : 'handled')",
+                value -> {
+                    // Por seguridad, Prisma no se cierra con un toque accidental en Atrás.
+                    // La navegación interna la maneja appBack() en JavaScript.
+                }
+        );
+    }
         super.onBackPressed();
     }
 

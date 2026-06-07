@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#0e1015" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Prisma Caja" />
+  <meta name="apple-mobile-web-app-title" content="Prisma" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <title>Prisma Caja</title>
+  <title>Prisma</title>
   <style>
     :root {
       --bg: #0e1015;
@@ -542,13 +542,38 @@
       pointer-events: none !important;
     }
 
+
+    .rainbow-title {
+      display: inline-block;
+      background: linear-gradient(90deg, #00e5ff, #00e676, #ffe156, #ff7a00, #ff4d6d, #8b5cf6, #00e5ff);
+      background-size: 350% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      animation: prismaRainbow 5s linear infinite;
+      text-shadow: 0 0 22px rgba(91, 211, 255, .18);
+    }
+
+    @keyframes prismaRainbow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 350% 50%; }
+    }
+
+    .wa-link-mini {
+      display: block;
+      margin-top: 5px;
+      color: #7dd3fc;
+      font-size: 11px;
+      word-break: break-all;
+    }
+
 </style>
 </head>
 <body>
   <main class="app">
     <header>
       <div>
-        <h1>Prisma Caja</h1>
+        <h1 class="rainbow-title">Prisma</h1>
         <p class="subtitle">Ventas · boletas · abonos · ganancias</p>
       </div>
     </header>
@@ -657,10 +682,10 @@
           <h2>Clientes</h2>
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
-        <p class="edit-help">Agrega clientes con WhatsApp opcional.</p>
+        <p class="edit-help">Agrega clientes con WhatsApp: 8 dígitos.</p>
         <div class="form">
           <input id="newName" placeholder="Nombre del cliente" autocomplete="off" />
-          <input id="newPhone" placeholder="WhatsApp opcional. Ej: 56912345678" autocomplete="off" />
+          <input id="newPhone" placeholder="WhatsApp: escribe 8 dígitos. Ej: 12345678" autocomplete="off" />
           <button class="big-action" onclick="addClient()">Agregar cliente</button>
         </div>
         <div class="label">Clientes guardados</div>
@@ -926,6 +951,7 @@
     let selectedPaymentSaleIds = [];
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
+    let navStack = ["home"];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -1073,10 +1099,59 @@
     }
 
     function sanitizePhone(value) {
-      return String(value || "").replace(/[^\d]/g, "");
+      const digits = String(value || "").replace(/[^\d]/g, "");
+
+      // Si escribes solo los 8 dígitos después de +569, completa automáticamente.
+      if (digits.length === 8) return "569" + digits;
+
+      // Si escribes 9 + 8 dígitos, completa +56.
+      if (digits.length === 9 && digits.startsWith("9")) return "56" + digits;
+
+      // Si escribes 56... o 569..., lo deja como viene.
+      if (digits.startsWith("56")) return digits;
+
+      // Si escribes algo más corto, lo guarda igual para no perder datos.
+      return digits;
     }
 
-    function go(id) {
+    function formatWhatsappPhone(phone) {
+      const digits = sanitizePhone(phone);
+      return digits ? "+" + digits : "";
+    }
+
+    function whatsappLinkForPhone(phone, text = "") {
+      const digits = sanitizePhone(phone);
+      if (!digits) return "";
+      const msg = text ? "?text=" + encodeURIComponent(text) : "";
+      return "https://wa.me/" + digits + msg;
+    }
+
+    function openClientWhatsappTest(id) {
+      const client = data.clients.find(c => c.id === id);
+      if (!client || !client.phone) {
+        alert("Este cliente no tiene WhatsApp guardado.");
+        return;
+      }
+
+      const link = whatsappLinkForPhone(
+        client.phone,
+        "Prueba de contacto desde Prisma"
+      );
+
+      window.open(link, "_blank");
+    }
+
+    function go(id, skipHistory = false) {
+      if (!skipHistory) {
+        const current = document.querySelector(".screen.active");
+        const currentId = current ? current.id : null;
+        if (currentId && currentId !== id) {
+          const last = navStack[navStack.length - 1];
+          if (last !== id) navStack.push(id);
+          if (navStack.length > 20) navStack.shift();
+        }
+      }
+
       document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
       document.getElementById(id).classList.add("active");
 
@@ -1091,6 +1166,30 @@
         document.getElementById("abonoSearch").value = "";
         renderAbonoList();
       }
+    }
+
+    function appBack() {
+      const openModals = [...document.querySelectorAll(".modal.show")];
+      if (openModals.length) {
+        openModals[openModals.length - 1].classList.remove("show");
+        return "handled";
+      }
+
+      const active = document.querySelector(".screen.active");
+      const activeId = active ? active.id : "home";
+
+      if (activeId !== "home") {
+        if (navStack.length > 1) {
+          navStack.pop();
+          const previous = navStack[navStack.length - 1] || "home";
+          go(previous, true);
+        } else {
+          go("home", true);
+        }
+        return "handled";
+      }
+
+      return "handled";
     }
 
     function openVenta() {
@@ -1802,17 +1901,23 @@
         return;
       }
 
-      target.innerHTML = list.map(client => `
-        <div class="compact-row">
-          <div>
-            <strong>${escapeHtml(client.name)}</strong>
-            <small>${client.phone ? "WhatsApp: " + escapeHtml(client.phone) : "Sin WhatsApp"}</small>
+      target.innerHTML = list.map(client => {
+        const phone = formatWhatsappPhone(client.phone);
+        const link = client.phone ? whatsappLinkForPhone(client.phone) : "";
+        return `
+          <div class="compact-row">
+            <div>
+              <strong>${escapeHtml(client.name)}</strong>
+              <small>${phone ? "WhatsApp: " + escapeHtml(phone) : "Sin WhatsApp"}</small>
+              ${link ? `<span class="wa-link-mini">${escapeHtml(link)}</span>` : ""}
+            </div>
+            <div class="compact-actions">
+              ${client.phone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
+              <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
+            </div>
           </div>
-          <div class="compact-actions">
-            <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
     function addClient() {
@@ -2000,7 +2105,7 @@
       });
 
       const csv = rows.map(row => row.map(csvCell).join(";")).join("\n");
-      downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }), "prisma-caja-historial.csv");
+      downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }), "prisma-historial.csv");
       toast("CSV exportado");
     }
 
@@ -2010,7 +2115,7 @@
 
     function crearPayloadRespaldo() {
       return {
-        app: "Prisma Caja",
+        app: "Prisma",
         version: 4,
         exportedAt: new Date().toISOString(),
         data: {
@@ -2023,7 +2128,7 @@
     }
 
     function nombreArchivoRespaldo() {
-      return "prisma-caja-respaldo-" + new Date().toISOString().slice(0, 10) + ".json";
+      return "prisma-respaldo-" + new Date().toISOString().slice(0, 10) + ".json";
     }
 
     function guardarRespaldoJSON() {
@@ -2042,7 +2147,7 @@
         const json = JSON.stringify(crearPayloadRespaldo(), null, 2);
         const file = new File([new Blob([json], { type: "application/json;charset=utf-8" })], nombreArchivoRespaldo(), { type: "application/json" });
         if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: "Respaldo Prisma Caja", files: [file] });
+          await navigator.share({ title: "Respaldo Prisma", files: [file] });
           toast("Respaldo compartido");
           return;
         }
@@ -2081,7 +2186,7 @@
           alert("Respaldo JSON cargado correctamente.");
         } catch (err) {
           console.error(err);
-          alert("No se pudo cargar el respaldo. Revisa que sea un JSON válido de Prisma Caja.");
+          alert("No se pudo cargar el respaldo. Revisa que sea un JSON válido de Prisma.");
         } finally {
           event.target.value = "";
         }
