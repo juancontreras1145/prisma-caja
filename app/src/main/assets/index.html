@@ -432,7 +432,7 @@
     }
     .compact-row strong { display: block; font-size: 16px; }
     .compact-row small { color: var(--muted); font-size: 12px; display: block; margin-top: 4px; }
-    .compact-actions { display: flex; gap: 8px; align-items: center; }
+    .compact-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .icon-btn {
       border: 0;
       border-radius: 12px;
@@ -700,10 +700,10 @@
           <h2>Clientes</h2>
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
-        <p class="edit-help">Agrega clientes con WhatsApp: 8 dígitos o +56 9 9945 6548.</p>
+        <p class="edit-help">Agrega clientes con WhatsApp opcional: 8 dígitos o +56 9 9945 6548.</p>
         <div class="form">
           <input id="newName" placeholder="Nombre del cliente" autocomplete="off" />
-          <input id="newPhone" placeholder="WhatsApp: 8 dígitos o +56 9 9945 6548 o +56 9 9945 6548" autocomplete="off" />
+          <input id="newPhone" placeholder="WhatsApp opcional: 8 dígitos o +56 9 9945 6548 o +56 9 9945 6548" autocomplete="off" />
           <button class="big-action" onclick="addClient()">Agregar cliente</button>
         </div>
         <div class="label">Clientes guardados</div>
@@ -1190,7 +1190,10 @@
       const name = prompt("Nombre del cliente", client.name);
       if (name === null) return;
 
-      const phone = prompt("WhatsApp. Puedes poner 8 dígitos o formato +56 9 9945 6548", currentPhone);
+      const phone = prompt(
+        "WhatsApp del cliente. Puedes poner 8 dígitos o formato +56 9 9945 6548. Déjalo vacío si no tiene.",
+        currentPhone
+      );
       if (phone === null) return;
 
       const cleanName = name.trim();
@@ -1204,10 +1207,10 @@
 
       persist();
       renderEditClients();
-      renderNamesPage && renderNamesPage();
-      renderAbonoList && renderAbonoList();
+      if (typeof renderNamesPage === "function") renderNamesPage();
+      if (typeof renderAbonoList === "function") renderAbonoList();
 
-      alert("Cliente actualizado.");
+      alert(client.phone ? "Cliente actualizado con WhatsApp." : "Cliente actualizado sin WhatsApp.");
     }
 
     function openClientWhatsappTest(id) {
@@ -1989,20 +1992,21 @@
       }
 
       target.innerHTML = list.map(client => {
-        const phonePretty = client.phone ? formatWhatsappPhonePretty(client.phone) : "";
-        const link = client.phone ? whatsappLinkForPhone(client.phone) : "";
+        const hasPhone = Boolean(client.phone);
+        const phonePretty = hasPhone ? formatWhatsappPhonePretty(client.phone) : "";
+        const link = hasPhone ? whatsappLinkForPhone(client.phone) : "";
 
         return `
           <div class="compact-row">
             <div>
               <strong>${escapeHtml(client.name)}</strong>
-              ${phonePretty ? `<span class="phone-pretty">${escapeHtml(phonePretty)}</span>` : `<small>Sin WhatsApp</small>`}
+              ${hasPhone ? `<span class="phone-pretty">${escapeHtml(phonePretty)}</span>` : `<small>Sin WhatsApp guardado</small>`}
               ${link ? `<span class="wa-link-mini">${escapeHtml(link)}</span>` : ""}
             </div>
             <div class="compact-actions">
-              ${client.phone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
-              ${client.phone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
-              <button class="icon-btn" onclick="editClient('${escapeJs(client.id)}')">Editar</button>
+              ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
+              ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
+              <button class="icon-btn" onclick="editClient('${escapeJs(client.id)}')">${hasPhone ? "Editar" : "Agregar WhatsApp"}</button>
               <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
             </div>
           </div>
