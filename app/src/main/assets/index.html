@@ -939,6 +939,27 @@
     </div>
   </div>
 
+
+  <div id="clientEditModal" class="modal">
+    <div class="sheet">
+      <h2>Editar cliente</h2>
+      <p class="muted">Puedes cambiar el nombre y agregar o corregir WhatsApp.</p>
+
+      <input id="editClientId" type="hidden" />
+
+      <div class="label">Nombre</div>
+      <input id="editClientName" placeholder="Nombre del cliente" autocomplete="off" />
+
+      <div class="label">WhatsApp</div>
+      <input id="editClientPhone" placeholder="Ej: 99456548 o +56 9 9945 6548" autocomplete="off" />
+
+      <div class="ticket-actions">
+        <button class="big-action" onclick="saveClientEdit()">Guardar cliente</button>
+        <button class="secondary-action" onclick="closeModal('clientEditModal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "cajaMinimalDataV2";
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
@@ -1118,16 +1139,9 @@
 
     function sanitizePhone(value) {
       const digits = String(value || "").replace(/[^\d]/g, "");
-
-      // Si escribes solo los 8 dígitos después de +56 9, completa automáticamente.
       if (digits.length === 8) return "569" + digits;
-
-      // Si escribes 9 + 8 dígitos, completa +56.
       if (digits.length === 9 && digits.startsWith("9")) return "56" + digits;
-
-      // Si escribes +56 9 XXXX XXXX, queda 569XXXXXXXX.
       if (digits.startsWith("56")) return digits;
-
       return digits;
     }
 
@@ -1138,18 +1152,14 @@
 
     function formatWhatsappPhonePretty(phone) {
       const digits = sanitizePhone(phone);
-
-      // Formato chileno: +56 9 9945 6548
       if (digits.length === 11 && digits.startsWith("569")) {
         const rest = digits.slice(3);
         return "+56 9 " + rest.slice(0, 4) + " " + rest.slice(4);
       }
-
       if (digits.length === 9 && digits.startsWith("9")) {
         const rest = digits.slice(1);
         return "+56 9 " + rest.slice(0, 4) + " " + rest.slice(4);
       }
-
       return digits ? "+" + digits : "";
     }
 
@@ -1190,10 +1200,7 @@
       const name = prompt("Nombre del cliente", client.name);
       if (name === null) return;
 
-      const phone = prompt(
-        "WhatsApp del cliente. Puedes poner 8 dígitos o formato +56 9 9945 6548. Déjalo vacío si no tiene.",
-        currentPhone
-      );
+      const phone = prompt("WhatsApp. Puedes poner 8 dígitos o formato +56 9 9945 6548", currentPhone);
       if (phone === null) return;
 
       const cleanName = name.trim();
@@ -1207,10 +1214,10 @@
 
       persist();
       renderEditClients();
-      if (typeof renderNamesPage === "function") renderNamesPage();
-      if (typeof renderAbonoList === "function") renderAbonoList();
+      renderNamesPage && renderNamesPage();
+      renderAbonoList && renderAbonoList();
 
-      alert(client.phone ? "Cliente actualizado con WhatsApp." : "Cliente actualizado sin WhatsApp.");
+      alert("Cliente actualizado.");
     }
 
     function openClientWhatsappTest(id) {
@@ -1981,6 +1988,51 @@
     }
 
 
+
+    function openClientEdit(id) {
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      document.getElementById("editClientId").value = client.id;
+      document.getElementById("editClientName").value = client.name || "";
+      document.getElementById("editClientPhone").value = client.phone ? formatWhatsappPhonePretty(client.phone) : "";
+      openModal("clientEditModal");
+    }
+
+    function saveClientEdit() {
+      const id = document.getElementById("editClientId").value;
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      const name = document.getElementById("editClientName").value.trim();
+      const phone = document.getElementById("editClientPhone").value.trim();
+
+      if (!name) {
+        alert("El nombre no puede quedar vacío.");
+        return;
+      }
+
+      client.name = name;
+      client.phone = sanitizePhone(phone);
+
+      persist();
+      closeModal("clientEditModal");
+      renderEditClients();
+
+      if (typeof renderNamesPage === "function") {
+        const namesScreen = document.getElementById("nombres");
+        if (namesScreen && namesScreen.classList.contains("active")) renderNamesPage();
+      }
+
+      if (typeof renderAbonoList === "function") {
+        const abonoScreen = document.getElementById("abono");
+        if (abonoScreen && abonoScreen.classList.contains("active")) renderAbonoList();
+      }
+
+      alert(client.phone ? "Cliente guardado con WhatsApp." : "Cliente guardado sin WhatsApp.");
+    }
+
+
     function renderEditClients() {
       const target = document.getElementById("editClients");
       if (!target) return;
@@ -1995,6 +2047,7 @@
         const hasPhone = Boolean(client.phone);
         const phonePretty = hasPhone ? formatWhatsappPhonePretty(client.phone) : "";
         const link = hasPhone ? whatsappLinkForPhone(client.phone) : "";
+        const editLabel = hasPhone ? "Editar" : "Agregar WhatsApp";
 
         return `
           <div class="compact-row">
@@ -2006,7 +2059,7 @@
             <div class="compact-actions">
               ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
               ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
-              <button class="icon-btn" onclick="editClient('${escapeJs(client.id)}')">${hasPhone ? "Editar" : "Agregar WhatsApp"}</button>
+              <button class="icon-btn" onclick="openClientEdit('${escapeJs(client.id)}')">${editLabel}</button>
               <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
             </div>
           </div>
@@ -2627,14 +2680,7 @@
       });
     }
 
-    let shareBusy = false;
 
-    function setShareBusy(isBusy) {
-      document.querySelectorAll('button[onclick="compartirImagenWhatsApp()"]').forEach(button => {
-        button.classList.toggle("share-busy", isBusy);
-        button.textContent = isBusy ? "Abriendo WhatsApp..." : "Compartir imagen";
-      });
-    }
 
     async function compartirImagenWhatsApp() {
       if (shareBusy) return;
