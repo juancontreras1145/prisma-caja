@@ -2606,12 +2606,18 @@
       const rangeSelect = document.getElementById("profitRange");
       if (rangeSelect && !rangeSelect.value) rangeSelect.value = "all";
 
-      const range = rangeSelect ? rangeSelect.value : "all";
-      const { start, end } = getProfitRangeDates(range);
+      const rangeData = getProfitRangeDates();
+      const range = rangeSelect ? rangeSelect.value : (rangeData.range || "all");
+      const startDate = rangeData.start;
+      const endDate = rangeData.end;
 
-      const sales = data.sales.filter(sale => {
-        const time = new Date(sale.createdAt || sale.date || Date.now()).getTime();
-        return time >= start && time <= end;
+      const allSales = typeof getSales === "function"
+        ? getSales()
+        : (data.movements || []).filter(m => m.type === "venta");
+
+      const sales = allSales.filter(sale => {
+        const date = new Date(sale.createdAt || sale.date || Date.now());
+        return date >= startDate && date < endDate;
       });
 
       let totalSales = 0;
@@ -2626,8 +2632,10 @@
 
       for (const sale of sales) {
         const saleTotal = Number(sale.total || 0);
-        const salePaid = Number(sale.paidAmount || 0);
-        const saleBalance = Math.max(0, Number(sale.balance || saleTotal - salePaid));
+        const salePaid = Number(sale.amountPaid ?? sale.paidAmount ?? 0);
+        const saleBalance = typeof getSaleRemaining === "function"
+          ? getSaleRemaining(sale)
+          : Math.max(0, saleTotal - salePaid);
 
         totalSales += saleTotal;
         collected += salePaid;
@@ -2654,8 +2662,11 @@
         for (const item of items) {
           const qty = Number(item.qty || item.quantity || 1);
           const price = Number(item.price || 0);
-          const cost = Number(item.cost || productCostByName(item.name) || 0);
-          const subtotal = Number(item.subtotal || price * qty);
+          const cost = typeof getItemUnitCost === "function"
+            ? getItemUnitCost(item)
+            : Number(item.cost || 0);
+
+          const subtotal = Number(item.total ?? item.subtotal ?? price * qty);
           const itemCost = cost * qty;
           const itemProfit = subtotal - itemCost;
 
@@ -2690,31 +2701,29 @@
       const clients = Object.values(clientMap).sort((a, b) => b.profit - a.profit);
 
       const starProduct = products[0];
-      const bestClient = clients[0];
       const biggestDebt = [...clients].sort((a, b) => b.pending - a.pending)[0];
-
       const maxProductProfit = Math.max(1, ...products.map(p => p.profit));
 
       const summaryHtml = `
         <div class="profit-hero-grid">
           <div class="profit-hero-card purple">
             <small>Ventas totales</small>
-            <strong>${money(totalSales)}</strong>
+            <strong>${formatMoney(totalSales)}</strong>
             <div class="profit-mini-note">${saleCount} boleta(s) · ${units} un.</div>
           </div>
           <div class="profit-hero-card green">
             <small>Utilidad descontando costos</small>
-            <strong>${money(totalProfit)}</strong>
-            <div class="profit-mini-note">Costo mercadería ${money(totalCost)}</div>
+            <strong>${formatMoney(totalProfit)}</strong>
+            <div class="profit-mini-note">Costo mercadería ${formatMoney(totalCost)}</div>
           </div>
           <div class="profit-hero-card green">
             <small>Cobrado</small>
-            <strong>${money(collected)}</strong>
+            <strong>${formatMoney(collected)}</strong>
             <div class="profit-mini-note">Entró a caja</div>
           </div>
           <div class="profit-hero-card">
             <small>Por cobrar</small>
-            <strong>${money(pending)}</strong>
+            <strong>${formatMoney(pending)}</strong>
             <div class="profit-mini-note">Saldo pendiente</div>
           </div>
         </div>
@@ -2733,7 +2742,7 @@
               <strong>Ticket promedio</strong>
               <small>Venta promedio</small>
             </div>
-            <b>${money(averageTicket)}</b>
+            <b>${formatMoney(averageTicket)}</b>
           </div>
           <div class="profit-row">
             <div>
@@ -2747,7 +2756,7 @@
               <strong>Mayor deuda</strong>
               <small>Pendiente</small>
             </div>
-            <b>${biggestDebt && biggestDebt.pending > 0 ? escapeHtml(biggestDebt.name) + " · " + money(biggestDebt.pending) : "-"}</b>
+            <b>${biggestDebt && biggestDebt.pending > 0 ? escapeHtml(biggestDebt.name) + " · " + formatMoney(biggestDebt.pending) : "-"}</b>
           </div>
         </div>
       `;
@@ -2765,9 +2774,9 @@
                     <div class="profit-row">
                       <div>
                         <strong>${escapeHtml(product.name)}</strong>
-                        <small>${product.units} un. · Venta ${money(product.sales)} · Costo ${money(product.cost)} · Margen ${itemMargin.toFixed(1)}%</small>
+                        <small>${product.units} un. · Venta ${formatMoney(product.sales)} · Costo ${formatMoney(product.cost)} · Margen ${itemMargin.toFixed(1)}%</small>
                       </div>
-                      <b>${money(product.profit)}</b>
+                      <b>${formatMoney(product.profit)}</b>
                     </div>
                     <div class="bar"><span style="width:${pct}%"></span></div>
                   </div>
@@ -2788,9 +2797,9 @@
                   <div class="profit-row">
                     <div>
                       <strong>${escapeHtml(client.name)}</strong>
-                      <small>Ventas ${money(client.sales)} · Cobrado ${money(client.paid)} · Pendiente ${money(client.pending)}</small>
+                      <small>Ventas ${formatMoney(client.sales)} · Cobrado ${formatMoney(client.paid)} · Pendiente ${formatMoney(client.pending)}</small>
                     </div>
-                    <b>${money(client.profit)}</b>
+                    <b>${formatMoney(client.profit)}</b>
                   </div>
                 </div>
               `).join("")}
