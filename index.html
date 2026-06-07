@@ -585,6 +585,31 @@
       font-weight: 800;
     }
 
+
+    /* Ajuste APK: boleta visible sobre barra inferior Android */
+    .modal.show {
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+      overflow-y: auto !important;
+      padding-top: 12px !important;
+      padding-bottom: 120px !important;
+    }
+
+    .modal .sheet {
+      margin: 0 auto 32px auto !important;
+      max-height: none !important;
+    }
+
+    .receipt-preview-wrap {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    .share-busy {
+      opacity: .62 !important;
+      pointer-events: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -836,9 +861,7 @@
       </div>
 
       <div class="after-sale-actions">
-        <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir imagen</button>
-        <button class="secondary-action" onclick="compartirImagenClienteDirecto()">Enviar al cliente</button>
-        <button class="secondary-action" onclick="compartirImagenClienteDirecto()">Enviar al cliente</button>
+        <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
         <button class="big-action" onclick="closeModal('afterSaleModal'); go('home')">Volver al inicio</button>
       </div>
     </div>
@@ -847,14 +870,14 @@
   <div id="receiptModal" class="modal">
     <div class="sheet">
       <h2>Boleta</h2>
-      <p class="muted">Comparte solo la imagen de la boleta. No se enviará texto debajo de la foto.</p>
+      <p class="muted">Si el cliente tiene WhatsApp guardado, se intentará abrir directo su conversación. Si no tiene número, se abrirá compartir genérico.</p>
 
       <div class="receipt-preview-wrap">
         <div id="receiptPreview"></div>
       </div>
 
       <div class="ticket-actions">
-        <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir imagen</button>
+        <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
         <button class="secondary-action" onclick="closeModal('receiptModal')">Cerrar</button>
       </div>
     </div>
@@ -2684,12 +2707,29 @@
 
 
 
+    function phoneForSale(sale) {
+      if (!sale) return "";
+
+      const direct = sale.clientPhone || sale.phone || sale.whatsapp || "";
+      if (direct) return sanitizePhone(direct);
+
+      const client = data.clients.find(c =>
+        c.id === sale.clientId ||
+        normalize(c.name) === normalize(sale.clientName || "")
+      );
+
+      return client && client.phone ? sanitizePhone(client.phone) : "";
+    }
+
+
+
+
     async function compartirImagenWhatsApp() {
       if (shareBusy) return;
 
       const sale = currentSale();
       if (!sale) {
-        toast("No hay boleta seleccionada");
+        alert("No hay boleta seleccionada.");
         return;
       }
 
@@ -2699,6 +2739,19 @@
       try {
         const blob = await buildReceiptImageCanvas(sale);
         const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
+        const phone = phoneForSale(sale);
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function" && phone) {
+          const dataUrl = await blobToDataUrl(blob);
+          window.AndroidBridge.shareImageToPhone(dataUrl, filename, phone);
+
+          setTimeout(() => {
+            shareBusy = false;
+            setShareBusy(false);
+          }, 1800);
+
+          return;
+        }
 
         if (window.AndroidBridge && typeof window.AndroidBridge.shareImage === "function") {
           const dataUrl = await blobToDataUrl(blob);
@@ -2719,10 +2772,10 @@
           return;
         }
 
-        toast("Tu navegador no permite compartir imagen");
+        alert("Tu navegador no permite compartir imagen.");
       } catch (err) {
         console.error(err);
-        toast("No se pudo compartir la imagen");
+        alert("No se pudo compartir la boleta.");
       } finally {
         if (!(window.AndroidBridge && typeof window.AndroidBridge.shareImage === "function")) {
           shareBusy = false;
@@ -2739,64 +2792,6 @@
         reader.readAsDataURL(blob);
       });
     }
-
-
-    function phoneForSale(sale) {
-      if (!sale) return "";
-
-      const direct = sale.clientPhone || "";
-      if (direct) return sanitizePhone(direct);
-
-      const client = data.clients.find(c =>
-        c.id === sale.clientId ||
-        normalize(c.name) === normalize(sale.clientName || "")
-      );
-
-      return client && client.phone ? sanitizePhone(client.phone) : "";
-    }
-
-    async function compartirImagenClienteDirecto() {
-      if (shareBusy) return;
-
-      const sale = currentSale();
-      if (!sale) {
-        alert("No hay boleta seleccionada.");
-        return;
-      }
-
-      const phone = phoneForSale(sale);
-      if (!phone) {
-        alert("Este cliente no tiene WhatsApp guardado. Agrégalo en Editar → Clientes.");
-        return;
-      }
-
-      if (!(window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function")) {
-        alert("Esta versión del APK todavía no tiene envío experimental al cliente.");
-        return;
-      }
-
-      shareBusy = true;
-      setShareBusy(true);
-
-      try {
-        const blob = await buildReceiptImageCanvas(sale);
-        const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
-        const dataUrl = await blobToDataUrl(blob);
-
-        window.AndroidBridge.shareImageToPhone(dataUrl, filename, phone);
-
-        setTimeout(() => {
-          shareBusy = false;
-          setShareBusy(false);
-        }, 1800);
-      } catch (err) {
-        console.error(err);
-        shareBusy = false;
-        setShareBusy(false);
-        alert("No se pudo intentar el envío directo. Usa Compartir imagen.");
-      }
-    }
-
 
     async function buildReceiptImageCanvas(sale) {
       const scale = window.AndroidBridge ? 1.35 : 2;

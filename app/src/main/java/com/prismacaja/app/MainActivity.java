@@ -207,7 +207,6 @@ public class MainActivity extends Activity {
         return false;
     }
 
-
     private boolean tryOpenImageToJid(Uri uri, String digits, String packageName) {
         try {
             Intent intent = new Intent(Intent.ACTION_SEND);
@@ -215,7 +214,6 @@ public class MainActivity extends Activity {
             intent.putExtra(Intent.EXTRA_STREAM, uri);
 
             // Experimental/no oficial: algunas versiones de WhatsApp respetan este JID.
-            // Si no funciona, la app debe seguir usando Compartir imagen normal.
             intent.putExtra("jid", digits + "@s.whatsapp.net");
 
             intent.setPackage(packageName);
@@ -418,10 +416,8 @@ public class MainActivity extends Activity {
                             if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp")) return;
                             if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp.w4b")) return;
 
-                            Toast.makeText(activity, "WhatsApp no aceptó envío directo. Usa Compartir imagen.", Toast.LENGTH_LONG).show();
                             activity.openImageShare(uri);
                         } catch (Exception e) {
-                            Toast.makeText(activity, "No funcionó directo. Usa Compartir imagen.", Toast.LENGTH_LONG).show();
                             activity.openImageShare(uri);
                         }
                     });
