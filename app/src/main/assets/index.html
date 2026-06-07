@@ -536,7 +536,13 @@
       .card { flex-direction: column; }
       .card-actions { width: 100%; grid-template-columns: 1fr 1fr; }
     }
-  </style>
+  
+    .share-busy {
+      opacity: .62 !important;
+      pointer-events: none !important;
+    }
+
+</style>
 </head>
 <body>
   <main class="app">
@@ -2399,12 +2405,26 @@
       return card;
     }
 
+    let shareBusy = false;
+
+    function setShareBusy(isBusy) {
+      document.querySelectorAll('button[onclick="compartirImagenWhatsApp()"]').forEach(button => {
+        button.classList.toggle("share-busy", isBusy);
+        button.textContent = isBusy ? "Preparando imagen..." : "Compartir imagen";
+      });
+    }
+
     async function compartirImagenWhatsApp() {
+      if (shareBusy) return;
+
       const sale = currentSale();
       if (!sale) {
         toast("No hay boleta seleccionada");
         return;
       }
+
+      shareBusy = true;
+      setShareBusy(true);
 
       try {
         const blob = await buildReceiptImageCanvas(sale);
@@ -2413,10 +2433,17 @@
         if (window.AndroidBridge && typeof window.AndroidBridge.shareImage === "function") {
           const dataUrl = await blobToDataUrl(blob);
           window.AndroidBridge.shareImage(dataUrl, filename);
+
+          setTimeout(() => {
+            shareBusy = false;
+            setShareBusy(false);
+          }, 3200);
+
           return;
         }
 
         const file = new File([blob], filename, { type: "image/png" });
+
         if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file] });
           return;
@@ -2426,6 +2453,11 @@
       } catch (err) {
         console.error(err);
         toast("No se pudo compartir la imagen");
+      } finally {
+        if (!(window.AndroidBridge && typeof window.AndroidBridge.shareImage === "function")) {
+          shareBusy = false;
+          setShareBusy(false);
+        }
       }
     }
 
@@ -2439,7 +2471,7 @@
     }
 
     async function buildReceiptImageCanvas(sale) {
-      const scale = 2;
+      const scale = window.AndroidBridge ? 1.35 : 2;
       const width = 720;
       const margin = 42;
       const items = sale.items || [];

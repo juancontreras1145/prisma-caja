@@ -151,7 +151,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void shareImage(String dataUrl, String fileName) {
-            activity.runOnUiThread(() -> {
+            new Thread(() -> {
                 try {
                     String safeName = fileName == null || fileName.trim().isEmpty()
                             ? "boleta.png"
@@ -179,16 +179,29 @@ public class MainActivity extends Activity {
                             file
                     );
 
-                    Intent intent = new Intent(Intent.ACTION_SEND);
-                    intent.setType("image/png");
-                    intent.putExtra(Intent.EXTRA_STREAM, uri);
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    activity.runOnUiThread(() -> {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_SEND);
+                            intent.setType("image/png");
+                            intent.putExtra(Intent.EXTRA_STREAM, uri);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                    activity.startActivity(Intent.createChooser(intent, "Compartir boleta"));
+                            // Permiso explícito para WhatsApp normal y Business si están instalados.
+                            activity.grantUriPermission("com.whatsapp", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            activity.grantUriPermission("com.whatsapp.w4b", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                            Intent chooser = Intent.createChooser(intent, "Compartir boleta");
+                            activity.startActivity(chooser);
+                        } catch (Exception e) {
+                            Toast.makeText(activity, "No se pudo abrir compartir", Toast.LENGTH_LONG).show();
+                        }
+                    });
                 } catch (Exception e) {
-                    Toast.makeText(activity, "No se pudo compartir la boleta", Toast.LENGTH_LONG).show();
+                    activity.runOnUiThread(() ->
+                            Toast.makeText(activity, "No se pudo preparar la boleta", Toast.LENGTH_LONG).show()
+                    );
                 }
-            });
+            }).start();
         }
     }
 }
