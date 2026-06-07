@@ -1,0 +1,10 @@
+{
+  "name": "Prisma Caja",
+  "short_name": "Prisma",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "orientation": "portrait"
+}
