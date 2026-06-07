@@ -610,6 +610,109 @@
       pointer-events: none !important;
     }
 
+
+    /* Ganancias compacto por pantallas */
+    .profit-slider {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px 2px 12px 2px;
+      margin-top: 12px;
+    }
+
+    .profit-slide {
+      min-width: 100%;
+      scroll-snap-align: start;
+    }
+
+    .profit-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 4px 0;
+    }
+
+    .profit-tab {
+      flex: 1;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: #dfe7f5;
+      border-radius: 999px;
+      padding: 10px 8px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .profit-tab.active {
+      background: linear-gradient(135deg, rgba(0,230,118,.26), rgba(0,163,255,.20));
+      border-color: rgba(0,230,118,.45);
+      color: #ffffff;
+    }
+
+    .profit-mini-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .profit-hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .profit-hero-card {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(0,163,255,.16), rgba(139,92,246,.10));
+      min-height: 100px;
+    }
+
+    .profit-hero-card.green {
+      background: linear-gradient(135deg, rgba(0,230,118,.18), rgba(0,163,255,.10));
+    }
+
+    .profit-hero-card.purple {
+      background: linear-gradient(135deg, rgba(139,92,246,.20), rgba(255,77,109,.10));
+    }
+
+    .profit-hero-card small {
+      display: block;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .profit-hero-card strong {
+      font-size: 23px;
+      color: #fff;
+    }
+
+    .profit-card-compact {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 20px;
+      padding: 16px;
+      background: rgba(255,255,255,.055);
+      margin-top: 12px;
+    }
+
+    .profit-list-compact {
+      display: grid;
+      gap: 12px;
+    }
+
+    .profit-list-item {
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding-bottom: 12px;
+    }
+
+    .profit-list-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
 </style>
 </head>
 <body>
@@ -922,7 +1025,7 @@
           <option value="today">Hoy</option>
           <option value="week">Últimos 7 días</option>
           <option value="month">Este mes</option>
-          <option value="all">Todo</option>
+          <option value="all" selected>Todo</option>
         </select>
         <button class="secondary-action" onclick="renderProfitDashboard()">Actualizar</button>
       </div>
@@ -2421,6 +2524,8 @@
 
       closeModal("profitPinModal");
       openModal("profitModal");
+      const profitRange = document.getElementById("profitRange");
+      if (profitRange) profitRange.value = "all";
       renderProfitDashboard();
     }
 
@@ -2498,115 +2603,241 @@
       const target = document.getElementById("profitDashboard");
       if (!target) return;
 
-      const { start, end, range } = getProfitRangeDates();
-      const sales = getSales().filter(sale => inRange(sale.createdAt, start, end));
-      const paymentEvents = collectPaymentEvents().filter(p => inRange(p.createdAt, start, end));
+      const rangeSelect = document.getElementById("profitRange");
+      if (rangeSelect && !rangeSelect.value) rangeSelect.value = "all";
 
-      const revenue = sales.reduce((sum, sale) => sum + Number(sale.total || 0), 0);
-      const cost = sales.reduce((sum, sale) => sum + getSaleCost(sale), 0);
-      const profit = revenue - cost;
-      const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
-      const collected = paymentEvents.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-      const pending = getSales().reduce((sum, sale) => sum + getSaleRemaining(sale), 0);
+      const range = rangeSelect ? rangeSelect.value : "all";
+      const { start, end } = getProfitRangeDates(range);
+
+      const sales = data.sales.filter(sale => {
+        const time = new Date(sale.createdAt || sale.date || Date.now()).getTime();
+        return time >= start && time <= end;
+      });
+
+      let totalSales = 0;
+      let totalCost = 0;
+      let totalProfit = 0;
+      let collected = 0;
+      let pending = 0;
+      let units = 0;
 
       const productMap = {};
-      sales.forEach(sale => {
-        (sale.items || []).forEach(item => {
-          const key = item.id || item.name;
+      const clientMap = {};
+
+      for (const sale of sales) {
+        const saleTotal = Number(sale.total || 0);
+        const salePaid = Number(sale.paidAmount || 0);
+        const saleBalance = Math.max(0, Number(sale.balance || saleTotal - salePaid));
+
+        totalSales += saleTotal;
+        collected += salePaid;
+        pending += saleBalance;
+
+        const clientName = sale.clientName || "Sin cliente";
+        if (!clientMap[clientName]) {
+          clientMap[clientName] = {
+            name: clientName,
+            sales: 0,
+            paid: 0,
+            pending: 0,
+            profit: 0,
+            count: 0
+          };
+        }
+
+        clientMap[clientName].sales += saleTotal;
+        clientMap[clientName].paid += salePaid;
+        clientMap[clientName].pending += saleBalance;
+        clientMap[clientName].count += 1;
+
+        const items = sale.items || [];
+        for (const item of items) {
+          const qty = Number(item.qty || item.quantity || 1);
+          const price = Number(item.price || 0);
+          const cost = Number(item.cost || productCostByName(item.name) || 0);
+          const subtotal = Number(item.subtotal || price * qty);
+          const itemCost = cost * qty;
+          const itemProfit = subtotal - itemCost;
+
+          units += qty;
+          totalCost += itemCost;
+          totalProfit += itemProfit;
+          clientMap[clientName].profit += itemProfit;
+
+          const key = item.name || "Producto";
           if (!productMap[key]) {
-            productMap[key] = { name: item.name, qty: 0, revenue: 0, cost: 0, profit: 0 };
+            productMap[key] = {
+              name: key,
+              units: 0,
+              sales: 0,
+              cost: 0,
+              profit: 0
+            };
           }
-          const qty = Number(item.qty || 0);
-          const itemRevenue = Number(item.total || 0);
-          const itemCost = getItemUnitCost(item) * qty;
-          productMap[key].qty += qty;
-          productMap[key].revenue += itemRevenue;
+
+          productMap[key].units += qty;
+          productMap[key].sales += subtotal;
           productMap[key].cost += itemCost;
-          productMap[key].profit += itemRevenue - itemCost;
-        });
-      });
+          productMap[key].profit += itemProfit;
+        }
+      }
+
+      const saleCount = sales.length;
+      const margin = totalSales ? (totalProfit / totalSales) * 100 : 0;
+      const averageTicket = saleCount ? totalSales / saleCount : 0;
 
       const products = Object.values(productMap).sort((a, b) => b.profit - a.profit);
-      const topProduct = products[0];
+      const clients = Object.values(clientMap).sort((a, b) => b.profit - a.profit);
 
-      const customerMap = {};
-      sales.forEach(sale => {
-        const key = sale.clientId || sale.clientName || "Cliente";
-        if (!customerMap[key]) {
-          customerMap[key] = { name: sale.clientName || "Cliente", revenue: 0, profit: 0, pending: 0, count: 0 };
-        }
-        customerMap[key].revenue += Number(sale.total || 0);
-        customerMap[key].profit += getSaleProfit(sale);
-        customerMap[key].pending += getSaleRemaining(sale);
-        customerMap[key].count += 1;
-      });
+      const starProduct = products[0];
+      const bestClient = clients[0];
+      const biggestDebt = [...clients].sort((a, b) => b.pending - a.pending)[0];
 
-      const customers = Object.values(customerMap).sort((a, b) => b.profit - a.profit);
-      const debtors = Object.values(customerMap).filter(c => c.pending > 0).sort((a, b) => b.pending - a.pending);
-      const topCustomer = customers[0];
-      const topDebtor = debtors[0];
+      const maxProductProfit = Math.max(1, ...products.map(p => p.profit));
 
-      const maxProductProfit = Math.max(1, ...products.map(p => Math.max(0, p.profit)));
-
-      target.innerHTML = `
-        <div class="profit-grid">
-          ${profitCard("Ganancia", formatMoney(profit), "utilidad bruta", profit >= 0 ? "good" : "bad")}
-          ${profitCard("Ventas", formatMoney(revenue), sales.length + " boleta(s)", "")}
-          ${profitCard("Cobrado", formatMoney(collected), "entró a caja", "good")}
-          ${profitCard("Por cobrar", formatMoney(pending), "saldo pendiente", pending ? "warn" : "good")}
+      const summaryHtml = `
+        <div class="profit-hero-grid">
+          <div class="profit-hero-card purple">
+            <small>Ventas totales</small>
+            <strong>${money(totalSales)}</strong>
+            <div class="profit-mini-note">${saleCount} boleta(s) · ${units} un.</div>
+          </div>
+          <div class="profit-hero-card green">
+            <small>Utilidad descontando costos</small>
+            <strong>${money(totalProfit)}</strong>
+            <div class="profit-mini-note">Costo mercadería ${money(totalCost)}</div>
+          </div>
+          <div class="profit-hero-card green">
+            <small>Cobrado</small>
+            <strong>${money(collected)}</strong>
+            <div class="profit-mini-note">Entró a caja</div>
+          </div>
+          <div class="profit-hero-card">
+            <small>Por cobrar</small>
+            <strong>${money(pending)}</strong>
+            <div class="profit-mini-note">Saldo pendiente</div>
+          </div>
         </div>
 
-        <div class="profit-section">
+        <div class="profit-card-compact">
           <h3>Resumen rápido</h3>
           <div class="profit-row">
             <div>
               <strong>Margen</strong>
-              <small>Ganancia sobre ventas</small>
+              <small>Utilidad / ventas</small>
             </div>
-            <div class="profit-money">${margin.toFixed(1)}%</div>
+            <b>${margin.toFixed(1)}%</b>
+          </div>
+          <div class="profit-row">
+            <div>
+              <strong>Ticket promedio</strong>
+              <small>Venta promedio</small>
+            </div>
+            <b>${money(averageTicket)}</b>
           </div>
           <div class="profit-row">
             <div>
               <strong>Producto estrella</strong>
-              <small>${topProduct ? escapeHtml(topProduct.qty + " unidades vendidas") : "Sin ventas"}</small>
+              <small>${starProduct ? starProduct.units + " unidades vendidas" : "Sin ventas"}</small>
             </div>
-            <div class="profit-money">${topProduct ? escapeHtml(topProduct.name) : "-"}</div>
-          </div>
-          <div class="profit-row">
-            <div>
-              <strong>Mejor cliente</strong>
-              <small>${topCustomer ? escapeHtml(topCustomer.count + " boleta(s)") : "Sin ventas"}</small>
-            </div>
-            <div class="profit-money">${topCustomer ? escapeHtml(topCustomer.name) : "-"}</div>
+            <b>${starProduct ? escapeHtml(starProduct.name) : "-"}</b>
           </div>
           <div class="profit-row">
             <div>
               <strong>Mayor deuda</strong>
-              <small>${topDebtor ? "Pendiente" : "Sin deuda"}</small>
+              <small>Pendiente</small>
             </div>
-            <div class="profit-money">${topDebtor ? escapeHtml(topDebtor.name + " · " + formatMoney(topDebtor.pending)) : "$0"}</div>
+            <b>${biggestDebt && biggestDebt.pending > 0 ? escapeHtml(biggestDebt.name) + " · " + money(biggestDebt.pending) : "-"}</b>
           </div>
         </div>
+      `;
 
-        <div class="profit-section">
+      const productsHtml = `
+        <div class="profit-card-compact">
           <h3>Productos</h3>
-          ${products.length ? products.slice(0, 5).map(p => productProfitRow(p, maxProductProfit)).join("") : '<div class="empty">Sin productos vendidos.</div>'}
-        </div>
-
-        <div class="profit-section">
-          <h3>Clientes</h3>
-          ${customers.length ? customers.slice(0, 5).map(c => `
-            <div class="profit-row">
-              <div>
-                <strong>${escapeHtml(c.name)}</strong>
-                <small>Ventas ${formatMoney(c.revenue)} · Pendiente ${formatMoney(c.pending)}</small>
-              </div>
-              <div class="profit-money">${formatMoney(c.profit)}</div>
+          ${products.length ? `
+            <div class="profit-list-compact">
+              ${products.slice(0, 8).map(product => {
+                const pct = Math.max(4, Math.min(100, (product.profit / maxProductProfit) * 100));
+                const itemMargin = product.sales ? (product.profit / product.sales) * 100 : 0;
+                return `
+                  <div class="profit-list-item">
+                    <div class="profit-row">
+                      <div>
+                        <strong>${escapeHtml(product.name)}</strong>
+                        <small>${product.units} un. · Venta ${money(product.sales)} · Costo ${money(product.cost)} · Margen ${itemMargin.toFixed(1)}%</small>
+                      </div>
+                      <b>${money(product.profit)}</b>
+                    </div>
+                    <div class="bar"><span style="width:${pct}%"></span></div>
+                  </div>
+                `;
+              }).join("")}
             </div>
-          `).join("") : '<div class="empty">Sin clientes en este período.</div>'}
-          <span class="kpi-pill">Rango: ${rangeLabel(range)}</span>
+          ` : '<div class="empty">Aún no hay productos vendidos en este rango.</div>'}
         </div>
       `;
+
+      const clientsHtml = `
+        <div class="profit-card-compact">
+          <h3>Clientes</h3>
+          ${clients.length ? `
+            <div class="profit-list-compact">
+              ${clients.slice(0, 10).map(client => `
+                <div class="profit-list-item">
+                  <div class="profit-row">
+                    <div>
+                      <strong>${escapeHtml(client.name)}</strong>
+                      <small>Ventas ${money(client.sales)} · Cobrado ${money(client.paid)} · Pendiente ${money(client.pending)}</small>
+                    </div>
+                    <b>${money(client.profit)}</b>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : '<div class="empty">Aún no hay clientes en este rango.</div>'}
+        </div>
+      `;
+
+      target.innerHTML = `
+        <div class="profit-tabs">
+          <button class="profit-tab active" onclick="profitGoSlide(0)">Resumen</button>
+          <button class="profit-tab" onclick="profitGoSlide(1)">Productos</button>
+          <button class="profit-tab" onclick="profitGoSlide(2)">Clientes</button>
+        </div>
+
+        <div id="profitSlider" class="profit-slider" onscroll="profitSyncTabs()">
+          <section class="profit-slide">${summaryHtml}</section>
+          <section class="profit-slide">${productsHtml}</section>
+          <section class="profit-slide">${clientsHtml}</section>
+        </div>
+
+        <div class="pill">Rango: ${range === "all" ? "Todo" : range === "today" ? "Hoy" : range === "week" ? "Semana" : "Mes"}</div>
+      `;
+    }
+
+    function profitGoSlide(index) {
+      const slider = document.getElementById("profitSlider");
+      if (!slider) return;
+
+      const width = slider.clientWidth || 1;
+      slider.scrollTo({ left: width * index, behavior: "smooth" });
+
+      document.querySelectorAll(".profit-tab").forEach((tab, i) => {
+        tab.classList.toggle("active", i === index);
+      });
+    }
+
+    function profitSyncTabs() {
+      const slider = document.getElementById("profitSlider");
+      if (!slider) return;
+
+      const width = slider.clientWidth || 1;
+      const index = Math.round(slider.scrollLeft / width);
+
+      document.querySelectorAll(".profit-tab").forEach((tab, i) => {
+        tab.classList.toggle("active", i === index);
+      });
     }
 
 
