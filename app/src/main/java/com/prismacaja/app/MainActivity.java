@@ -12,6 +12,7 @@ import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -65,6 +66,7 @@ public class MainActivity extends Activity {
 
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 intent.setType("application/json");
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
                         "application/json",
@@ -147,8 +149,6 @@ public class MainActivity extends Activity {
                     // La navegación interna la maneja appBack() en JavaScript.
                 }
         );
-    }
-        super.onBackPressed();
     }
 
     private boolean openShareTarget(Intent baseIntent, Uri uri, String packageName) {
