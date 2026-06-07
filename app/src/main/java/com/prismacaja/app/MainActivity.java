@@ -30,10 +30,12 @@ import java.net.URLEncoder;
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int SAVE_JSON_REQUEST = 1002;
+    private static final int SAVE_CSV_REQUEST = 1003;
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private String pendingJsonContent;
+    private String pendingCsvContent;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -294,6 +296,21 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void saveCsvFile(String fileName, String csv) {
+        try {
+            pendingCsvContent = csv;
+
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("text/csv");
+            intent.putExtra(Intent.EXTRA_TITLE, fileName == null ? "prisma-historial.csv" : fileName);
+
+            startActivityForResult(intent, SAVE_CSV_REQUEST);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir guardar CSV", Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent dataIntent) {
         super.onActivityResult(requestCode, resultCode, dataIntent);
@@ -338,6 +355,25 @@ public class MainActivity extends Activity {
             }
 
             pendingJsonContent = null;
+            return;
+        }
+
+        if (requestCode == SAVE_CSV_REQUEST) {
+            if (resultCode == Activity.RESULT_OK && dataIntent != null && dataIntent.getData() != null && pendingCsvContent != null) {
+                try {
+                    Uri uri = dataIntent.getData();
+                    try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                        if (out != null) {
+                            out.write(pendingCsvContent.getBytes("UTF-8"));
+                            Toast.makeText(this, "CSV guardado", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(this, "No se pudo escribir el CSV", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            pendingCsvContent = null;
         }
     }
 
@@ -371,6 +407,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void saveJson(String fileName, String json) {
             activity.runOnUiThread(() -> activity.saveJsonFile(fileName, json));
+        }
+
+        @JavascriptInterface
+        public void saveCsv(String fileName, String csv) {
+            activity.runOnUiThread(() -> activity.saveCsvFile(fileName, csv));
         }
 
         @JavascriptInterface

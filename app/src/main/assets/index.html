@@ -1149,12 +1149,7 @@
         { id: "c3", name: "Claudio Otaiza", phone: "" },
         { id: "c4", name: "Juan", phone: "" }
       ],
-      products: [
-        { id: "chocman", name: "Chocman", price: 350, cost: 0, color: "#8b5a2b" },
-        { id: "mani", name: "Maní", price: 650, cost: 0, color: "#f2c94c" },
-        { id: "bachata", name: "Bachata", price: 400, cost: 0, color: "#eb5757" },
-        { id: "super8", name: "Super 8", price: 400, cost: 0, color: "#ff7a00" }
-      ],
+      products: [],
       movements: [],
       nextReceiptNumber: 1
     };
@@ -1213,11 +1208,13 @@
       }
 
       let products = Array.isArray(imported.products)
-        ? imported.products.map(normalizeProduct)
-        : base.products;
+        ? imported.products.map(normalizeProduct).filter(p => String(p.name || "").trim())
+        : [];
 
       let movements = Array.isArray(imported.movements) ? imported.movements.map(normalizeMovement) : [];
       movements.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      products = removeLegacyDefaultProducts(products);
 
       let maxBoleta = 0;
       movements.forEach(m => {
@@ -1237,7 +1234,7 @@
 
       return {
         clients: clients.length ? clients : base.clients,
-        products: products.length ? products : base.products,
+        products,
         movements,
         nextReceiptNumber
       };
@@ -1540,8 +1537,43 @@
       };
     }
 
+    function isLegacyDefaultProduct(product) {
+      const legacy = {
+        chocman: { name: "chocman", price: 350, color: "#8b5a2b" },
+        mani: { name: "maní", altName: "mani", price: 650, color: "#f2c94c" },
+        bachata: { name: "bachata", price: 400, color: "#eb5757" },
+        super8: { name: "super 8", altName: "super8", price: 400, color: "#ff7a00" }
+      };
+      const id = String(product.id || "").toLowerCase();
+      const item = legacy[id];
+      if (!item) return false;
+
+      const name = normalize(product.name || "");
+      const expectedName = normalize(item.name);
+      const expectedAltName = item.altName ? normalize(item.altName) : "";
+      const price = Number(product.price || 0);
+      const cost = Number(product.cost || 0);
+      const color = String(product.color || "").toLowerCase();
+
+      return (name === expectedName || (expectedAltName && name === expectedAltName))
+        && price === item.price
+        && cost === 0
+        && color === item.color;
+    }
+
+    function removeLegacyDefaultProducts(products) {
+      if (!Array.isArray(products)) return [];
+      return products.filter(product => !isLegacyDefaultProduct(product));
+    }
+
     function renderProducts() {
       const target = document.getElementById("productButtons");
+      if (!data.products.length) {
+        target.innerHTML = '<div class="empty">No hay productos. Agrégalos en Editar &gt; Productos.</div>';
+        updateSelectionUI();
+        return;
+      }
+
       target.innerHTML = data.products.map(product => {
         const qty = selectedCart[product.id] || 0;
         return `
@@ -2335,10 +2367,6 @@
     }
 
     function removeProduct(id) {
-      if (data.products.length <= 1) {
-        toast("Debe quedar al menos un producto");
-        return;
-      }
       if (!confirm("¿Quitar este producto? No borra ventas antiguas.")) return;
       data.products = data.products.filter(product => product.id !== id);
       delete selectedCart[id];
@@ -2447,6 +2475,8 @@
             "",
             "",
             "",
+            "",
+            "Abono",
             m.method || "Efectivo",
             Number(m.amount || 0)
           ]);
@@ -2454,7 +2484,15 @@
       });
 
       const csv = rows.map(row => row.map(csvCell).join(";")).join("\n");
-      downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }), "prisma-historial.csv");
+      const csvContent = "\ufeff" + csv;
+      const filename = "prisma-historial.csv";
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.saveCsv === "function") {
+        window.AndroidBridge.saveCsv(filename, csvContent);
+        return;
+      }
+
+      downloadBlob(new Blob([csvContent], { type: "text/csv;charset=utf-8" }), filename);
       toast("CSV exportado");
     }
 
