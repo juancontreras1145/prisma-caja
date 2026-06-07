@@ -740,6 +740,29 @@
       display: none !important;
     }
 
+
+    /* Eliminar boleta visible pero seguro */
+    .safe-delete-zone {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+
+    .safe-delete-btn {
+      width: 100%;
+      border: 1px solid rgba(255,77,109,.38);
+      background: rgba(255,77,109,.13);
+      color: #ffb4c2;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .history-delete-hidden {
+      display: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -1947,6 +1970,8 @@
     }
 
 
+
+
     function hideHistoryDeleteButtons() {
       const history = document.getElementById("historial") || document.getElementById("history");
       if (!history) return;
@@ -1954,6 +1979,7 @@
       history.querySelectorAll("button").forEach(button => {
         const text = (button.textContent || "").trim();
         const action = button.getAttribute("onclick") || "";
+
         if (text === "×" || /delete|remove|borrar/i.test(action)) {
           if (!/showReceipt|Boleta/i.test(action)) {
             button.classList.add("history-delete-hidden");
@@ -2005,6 +2031,8 @@
       }
       setTimeout(hideHistoryDeleteButtons, 0);
 
+      setTimeout(hideHistoryDeleteButtons, 0);
+
     }
 
     function renderHistoryGroup(group, movements) {
@@ -2054,7 +2082,7 @@
             </div>
             <div class="card-actions">
               <button class="share-btn" onclick="showReceipt('${escapeJs(m.id)}')">Boleta</button>
-              <button class="delete" onclick="deleteMovement('${escapeJs(m.id)}')">×</button>
+              <span class="history-delete-hidden"><button class="delete" onclick="deleteMovement('${escapeJs(m.id)}')">×</button></span>
             </div>
           </div>
         `;
@@ -2073,7 +2101,7 @@
             <br><span class="badge paid">Abono</span>
           </div>
           <div class="card-actions">
-            <button class="delete" onclick="deleteMovement('${escapeJs(m.id)}')">×</button>
+            <span class="history-delete-hidden"><button class="delete" onclick="deleteMovement('${escapeJs(m.id)}')">×</button></span>
           </div>
         </div>
       `;
@@ -2234,7 +2262,7 @@
               ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
               ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
               <button class="icon-btn" onclick="openClientEdit('${escapeJs(client.id)}')">${editLabel}</button>
-              <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button>
+              <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button></span>
             </div>
           </div>
         `;
@@ -2337,7 +2365,7 @@
           </div>
           <div class="compact-actions">
             <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">×</button>
+            <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">×</button></span>
           </div>
         </div>
       `).join("");
@@ -2915,9 +2943,11 @@
 
 
 
+
+
+
     function safeDeleteReceiptFromList(id) {
-      // El borrado desde la lista queda desactivado para evitar toques accidentales.
-      alert("Para borrar una boleta, abre la boleta y usa el botón Eliminar boleta al final.");
+      alert("Para borrar una boleta, abre la boleta y toca Eliminar boleta debajo de Cerrar.");
     }
 
     function safeDeleteCurrentReceipt() {
@@ -2958,6 +2988,22 @@
       alert("Boleta eliminada.");
     }
 
+    function ensureReceiptDeleteButton() {
+      const modal = document.getElementById("receiptModal");
+      if (!modal) return;
+
+      const sheet = modal.querySelector(".sheet") || modal.querySelector(".modal-card") || modal;
+      if (!sheet) return;
+
+      if (sheet.querySelector(".safe-delete-zone")) return;
+
+      const zone = document.createElement("div");
+      zone.className = "safe-delete-zone";
+      zone.innerHTML = '<button class="safe-delete-btn" onclick="safeDeleteCurrentReceipt()">Eliminar boleta</button>';
+
+      sheet.appendChild(zone);
+    }
+
 
     function showReceipt(id) {
       const sale = getSaleById(id);
@@ -2970,6 +3016,7 @@
       target.innerHTML = "";
       target.appendChild(createReceiptNode(sale));
       openModal("receiptModal");
+      ensureReceiptDeleteButton();
     }
 
     function currentSale() {
