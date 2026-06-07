@@ -3,12 +3,14 @@ package com.prismacaja.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -22,7 +24,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class MainActivity extends Activity {
+    private static final int FILE_CHOOSER_REQUEST = 1001;
+
     private WebView webView;
+    private ValueCallback<Uri[]> filePathCallback;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -33,20 +38,52 @@ public class MainActivity extends Activity {
 
         webView = new WebView(this);
         setContentView(webView);
-        hideSystemBars();
+        setupBars();
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
-
-        // Más simple y estable: carga directo desde assets.
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
-        webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient());
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(
+                    WebView webView,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams
+            ) {
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+
+                MainActivity.this.filePathCallback = filePathCallback;
+
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("application/json");
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                        "application/json",
+                        "text/json",
+                        "text/plain",
+                        "*/*"
+                });
+
+                try {
+                    startActivityForResult(Intent.createChooser(intent, "Seleccionar respaldo JSON"), FILE_CHOOSER_REQUEST);
+                } catch (Exception e) {
+                    MainActivity.this.filePathCallback = null;
+                    Toast.makeText(MainActivity.this, "No se pudo abrir el selector de archivos", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+
+                return true;
+            }
+        });
 
         webView.addJavascriptInterface(new AndroidBridge(this), "AndroidBridge");
         webView.loadUrl("file:///android_asset/index.html");
@@ -55,24 +92,45 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        hideSystemBars();
+        setupBars();
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) hideSystemBars();
+        if (hasFocus) setupBars();
     }
 
-    private void hideSystemBars() {
-        // No ocultamos la barra inferior de Android.
-        // Así quedan visibles Atrás / Inicio / Recientes.
-        getWindow().setStatusBarColor(android.graphics.Color.parseColor("#07111f"));
-        getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#07111f"));
+    private void setupBars() {
+        // Dejamos visible la barra inferior de Android.
+        getWindow().setStatusBarColor(Color.parseColor("#07111f"));
+        getWindow().setNavigationBarColor(Color.parseColor("#07111f"));
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
 
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        );
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent dataIntent) {
+        super.onActivityResult(requestCode, resultCode, dataIntent);
+
+        if (requestCode == FILE_CHOOSER_REQUEST) {
+            if (filePathCallback == null) return;
+
+            Uri[] results = null;
+
+            if (resultCode == Activity.RESULT_OK && dataIntent != null) {
+                Uri uri = dataIntent.getData();
+                if (uri != null) {
+                    results = new Uri[]{uri};
+                    getContentResolver().takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    );
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+        }
     }
 
     @Override
@@ -126,8 +184,7 @@ public class MainActivity extends Activity {
                     intent.putExtra(Intent.EXTRA_STREAM, uri);
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                    Intent chooser = Intent.createChooser(intent, "Compartir boleta");
-                    activity.startActivity(chooser);
+                    activity.startActivity(Intent.createChooser(intent, "Compartir boleta"));
                 } catch (Exception e) {
                     Toast.makeText(activity, "No se pudo compartir la boleta", Toast.LENGTH_LONG).show();
                 }

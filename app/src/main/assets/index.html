@@ -695,6 +695,7 @@
         <p class="edit-help">Guarda un JSON para recuperar clientes, productos, costos, boletas y abonos.</p>
         <button class="secondary-action" onclick="guardarRespaldoJSON()">Guardar respaldo JSON</button>
         <button class="secondary-action" onclick="compartirRespaldoJSON()">Compartir respaldo JSON</button>
+        <button class="secondary-action" onclick="document.getElementById('importJsonInput').click()">Cargar respaldo JSON</button>
         <input id="importJsonInput" type="file" accept="application/json,.json" style="display:none" onchange="cargarRespaldoJSON(event)" />
       </div>
 
@@ -853,19 +854,7 @@
       </div>
 
       <div id="profitDashboard"></div>
-
-      <div id="initialImportBox" class="profit-section">
-        <h3>Importación inicial</h3>
-        <div class="profit-row">
-          <div>
-            <strong>Importar JSON una sola vez</strong>
-            <small>Usa esto para pasar los datos antiguos al APK. Después quedará bloqueado.</small>
-          </div>
-        </div>
-        <button id="initialImportBtn" class="secondary-action" onclick="openInitialJsonImport()">Importar JSON inicial</button>
-      </div>
-
-      <button class="secondary-action" onclick="closeModal('profitModal')">Cerrar</button>
+<button class="secondary-action" onclick="closeModal('profitModal')">Cerrar</button>
     </div>
   </div>
 
@@ -2059,43 +2048,9 @@
     }
 
 
-    function refreshInitialImportBox() {
-      const box = document.getElementById("initialImportBox");
-      const btn = document.getElementById("initialImportBtn");
-      if (!box || !btn) return;
-
-      const used = localStorage.getItem("prismaCajaJsonImportado") === "1";
-      if (used) {
-        btn.disabled = true;
-        btn.textContent = "JSON inicial ya importado";
-        box.style.opacity = "0.6";
-      } else {
-        btn.disabled = false;
-        btn.textContent = "Importar JSON inicial";
-        box.style.opacity = "1";
-      }
-    }
-
-    function openInitialJsonImport() {
-      if (localStorage.getItem("prismaCajaJsonImportado") === "1") {
-        alert("La importación inicial ya fue usada en esta app.");
-        return;
-      }
-
-      const input = document.getElementById("importJsonInput");
-      if (input) input.click();
-    }
-
-
     function cargarRespaldoJSON(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
-
-      if (localStorage.getItem("prismaCajaJsonImportado") === "1") {
-        alert("La importación inicial ya fue usada. Los datos nuevos quedan guardados dentro de la app.");
-        event.target.value = "";
-        return;
-      }
 
       const reader = new FileReader();
 
@@ -2104,19 +2059,20 @@
           const parsed = JSON.parse(String(reader.result || "{}"));
           const imported = parsed.data || parsed;
 
+          if (!imported || typeof imported !== "object") {
+            throw new Error("JSON vacío");
+          }
+
           data = normalizeLoadedData(imported);
           if (typeof renumberReceipts === "function") renumberReceipts();
           persist();
-
-          localStorage.setItem("prismaCajaJsonImportado", "1");
-          refreshInitialImportBox();
 
           if (typeof renderEditClients === "function") renderEditClients();
           if (typeof renderEditProducts === "function") renderEditProducts();
           if (typeof renderHistory === "function") renderHistory();
           if (typeof renderProfitDashboard === "function") renderProfitDashboard();
 
-          alert("Datos importados correctamente. Desde ahora la app guardará todo dentro del APK.");
+          alert("Respaldo JSON cargado correctamente.");
         } catch (err) {
           console.error(err);
           alert("No se pudo cargar el respaldo. Revisa que sea un JSON válido de Prisma Caja.");
@@ -2159,7 +2115,7 @@
     }
 
     function submitProfitPin() {
-      if (profitPinValue !== "4511") {
+      if (profitPinValue !== "1145") {
         profitPinValue = "";
         updateProfitPinDisplay();
         toast("Clave incorrecta");
@@ -2169,7 +2125,6 @@
       closeModal("profitPinModal");
       openModal("profitModal");
       renderProfitDashboard();
-      refreshInitialImportBox();
     }
 
 
