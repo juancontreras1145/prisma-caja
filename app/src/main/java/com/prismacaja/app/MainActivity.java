@@ -212,6 +212,31 @@ public class MainActivity extends Activity {
         return false;
     }
 
+
+    private boolean tryOpenImageToJid(Uri uri, String digits, String packageName) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("image/png");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+
+            // Método no oficial: WhatsApp a veces respeta el JID del contacto.
+            // Si no lo respeta, puede abrir selector o fallar.
+            intent.putExtra("jid", digits + "@s.whatsapp.net");
+
+            intent.setPackage(packageName);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+
+        return false;
+    }
+
     private void openImageShare(Uri uri) {
         Intent baseIntent = new Intent(Intent.ACTION_SEND);
         baseIntent.setType("image/png");
@@ -278,6 +303,59 @@ public class MainActivity extends Activity {
         public void openWhatsapp(String phone, String text) {
             activity.runOnUiThread(() -> activity.openWhatsappNumber(phone, text));
         }
+
+
+        @JavascriptInterface
+        public void shareImageToPhone(String dataUrl, String fileName, String phone) {
+            new Thread(() -> {
+                try {
+                    String safeName = fileName == null || fileName.trim().isEmpty()
+                            ? "boleta.png"
+                            : fileName.replaceAll("[^a-zA-Z0-9._-]", "-");
+
+                    String base64 = dataUrl;
+                    int comma = dataUrl.indexOf(",");
+                    if (comma >= 0) {
+                        base64 = dataUrl.substring(comma + 1);
+                    }
+
+                    byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+
+                    File dir = new File(activity.getCacheDir(), "receipts");
+                    if (!dir.exists()) dir.mkdirs();
+
+                    File file = new File(dir, safeName);
+                    try (FileOutputStream out = new FileOutputStream(file)) {
+                        out.write(bytes);
+                    }
+
+                    Uri uri = FileProvider.getUriForFile(
+                            activity,
+                            activity.getPackageName() + ".fileprovider",
+                            file
+                    );
+
+                    String digits = activity.normalizePhone(phone);
+
+                    activity.runOnUiThread(() -> {
+                        try {
+                            if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp")) return;
+                            if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp.w4b")) return;
+
+                            // Si WhatsApp no acepta destino directo, cae al compartir normal.
+                            activity.openImageShare(uri);
+                        } catch (Exception e) {
+                            activity.openImageShare(uri);
+                        }
+                    });
+                } catch (Exception e) {
+                    activity.runOnUiThread(() ->
+                            Toast.makeText(activity, "No se pudo preparar la boleta", Toast.LENGTH_LONG).show()
+                    );
+                }
+            }).start();
+        }
+
 
         @JavascriptInterface
         public void shareImage(String dataUrl, String fileName) {
