@@ -24,13 +24,16 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
+    private static final int SAVE_JSON_REQUEST = 1002;
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
+    private String pendingJsonContent;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -79,7 +82,7 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-                intent.setType("application/json");
+                intent.setType("*/*");
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
                         "application/json",
                         "text/json",
@@ -107,12 +110,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         setupBars();
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) setupBars();
     }
 
     private void setupBars() {
@@ -158,8 +155,7 @@ public class MainActivity extends Activity {
         if (tryOpenPackage(uri, "com.whatsapp.w4b")) return;
 
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(intent);
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
         } catch (Exception e) {
             Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
         }
@@ -188,8 +184,7 @@ public class MainActivity extends Activity {
                 encoded = "?text=" + URLEncoder.encode(text, "UTF-8").replace("+", "%20");
             }
 
-            Uri uri = Uri.parse("https://wa.me/" + digits + encoded);
-            openExternalWhatsapp(uri);
+            openExternalWhatsapp(Uri.parse("https://wa.me/" + digits + encoded));
         } catch (Exception e) {
             Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
         }
@@ -212,31 +207,6 @@ public class MainActivity extends Activity {
         return false;
     }
 
-
-    private boolean tryOpenImageToJid(Uri uri, String digits, String packageName) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("image/png");
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-
-            // Método no oficial: WhatsApp a veces respeta el JID del contacto.
-            // Si no lo respeta, puede abrir selector o fallar.
-            intent.putExtra("jid", digits + "@s.whatsapp.net");
-
-            intent.setPackage(packageName);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                startActivity(intent);
-                return true;
-            }
-        } catch (Exception ignored) {
-        }
-
-        return false;
-    }
-
     private void openImageShare(Uri uri) {
         Intent baseIntent = new Intent(Intent.ACTION_SEND);
         baseIntent.setType("image/png");
@@ -247,6 +217,58 @@ public class MainActivity extends Activity {
         if (openShareTarget(baseIntent, uri, "com.whatsapp.w4b")) return;
 
         startActivity(Intent.createChooser(baseIntent, "Compartir boleta"));
+    }
+
+    private File writeCacheFile(String folderName, String fileName, String content) throws Exception {
+        String safeName = fileName == null || fileName.trim().isEmpty()
+                ? "respaldo-prisma.json"
+                : fileName.replaceAll("[^a-zA-Z0-9._-]", "-");
+
+        File dir = new File(getCacheDir(), folderName);
+        if (!dir.exists()) dir.mkdirs();
+
+        File file = new File(dir, safeName);
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            out.write(content.getBytes("UTF-8"));
+        }
+
+        return file;
+    }
+
+    private void shareJsonFile(String fileName, String json) {
+        try {
+            File file = writeCacheFile("json", fileName, json);
+
+            Uri uri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    file
+            );
+
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            startActivity(Intent.createChooser(intent, "Compartir respaldo JSON"));
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo compartir el JSON", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void saveJsonFile(String fileName, String json) {
+        try {
+            pendingJsonContent = json;
+
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_TITLE, fileName == null ? "respaldo-prisma.json" : fileName);
+
+            startActivityForResult(intent, SAVE_JSON_REQUEST);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir guardar JSON", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -274,6 +296,25 @@ public class MainActivity extends Activity {
 
             filePathCallback.onReceiveValue(results);
             filePathCallback = null;
+            return;
+        }
+
+        if (requestCode == SAVE_JSON_REQUEST) {
+            if (resultCode == Activity.RESULT_OK && dataIntent != null && dataIntent.getData() != null && pendingJsonContent != null) {
+                try {
+                    Uri uri = dataIntent.getData();
+                    try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                        if (out != null) {
+                            out.write(pendingJsonContent.getBytes("UTF-8"));
+                            Toast.makeText(this, "JSON guardado", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(this, "No se pudo escribir el JSON", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            pendingJsonContent = null;
         }
     }
 
@@ -304,58 +345,15 @@ public class MainActivity extends Activity {
             activity.runOnUiThread(() -> activity.openWhatsappNumber(phone, text));
         }
 
-
         @JavascriptInterface
-        public void shareImageToPhone(String dataUrl, String fileName, String phone) {
-            new Thread(() -> {
-                try {
-                    String safeName = fileName == null || fileName.trim().isEmpty()
-                            ? "boleta.png"
-                            : fileName.replaceAll("[^a-zA-Z0-9._-]", "-");
-
-                    String base64 = dataUrl;
-                    int comma = dataUrl.indexOf(",");
-                    if (comma >= 0) {
-                        base64 = dataUrl.substring(comma + 1);
-                    }
-
-                    byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
-
-                    File dir = new File(activity.getCacheDir(), "receipts");
-                    if (!dir.exists()) dir.mkdirs();
-
-                    File file = new File(dir, safeName);
-                    try (FileOutputStream out = new FileOutputStream(file)) {
-                        out.write(bytes);
-                    }
-
-                    Uri uri = FileProvider.getUriForFile(
-                            activity,
-                            activity.getPackageName() + ".fileprovider",
-                            file
-                    );
-
-                    String digits = activity.normalizePhone(phone);
-
-                    activity.runOnUiThread(() -> {
-                        try {
-                            if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp")) return;
-                            if (!digits.isEmpty() && activity.tryOpenImageToJid(uri, digits, "com.whatsapp.w4b")) return;
-
-                            // Si WhatsApp no acepta destino directo, cae al compartir normal.
-                            activity.openImageShare(uri);
-                        } catch (Exception e) {
-                            activity.openImageShare(uri);
-                        }
-                    });
-                } catch (Exception e) {
-                    activity.runOnUiThread(() ->
-                            Toast.makeText(activity, "No se pudo preparar la boleta", Toast.LENGTH_LONG).show()
-                    );
-                }
-            }).start();
+        public void saveJson(String fileName, String json) {
+            activity.runOnUiThread(() -> activity.saveJsonFile(fileName, json));
         }
 
+        @JavascriptInterface
+        public void shareJson(String fileName, String json) {
+            activity.runOnUiThread(() -> activity.shareJsonFile(fileName, json));
+        }
 
         @JavascriptInterface
         public void shareImage(String dataUrl, String fileName) {

@@ -845,7 +845,7 @@
   <div id="receiptModal" class="modal">
     <div class="sheet">
       <h2>Boleta</h2>
-      <p class="muted">Intento directo al cliente: si WhatsApp no lo permite, se abrirá para elegir contacto.</p>
+      <p class="muted">Comparte solo la imagen de la boleta. No se enviará texto debajo de la foto.</p>
 
       <div class="receipt-preview-wrap">
         <div id="receiptPreview"></div>
@@ -2224,30 +2224,44 @@
     function guardarRespaldoJSON() {
       try {
         const json = JSON.stringify(crearPayloadRespaldo(), null, 2);
-        downloadBlob(new Blob([json], { type: "application/json;charset=utf-8" }), nombreArchivoRespaldo());
+        const filename = nombreArchivoRespaldo();
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveJson === "function") {
+          window.AndroidBridge.saveJson(filename, json);
+          return;
+        }
+
+        downloadBlob(new Blob([json], { type: "application/json;charset=utf-8" }), filename);
         toast("Respaldo JSON generado");
       } catch (err) {
         console.error(err);
-        toast("No se pudo guardar el respaldo");
+        alert("No se pudo guardar el respaldo JSON.");
       }
     }
 
     async function compartirRespaldoJSON() {
       try {
         const json = JSON.stringify(crearPayloadRespaldo(), null, 2);
-        const file = new File([new Blob([json], { type: "application/json;charset=utf-8" })], nombreArchivoRespaldo(), { type: "application/json" });
+        const filename = nombreArchivoRespaldo();
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.shareJson === "function") {
+          window.AndroidBridge.shareJson(filename, json);
+          return;
+        }
+
+        const file = new File([new Blob([json], { type: "application/json;charset=utf-8" })], filename, { type: "application/json" });
         if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
           await navigator.share({ title: "Respaldo Prisma", files: [file] });
           toast("Respaldo compartido");
           return;
         }
+
         guardarRespaldoJSON();
       } catch (err) {
         console.error(err);
         guardarRespaldoJSON();
       }
     }
-
 
     function cargarRespaldoJSON(event) {
       const file = event.target.files && event.target.files[0];
@@ -2609,22 +2623,6 @@
       });
     }
 
-
-    function phoneForSale(sale) {
-      if (!sale) return "";
-
-      const direct = sale.clientPhone || sale.phone || sale.whatsapp || "";
-      if (direct) return sanitizePhone(direct);
-
-      const client = data.clients.find(c =>
-        c.id === sale.clientId ||
-        normalize(c.name) === normalize(sale.clientName || "")
-      );
-
-      return client && client.phone ? sanitizePhone(client.phone) : "";
-    }
-
-
     let shareBusy = false;
 
     function setShareBusy(isBusy) {
@@ -2649,19 +2647,6 @@
       try {
         const blob = await buildReceiptImageCanvas(sale);
         const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
-        const phone = phoneForSale(sale);
-
-        if (window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function" && phone) {
-          const dataUrl = await blobToDataUrl(blob);
-          window.AndroidBridge.shareImageToPhone(dataUrl, filename, phone);
-
-          setTimeout(() => {
-            shareBusy = false;
-            setShareBusy(false);
-          }, 1800);
-
-          return;
-        }
 
         if (window.AndroidBridge && typeof window.AndroidBridge.shareImage === "function") {
           const dataUrl = await blobToDataUrl(blob);
