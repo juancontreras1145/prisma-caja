@@ -714,6 +714,65 @@
       padding-bottom: 0;
     }
 
+    .product:disabled {
+      opacity: .48;
+      filter: grayscale(.25);
+      cursor: not-allowed;
+    }
+
+    .inventory-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .inventory-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 128px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .inventory-row strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .inventory-row small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .inventory-controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .inventory-controls input {
+      width: 100%;
+      padding: 12px 10px;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .inventory-controls button {
+      border: 1px solid rgba(0,230,118,.30);
+      background: rgba(0,230,118,.12);
+      color: #d8fff0;
+      border-radius: 14px;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
 
     /* Borrado seguro de boletas */
     .safe-delete-zone {
@@ -1359,7 +1418,9 @@
             qty: Number(item.qty || 1),
             price: Number(item.price || 0),
             cost: Math.max(0, Number(item.cost || 0)),
-            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1)))
+            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1))),
+            stockBefore: normalizeStockValue(item.stockBefore ?? null),
+            stockAfter: normalizeStockValue(item.stockAfter ?? null)
           })) : [],
           total,
           status: m.status || (amountPaid >= total ? "pagado" : "fiado"),
@@ -1640,8 +1701,36 @@
         name: String(product.name || "Producto"),
         price: Math.max(0, Number(product.price || 0)),
         cost: Math.max(0, Number(product.cost || product.unitCost || product.purchasePrice || 0)),
-        color: product.color || cssColors[product.css] || "#2f80ed"
+        color: product.color || cssColors[product.css] || "#2f80ed",
+        stock: normalizeStockValue(product.stock ?? product.inventory ?? product.qtyStock ?? product.quantityStock ?? null)
       };
+    }
+
+    function normalizeStockValue(value) {
+      if (value === null || value === undefined || value === "") return null;
+      const n = Number(value);
+      if (!Number.isFinite(n)) return null;
+      return Math.max(0, Math.floor(n));
+    }
+
+    function productStock(product) {
+      if (!product) return null;
+      return normalizeStockValue(product.stock);
+    }
+
+    function productHasStockControl(product) {
+      return productStock(product) !== null;
+    }
+
+    function stockInputId(productId) {
+      return "stock-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function stockLabel(product) {
+      const stock = productStock(product);
+      if (stock === null) return "Sin stock definido";
+      if (stock <= 0) return "Sin stock";
+      return "Stock: " + stock + " un.";
     }
 
     function isLegacyDefaultProduct(product) {
@@ -1708,9 +1797,15 @@
 
       target.innerHTML = data.products.map(product => {
         const qty = selectedCart[product.id] || 0;
+        const stock = productStock(product);
+        const limited = stock !== null;
+        const noStock = limited && stock <= 0;
+        const reachedStock = limited && qty >= stock;
+        const disabled = noStock || reachedStock;
+        const stockText = limited ? `<br><small>${stock <= 0 ? "Sin stock" : "Stock " + stock}</small>` : "";
         return `
-          <button class="product ${qty ? "selected" : ""}" style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
-            <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small></span>
+          <button class="product ${qty ? "selected" : ""}" ${disabled ? "disabled" : ""} style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
+            <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small>${stockText}</span>
             ${qty ? `<b class="qty-badge">×${qty}</b>` : ""}
           </button>
         `;
@@ -1719,7 +1814,15 @@
     }
 
     function addProductToSelection(id) {
-      selectedCart[id] = (selectedCart[id] || 0) + 1;
+      const product = data.products.find(p => p.id === id);
+      if (!product) return;
+      const stock = productStock(product);
+      const currentQty = selectedCart[id] || 0;
+      if (stock !== null && currentQty >= stock) {
+        toast("No queda más stock de " + product.name);
+        return;
+      }
+      selectedCart[id] = currentQty + 1;
       renderProducts();
     }
 
@@ -1732,6 +1835,7 @@
           price: Number(product.price || 0),
           cost: Math.max(0, Number(product.cost || 0)),
           color: product.color,
+          stock: productStock(product),
           qty: selectedCart[product.id],
           total: Number(product.price || 0) * selectedCart[product.id]
         }));
@@ -1757,7 +1861,10 @@
         return;
       }
 
-      itemsTarget.innerHTML = items.map(item => `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`).join("");
+      itemsTarget.innerHTML = items.map(item => {
+        const stockNote = item.stock !== null ? ` · quedan ${Math.max(0, item.stock - item.qty)}` : "";
+        return `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}${stockNote}</div>`;
+      }).join("");
       totalTarget.textContent = formatMoney(getSelectedTotal());
       chooseBtn.disabled = false;
       clearBtn.disabled = false;
@@ -1860,10 +1967,46 @@
       document.getElementById("saleTransferBtn").classList.toggle("selected", method === "Transferencia");
     }
 
+    function validateStockForSale(items) {
+      for (const item of items) {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (stock !== null && Number(item.qty || 0) > stock) {
+          return { product: product || item, stock, qty: Number(item.qty || 0) };
+        }
+      }
+      return null;
+    }
+
+    function discountStockForSale(items) {
+      items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (!product || stock === null) return;
+        product.stock = Math.max(0, stock - Number(item.qty || 0));
+      });
+    }
+
+    function restoreStockForSale(sale) {
+      if (!sale || !Array.isArray(sale.items)) return;
+      sale.items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id)
+          || data.products.find(p => normalize(p.name) === normalize(item.name));
+        if (!product || !productHasStockControl(product)) return;
+        product.stock = Math.max(0, Number(productStock(product) || 0) + Number(item.qty || 0));
+      });
+    }
+
     function saveSale() {
       const items = getSelectedItems();
       if (!items.length) {
         toast("No hay productos seleccionados");
+        return;
+      }
+
+      const stockProblem = validateStockForSale(items);
+      if (stockProblem) {
+        toast(`${stockProblem.product.name || "Producto"}: stock ${stockProblem.stock}, seleccionado ${stockProblem.qty}`);
         return;
       }
 
@@ -1884,7 +2027,9 @@
           qty: item.qty,
           price: item.price,
           cost: item.cost,
-          total: item.total
+          total: item.total,
+          stockBefore: item.stock,
+          stockAfter: item.stock === null ? null : Math.max(0, Number(item.stock || 0) - Number(item.qty || 0))
         })),
         total,
         status: selectedSaleStatus,
@@ -1902,6 +2047,7 @@
         day: now.toISOString().slice(0, 10)
       };
 
+      discountStockForSale(items);
       data.movements.unshift(newSale);
 
       persist();
@@ -2297,6 +2443,7 @@
       }
 
       if (movement.type === "venta") {
+        restoreStockForSale(movement);
         data.movements = data.movements.filter(m => {
           if (m.type !== "abono") return true;
           if (!Array.isArray(m.applied)) return true;
@@ -2543,7 +2690,8 @@
         name,
         price,
         cost,
-        color
+        color,
+        stock: null
       });
 
       nameInput.value = "";
@@ -2577,7 +2725,7 @@
         <div class="compact-row">
           <div>
             <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
-            <small>Venta ${formatMoney(product.price || 0)} · Costo ${formatMoney(product.cost || 0)} · Gana ${formatMoney(Number(product.price || 0) - Number(product.cost || 0))}</small>
+            <small>Venta ${formatMoney(product.price || 0)} · Costo ${formatMoney(product.cost || 0)} · Gana ${formatMoney(Number(product.price || 0) - Number(product.cost || 0))} · ${stockLabel(product)}</small>
           </div>
           <div class="compact-actions">
             <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
@@ -3147,21 +3295,115 @@
         </div>
       `;
 
+      const inventoryHtml = renderInventoryDashboardHtml(products);
+
       target.innerHTML = `
         <div class="profit-tabs">
           <button class="profit-tab active" onclick="profitGoSlide(0)">Resumen</button>
           <button class="profit-tab" onclick="profitGoSlide(1)">Productos</button>
           <button class="profit-tab" onclick="profitGoSlide(2)">Clientes</button>
+          <button class="profit-tab" onclick="profitGoSlide(3)">Inventario</button>
         </div>
 
         <div id="profitSlider" class="profit-slider" onscroll="profitSyncTabs()">
           <section class="profit-slide">${summaryHtml}</section>
           <section class="profit-slide">${productsHtml}</section>
           <section class="profit-slide">${clientsHtml}</section>
+          <section class="profit-slide">${inventoryHtml}</section>
         </div>
 
         <div class="pill">Rango: ${range === "all" ? "Todo" : range === "today" ? "Hoy" : range === "week" ? "Semana" : "Mes"}</div>
       `;
+    }
+
+    function getSoldUnitsForProduct(product) {
+      const productId = product.id;
+      const productName = normalize(product.name || "");
+      return getSales().reduce((sum, sale) => {
+        return sum + (sale.items || []).reduce((inner, item) => {
+          const sameId = item.id && productId && item.id === productId;
+          const sameName = normalize(item.name || "") === productName;
+          return inner + ((sameId || sameName) ? Number(item.qty || 0) : 0);
+        }, 0);
+      }, 0);
+    }
+
+    function renderInventoryDashboardHtml() {
+      const products = data.products || [];
+      if (!products.length) {
+        return `
+          <div class="profit-card-compact">
+            <h3>Inventario</h3>
+            <div class="empty">No hay productos. Agrega productos en Editar > Productos y después define el stock aquí.</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="profit-card-compact">
+          <h3>Inventario</h3>
+          <p class="profit-mini-note">Escribe el stock actual de cada producto. Al guardar una venta se descuenta automáticamente.</p>
+          <div class="inventory-list">
+            ${products.map(product => {
+              const stock = productStock(product);
+              const inputId = stockInputId(product.id);
+              const sold = getSoldUnitsForProduct(product);
+              return `
+                <div class="inventory-row">
+                  <div>
+                    <strong>${escapeHtml(product.name)}</strong>
+                    <small>${stockLabel(product)} · Vendidas ${sold} un.</small>
+                  </div>
+                  <div class="inventory-controls">
+                    <input id="${escapeAttr(inputId)}" type="number" min="0" step="1" value="${stock === null ? "" : stock}" placeholder="Stock" />
+                    <button onclick="saveProductStock('${escapeJs(product.id)}')">Guardar</button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <button class="secondary-action" onclick="saveAllProductStocks()">Guardar todo el inventario</button>
+        </div>
+      `;
+    }
+
+    function saveProductStock(id, options = {}) {
+      const product = data.products.find(p => p.id === id);
+      if (!product) return false;
+      const input = document.getElementById(stockInputId(id));
+      if (!input) return false;
+      const raw = String(input.value || "").trim();
+      if (raw === "") {
+        product.stock = null;
+      } else {
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n < 0) {
+          toast("Stock inválido para " + product.name);
+          return false;
+        }
+        product.stock = Math.max(0, Math.floor(n));
+      }
+
+      if (!options.silent) {
+        persist();
+        renderProducts();
+        renderEditProducts();
+        renderProfitDashboard();
+        setTimeout(() => profitGoSlide(3), 0);
+        toast("Stock actualizado");
+      }
+      return true;
+    }
+
+    function saveAllProductStocks() {
+      const ok = (data.products || []).every(product => saveProductStock(product.id, { silent: true }));
+      if (!ok) return;
+      persist();
+      renderProducts();
+      renderEditProducts();
+      renderProfitDashboard();
+      setTimeout(() => profitGoSlide(3), 0);
+      toast("Inventario guardado");
     }
 
     function profitGoSlide(index) {
@@ -3233,16 +3475,7 @@
 
       if (!ok) return;
 
-      if (Array.isArray(data.movements)) {
-        data.movements = data.movements.filter(m => m.id !== sale.id);
-      }
-
-      if (Array.isArray(data.sales)) {
-        data.sales = data.sales.filter(m => m.id !== sale.id);
-      }
-
-      if (typeof renumberReceipts === "function") renumberReceipts();
-      persist();
+      deleteMovement(sale.id);
 
       closeModal("receiptModal");
       closeModal("afterSaleModal");
