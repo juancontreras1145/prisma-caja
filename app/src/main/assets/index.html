@@ -61,47 +61,101 @@
     .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .stat { border: 1px solid var(--line); background: var(--card); border-radius: 18px; padding: 13px; }
 
-    .mascot-area { position: relative; min-height: 220px; margin-top: 22px; overflow: hidden; border-radius: 28px; }
-    .mascot-stage { position: absolute; left: 0; right: 0; bottom: 0; top: 0; opacity: 1; transition: opacity .35s ease; }
-    .mascot-stage.is-hidden { opacity: 0; }
-    .mascot-floor { position: absolute; left: 12px; right: 12px; bottom: 10px; height: 58px; border-radius: 999px; background: radial-gradient(circle at center, rgba(40,199,111,.18), rgba(47,128,237,.06) 60%, transparent 76%); filter: blur(2px); }
-    .mascot-cat { position: absolute; left: 24px; bottom: 20px; width: 136px; height: 136px; object-fit: contain; filter: drop-shadow(0 18px 22px rgba(0,0,0,.34)); transform-origin: bottom center; }
-    .mascot-bubble { position: absolute; top: 10px; right: 12px; max-width: 220px; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: var(--text); font-size: 14px; font-weight: 800; line-height: 1.35; backdrop-filter: blur(6px); box-shadow: 0 12px 30px rgba(0,0,0,.18); }
-    .mascot-bubble small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
-    .mascot-prop { position: absolute; right: 34px; bottom: 34px; font-size: 42px; filter: drop-shadow(0 8px 12px rgba(0,0,0,.28)); transform-origin: center center; }
-    .mascot-note { position: absolute; left: 18px; bottom: 0; color: rgba(255,255,255,.28); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; }
-    .settings-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 15px; margin-top: 6px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); }
-    .settings-toggle strong { display: block; font-size: 15px; }
-    .settings-toggle small { color: var(--muted); display: block; margin-top: 3px; }
-    .toggle-btn { border: 0; min-width: 118px; border-radius: 999px; padding: 12px 16px; font-weight: 900; cursor: pointer; color: white; background: linear-gradient(135deg, #4b5563, #1f2937); }
-    .toggle-btn.on { background: linear-gradient(135deg, #28c76f, #119b52); color: #08130d; }
+    .mascot-area {
+      position: relative;
+      min-height: 155px;
+      margin-top: 20px;
+      overflow: hidden;
+      pointer-events: none;
+    }
 
-    @keyframes mascotBounce { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
-    @keyframes mascotWiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
-    @keyframes mascotSleep { 0%,100% { transform: translateY(0) scale(0.98); } 50% { transform: translateY(4px) scale(1); } }
-    @keyframes mascotSnack { 0%,100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(6px) rotate(2deg); } }
-    @keyframes yarnRoll { 0% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(-18px) rotate(-22deg); } 100% { transform: translateX(0) rotate(0deg); } }
-    @keyframes butterflyFloat { 0%,100% { transform: translate(0,0) rotate(0deg); } 25% { transform: translate(-12px,-18px) rotate(-8deg); } 75% { transform: translate(10px,-10px) rotate(7deg); } }
-    @keyframes sparklePop { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.18) rotate(12deg); } }
-    .mascot-scene-play .mascot-cat { animation: mascotBounce 1.4s ease-in-out infinite; }
-    .mascot-scene-play .mascot-prop { animation: yarnRoll 1.6s ease-in-out infinite; }
-    .mascot-scene-eat .mascot-cat, .mascot-scene-drink .mascot-cat { animation: mascotSnack 1.8s ease-in-out infinite; }
-    .mascot-scene-sleep .mascot-cat { animation: mascotSleep 2.6s ease-in-out infinite; }
-    .mascot-scene-sleep .mascot-prop { animation: sparklePop 2.2s ease-in-out infinite; }
-    .mascot-scene-chase .mascot-cat { animation: mascotWiggle 1.5s ease-in-out infinite; }
-    .mascot-scene-chase .mascot-prop { animation: butterflyFloat 2s ease-in-out infinite; }
-    .mascot-scene-greet .mascot-cat, .mascot-scene-clean .mascot-cat { animation: mascotBounce 1.7s ease-in-out infinite; }
-    .mascot-scene-greet .mascot-prop, .mascot-scene-clean .mascot-prop { animation: sparklePop 1.6s ease-in-out infinite; }
+    .mascot-stage {
+      position: absolute;
+      inset: 0;
+      opacity: 1;
+      transition: opacity .35s ease;
+    }
+
+    .mascot-stage.is-hidden { opacity: 0; }
+
+    .mascot-cat {
+      position: absolute;
+      bottom: 10px;
+      width: 118px;
+      height: 118px;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 18px rgba(0,0,0,.32));
+      transform-origin: bottom center;
+      opacity: .96;
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      bottom: 14px;
+      width: 112px;
+      height: 24px;
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(0,0,0,.32), transparent 70%);
+      filter: blur(2px);
+      opacity: .55;
+    }
+
+    @keyframes catIdle {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(-1deg); }
+    }
+
+    @keyframes catWalkLeft {
+      0% { transform: translateX(42px) rotate(0deg); opacity: .05; }
+      12% { opacity: .96; }
+      50% { transform: translateX(-16px) rotate(-2deg); opacity: .96; }
+      88% { opacity: .96; }
+      100% { transform: translateX(-62px) rotate(1deg); opacity: .05; }
+    }
+
+    @keyframes catWalkRight {
+      0% { transform: translateX(-52px) rotate(0deg) scaleX(-1); opacity: .05; }
+      12% { opacity: .96; }
+      50% { transform: translateX(10px) rotate(2deg) scaleX(-1); opacity: .96; }
+      88% { opacity: .96; }
+      100% { transform: translateX(58px) rotate(-1deg) scaleX(-1); opacity: .05; }
+    }
+
+    @keyframes catPeek {
+      0%,100% { transform: translateY(38px) scale(.92); opacity: .35; }
+      35%,70% { transform: translateY(0) scale(1); opacity: .96; }
+    }
+
+    @keyframes catNap {
+      0%,100% { transform: translateY(0) scale(.98) rotate(-2deg); }
+      50% { transform: translateY(3px) scale(1) rotate(-2deg); }
+    }
+
+    @keyframes shadowPulse {
+      0%,100% { transform: scaleX(1); opacity: .45; }
+      50% { transform: scaleX(.88); opacity: .28; }
+    }
+
+    .mascot-scene-idle .mascot-cat { left: 24px; animation: catIdle 2.8s ease-in-out infinite; }
+    .mascot-scene-idle .mascot-shadow { left: 26px; animation: shadowPulse 2.8s ease-in-out infinite; }
+
+    .mascot-scene-walk-left .mascot-cat { right: 34px; animation: catWalkLeft 6.8s ease-in-out infinite; }
+    .mascot-scene-walk-left .mascot-shadow { right: 38px; animation: shadowPulse 1.8s ease-in-out infinite; }
+
+    .mascot-scene-walk-right .mascot-cat { left: 28px; animation: catWalkRight 6.8s ease-in-out infinite; }
+    .mascot-scene-walk-right .mascot-shadow { left: 32px; animation: shadowPulse 1.8s ease-in-out infinite; }
+
+    .mascot-scene-peek .mascot-cat { right: 26px; animation: catPeek 5.5s ease-in-out infinite; }
+    .mascot-scene-peek .mascot-shadow { right: 30px; animation: shadowPulse 2.2s ease-in-out infinite; }
+
+    .mascot-scene-nap .mascot-cat { left: 24px; animation: catNap 3.2s ease-in-out infinite; }
+    .mascot-scene-nap .mascot-shadow { left: 28px; animation: shadowPulse 3.2s ease-in-out infinite; }
 
     @media (max-width: 520px) {
-      .mascot-area { min-height: 200px; }
-      .mascot-cat { width: 122px; height: 122px; left: 16px; }
-      .mascot-bubble { max-width: 190px; font-size: 13px; padding: 11px 12px; }
-      .mascot-prop { right: 22px; font-size: 36px; }
-      .toggle-btn { min-width: 106px; }
+      .mascot-area { min-height: 140px; }
+      .mascot-cat { width: 104px; height: 104px; }
+      .mascot-shadow { width: 98px; }
     }
-    .stat small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
-    .stat strong { display: block; font-size: 20px; letter-spacing: -0.4px; }
 
     .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .back { border: 1px solid var(--line); border-radius: 15px; background: var(--card); color: var(--text); padding: 12px 15px; font-weight: 950; cursor: pointer; }
@@ -918,12 +972,9 @@
       </div>
 
       <div id="mascotArea" class="mascot-area">
-        <div id="mascotStage" class="mascot-stage mascot-scene-play">
-          <div class="mascot-floor"></div>
-          <img id="mascotCat" class="mascot-cat" src="prisma_icon.png" alt="Gatita Prisma" />
-          <div id="mascotBubble" class="mascot-bubble">La gatita anda jugando.<small>Las animaciones se pueden apagar en Ajustes.</small></div>
-          <div id="mascotProp" class="mascot-prop" aria-hidden="true">🧶</div>
-          <div class="mascot-note">Mascota Prisma</div>
+        <div id="mascotStage" class="mascot-stage mascot-scene-idle">
+          <div class="mascot-shadow"></div>
+          <img id="mascotCat" class="mascot-cat" src="prisma_icon.png" alt="" />
         </div>
       </div>
     </section>
@@ -1079,7 +1130,7 @@
         </div>
 
         <div class="label">Animaciones</div>
-        <p class="edit-help">Muestra a la gatita abajo en Inicio haciendo cosas al azar.</p>
+        <p class="edit-help">Muestra una gatita pequeña abajo en Inicio con movimientos suaves.</p>
         <div class="settings-toggle">
           <div>
             <strong>Gatita animada</strong>
@@ -1366,13 +1417,11 @@
     let mascotSceneKey = "";
 
     const mascotScenes = [
-      { key: "play", prop: "🧶", text: "La gatita está jugando con una bola de lana.", note: "Hoy anda juguetona." },
-      { key: "eat", prop: "🐟", text: "La gatita encontró un snack y está comiendo feliz.", note: "Parece que le gustó mucho." },
-      { key: "drink", prop: "🥛", text: "La gatita se tomó una pausa para tomar leche.", note: "Un descanso bien merecido." },
-      { key: "sleep", prop: "💤", text: "La gatita se quedó dormidita un rato.", note: "Modo siesta activado." },
-      { key: "chase", prop: "🦋", text: "La gatita está persiguiendo una mariposa.", note: "No para quieta." },
-      { key: "greet", prop: "✨", text: "La gatita vino a saludar desde abajo.", note: "Te acompaña un ratito." },
-      { key: "clean", prop: "🪄", text: "La gatita anda arreglándose el pelito.", note: "Muy elegante hoy." }
+      { key: "idle" },
+      { key: "walk-left" },
+      { key: "walk-right" },
+      { key: "peek" },
+      { key: "nap" }
     ];
 
     function structuredDefault() {
@@ -2630,7 +2679,7 @@
         toggleBtn.classList.toggle("on", enabled);
       }
       if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
-        ? "La gatita aparece y cambia de actividad al azar."
+        ? "La gatita aparece abajo con movimientos discretos."
         : "Las animaciones están apagadas.";
     }
 
@@ -2678,27 +2727,21 @@
 
     function setMascotScene(scene) {
       const stage = document.getElementById("mascotStage");
-      const bubble = document.getElementById("mascotBubble");
-      const prop = document.getElementById("mascotProp");
-      if (!stage || !bubble || !prop) return;
+      if (!stage) return;
 
       if (!scene) {
         stage.className = "mascot-stage is-hidden";
-        bubble.innerHTML = "";
-        prop.textContent = "";
         mascotSceneKey = "";
         return;
       }
 
       mascotSceneKey = scene.key;
       stage.className = "mascot-stage mascot-scene-" + scene.key;
-      bubble.innerHTML = escapeHtml(scene.text) + "<small>" + escapeHtml(scene.note || "") + "</small>";
-      prop.textContent = scene.prop || "✨";
     }
 
     function chooseRandomMascotScene() {
       if (!areMascotAnimationsEnabled()) return null;
-      const shouldHide = Math.random() < 0.18;
+      const shouldHide = Math.random() < 0.10;
       if (shouldHide) return null;
 
       const candidates = mascotScenes.filter(scene => scene.key !== mascotSceneKey);
