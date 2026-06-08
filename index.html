@@ -933,7 +933,7 @@
         <button class="edit-tile products" onclick="openEditPanel('products')">
           <span>📦</span>
           Productos
-          <small>Precios, costos y colores</small>
+          <small>Precios, costos, colores y stock</small>
         </button>
         <button class="edit-tile settings" onclick="openEditPanel('settings')">
           <span>⚙️</span>
@@ -972,11 +972,12 @@
           <h2>Productos</h2>
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
-        <p class="edit-help">El costo se usa para calcular ganancias. Toca “Editar” en un producto para cambiar precio o costo.</p>
+        <p class="edit-help">Define precio, costo y stock desde aquí. Si dejas el stock vacío, ese producto se podrá vender sin límite.</p>
         <div class="form">
           <input id="newProductName" placeholder="Nombre producto. Ej: Papas" autocomplete="off" />
           <input id="newProductPrice" type="number" min="0" step="10" placeholder="Precio venta. Ej: 500" />
           <input id="newProductCost" type="number" min="0" step="10" placeholder="Costo para ti. Ej: 300" />
+          <input id="newProductStock" type="number" min="0" step="1" placeholder="Stock inicial. Opcional" />
           <select id="newProductColor">
             <option value="#8b5a2b">Café</option>
             <option value="#f2c94c">Amarillo</option>
@@ -1733,6 +1734,14 @@
       return "Stock: " + stock + " un.";
     }
 
+    function parseOptionalStock(raw) {
+      const text = String(raw ?? "").trim();
+      if (text === "") return null;
+      const n = Number(text);
+      if (!Number.isFinite(n) || n < 0) return undefined;
+      return Math.max(0, Math.floor(n));
+    }
+
     function isLegacyDefaultProduct(product) {
       const legacy = {
         chocman: { name: "chocman", price: 350, color: "#8b5a2b" },
@@ -1795,17 +1804,26 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => {
+      const visibleProducts = data.products.filter(product => {
+        const stock = productStock(product);
+        return stock === null || stock > 0 || selectedCart[product.id];
+      });
+
+      if (!visibleProducts.length) {
+        target.innerHTML = '<div class="empty">No hay productos con stock disponible. Agrega stock en Editar &gt; Productos.</div>';
+        updateSelectionUI();
+        return;
+      }
+
+      target.innerHTML = visibleProducts.map(product => {
         const qty = selectedCart[product.id] || 0;
         const stock = productStock(product);
         const limited = stock !== null;
-        const noStock = limited && stock <= 0;
         const reachedStock = limited && qty >= stock;
-        const disabled = noStock || reachedStock;
-        const stockText = limited ? `<br><small>${stock <= 0 ? "Sin stock" : "Stock " + stock}</small>` : "";
+        const disabled = reachedStock;
         return `
           <button class="product ${qty ? "selected" : ""}" ${disabled ? "disabled" : ""} style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
-            <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small>${stockText}</span>
+            <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small></span>
             ${qty ? `<b class="qty-badge">×${qty}</b>` : ""}
           </button>
         `;
@@ -1862,8 +1880,7 @@
       }
 
       itemsTarget.innerHTML = items.map(item => {
-        const stockNote = item.stock !== null ? ` · quedan ${Math.max(0, item.stock - item.qty)}` : "";
-        return `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}${stockNote}</div>`;
+        return `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`;
       }).join("");
       totalTarget.textContent = formatMoney(getSelectedTotal());
       chooseBtn.disabled = false;
@@ -2671,10 +2688,12 @@
       const priceInput = document.getElementById("newProductPrice");
       const costInput = document.getElementById("newProductCost");
       const colorInput = document.getElementById("newProductColor");
+      const stockInput = document.getElementById("newProductStock");
       const name = nameInput.value.trim();
       const price = Math.max(0, Number(priceInput.value || 0));
       const cost = Math.max(0, Number(costInput.value || 0));
       const color = colorInput.value || "#2f80ed";
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
 
       if (!name) {
         toast("Escribe el nombre del producto");
@@ -2684,6 +2703,10 @@
         toast("Ingresa un precio");
         return;
       }
+      if (stock === undefined) {
+        toast("Ingresa un stock válido");
+        return;
+      }
 
       data.products.push({
         id: "prod-" + makeId(),
@@ -2691,12 +2714,13 @@
         price,
         cost,
         color,
-        stock: null
+        stock
       });
 
       nameInput.value = "";
       priceInput.value = "";
       costInput.value = "";
+      if (stockInput) stockInput.value = "";
       persist();
       renderEditProducts();
       toast("Producto agregado");
@@ -2748,9 +2772,19 @@
       const cost = prompt("Costo para ti", String(product.cost || 0));
       if (cost === null) return;
 
+      const currentStock = productStock(product);
+      const stockText = prompt("Stock actual. Deja vacío para vender sin límite", currentStock === null ? "" : String(currentStock));
+      if (stockText === null) return;
+      const stock = parseOptionalStock(stockText);
+      if (stock === undefined) {
+        toast("Stock inválido");
+        return;
+      }
+
       product.name = name.trim() || product.name;
       product.price = Math.max(0, Number(price || 0));
       product.cost = Math.max(0, Number(cost || 0));
+      product.stock = stock;
 
       persist();
       renderEditProducts();
@@ -2764,7 +2798,8 @@
         name: document.getElementById("prod-name-" + product.id).value.trim() || product.name,
         price: Math.max(0, Number(document.getElementById("prod-price-" + product.id).value || 0)),
         cost: Math.max(0, Number(document.getElementById("prod-cost-" + product.id).value || 0)),
-        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed"
+        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed",
+        stock: parseOptionalStock(document.getElementById("prod-stock-" + product.id)?.value ?? product.stock) ?? null
       }));
       persist();
       renderEditProducts();
@@ -3295,115 +3330,21 @@
         </div>
       `;
 
-      const inventoryHtml = renderInventoryDashboardHtml(products);
-
       target.innerHTML = `
         <div class="profit-tabs">
           <button class="profit-tab active" onclick="profitGoSlide(0)">Resumen</button>
           <button class="profit-tab" onclick="profitGoSlide(1)">Productos</button>
           <button class="profit-tab" onclick="profitGoSlide(2)">Clientes</button>
-          <button class="profit-tab" onclick="profitGoSlide(3)">Inventario</button>
         </div>
 
         <div id="profitSlider" class="profit-slider" onscroll="profitSyncTabs()">
           <section class="profit-slide">${summaryHtml}</section>
           <section class="profit-slide">${productsHtml}</section>
           <section class="profit-slide">${clientsHtml}</section>
-          <section class="profit-slide">${inventoryHtml}</section>
         </div>
 
         <div class="pill">Rango: ${range === "all" ? "Todo" : range === "today" ? "Hoy" : range === "week" ? "Semana" : "Mes"}</div>
       `;
-    }
-
-    function getSoldUnitsForProduct(product) {
-      const productId = product.id;
-      const productName = normalize(product.name || "");
-      return getSales().reduce((sum, sale) => {
-        return sum + (sale.items || []).reduce((inner, item) => {
-          const sameId = item.id && productId && item.id === productId;
-          const sameName = normalize(item.name || "") === productName;
-          return inner + ((sameId || sameName) ? Number(item.qty || 0) : 0);
-        }, 0);
-      }, 0);
-    }
-
-    function renderInventoryDashboardHtml() {
-      const products = data.products || [];
-      if (!products.length) {
-        return `
-          <div class="profit-card-compact">
-            <h3>Inventario</h3>
-            <div class="empty">No hay productos. Agrega productos en Editar > Productos y después define el stock aquí.</div>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="profit-card-compact">
-          <h3>Inventario</h3>
-          <p class="profit-mini-note">Escribe el stock actual de cada producto. Al guardar una venta se descuenta automáticamente.</p>
-          <div class="inventory-list">
-            ${products.map(product => {
-              const stock = productStock(product);
-              const inputId = stockInputId(product.id);
-              const sold = getSoldUnitsForProduct(product);
-              return `
-                <div class="inventory-row">
-                  <div>
-                    <strong>${escapeHtml(product.name)}</strong>
-                    <small>${stockLabel(product)} · Vendidas ${sold} un.</small>
-                  </div>
-                  <div class="inventory-controls">
-                    <input id="${escapeAttr(inputId)}" type="number" min="0" step="1" value="${stock === null ? "" : stock}" placeholder="Stock" />
-                    <button onclick="saveProductStock('${escapeJs(product.id)}')">Guardar</button>
-                  </div>
-                </div>
-              `;
-            }).join("")}
-          </div>
-          <button class="secondary-action" onclick="saveAllProductStocks()">Guardar todo el inventario</button>
-        </div>
-      `;
-    }
-
-    function saveProductStock(id, options = {}) {
-      const product = data.products.find(p => p.id === id);
-      if (!product) return false;
-      const input = document.getElementById(stockInputId(id));
-      if (!input) return false;
-      const raw = String(input.value || "").trim();
-      if (raw === "") {
-        product.stock = null;
-      } else {
-        const n = Number(raw);
-        if (!Number.isFinite(n) || n < 0) {
-          toast("Stock inválido para " + product.name);
-          return false;
-        }
-        product.stock = Math.max(0, Math.floor(n));
-      }
-
-      if (!options.silent) {
-        persist();
-        renderProducts();
-        renderEditProducts();
-        renderProfitDashboard();
-        setTimeout(() => profitGoSlide(3), 0);
-        toast("Stock actualizado");
-      }
-      return true;
-    }
-
-    function saveAllProductStocks() {
-      const ok = (data.products || []).every(product => saveProductStock(product.id, { silent: true }));
-      if (!ok) return;
-      persist();
-      renderProducts();
-      renderEditProducts();
-      renderProfitDashboard();
-      setTimeout(() => profitGoSlide(3), 0);
-      toast("Inventario guardado");
     }
 
     function profitGoSlide(index) {
