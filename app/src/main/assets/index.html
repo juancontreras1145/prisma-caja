@@ -433,6 +433,20 @@
     }
     .compact-row strong { display: block; font-size: 16px; }
     .compact-row small { color: var(--muted); font-size: 12px; display: block; margin-top: 4px; }
+    .product-add-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .product-add-grid .wide, .product-add-grid .big-action { grid-column: 1 / -1; }
+    .product-add-grid input, .product-add-grid select { padding: 12px 13px; border-radius: 15px; font-size: 15px; }
+    .product-add-grid .big-action { margin-top: 2px; padding: 14px; }
+    .product-compact-row { padding: 10px 11px; border-radius: 16px; }
+    .product-compact-row strong { font-size: 15px; line-height: 1.15; }
+    .product-compact-row small { font-size: 11.5px; line-height: 1.25; }
+    .product-main-line { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .product-stock-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 7px; background: rgba(255,255,255,.08); color: var(--muted); font-size: 11px; font-weight: 900; }
+    .product-edit-row { grid-template-columns: 1fr; align-items: stretch; padding: 11px; }
+    .product-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .product-edit-grid .wide { grid-column: 1 / -1; }
+    .product-edit-grid input, .product-edit-grid select { padding: 11px 12px; border-radius: 14px; font-size: 14px; }
+    .product-edit-grid button { margin-top: 0; }
     .compact-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .icon-btn {
       border: 0;
@@ -960,7 +974,7 @@
         <p class="edit-help">Agrega clientes con WhatsApp opcional: 8 dígitos o +56 9 9945 6548.</p>
         <div class="form">
           <input id="newName" placeholder="Nombre del cliente" autocomplete="off" />
-          <input id="newPhone" placeholder="WhatsApp opcional: 8 dígitos o +56 9 9945 6548 o +56 9 9945 6548" autocomplete="off" />
+          <input id="newPhone" placeholder="WhatsApp opcional: 8 dígitos o +56 9 9945 6548" autocomplete="off" />
           <button class="big-action" onclick="addClient()">Agregar cliente</button>
         </div>
         <div class="label">Clientes guardados</div>
@@ -973,11 +987,11 @@
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
         <p class="edit-help">Define precio, costo y stock desde aquí. Si dejas el stock vacío, ese producto se podrá vender sin límite.</p>
-        <div class="form">
-          <input id="newProductName" placeholder="Nombre producto. Ej: Papas" autocomplete="off" />
-          <input id="newProductPrice" type="number" min="0" step="10" placeholder="Precio venta. Ej: 500" />
-          <input id="newProductCost" type="number" min="0" step="10" placeholder="Costo para ti. Ej: 300" />
-          <input id="newProductStock" type="number" min="0" step="1" placeholder="Stock inicial. Opcional" />
+        <div class="form product-add-grid">
+          <input id="newProductName" class="wide" placeholder="Nombre producto. Ej: Papas" autocomplete="off" />
+          <input id="newProductPrice" type="number" min="0" step="10" placeholder="Precio venta" />
+          <input id="newProductCost" type="number" min="0" step="10" placeholder="Costo" />
+          <input id="newProductStock" type="number" min="0" step="1" placeholder="Stock opcional" />
           <select id="newProductColor">
             <option value="#8b5a2b">Café</option>
             <option value="#f2c94c">Amarillo</option>
@@ -1283,6 +1297,7 @@
     let selectedSaleMethod = "Efectivo";
     let selectedPaymentMethod = "Efectivo";
     let selectedPaymentSaleIds = [];
+    let editingProductId = null;
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
     let navStack = ["home"];
@@ -1729,9 +1744,9 @@
 
     function stockLabel(product) {
       const stock = productStock(product);
-      if (stock === null) return "Sin stock definido";
+      if (stock === null) return "Stock libre";
       if (stock <= 0) return "Sin stock";
-      return "Stock: " + stock + " un.";
+      return "Stock " + stock;
     }
 
     function parseOptionalStock(raw) {
@@ -2513,6 +2528,7 @@
     }
 
     function closeEditPanels() {
+      editingProductId = null;
       ["editPanelClients", "editPanelProducts", "editPanelSettings", "editPanelBackup", "editPanelData"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
@@ -2736,6 +2752,25 @@
       toast("Producto quitado");
     }
 
+    function productEditInputId(productId, field) {
+      return "edit-product-" + field + "-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function productColorOptions(selectedColor) {
+      const colors = [
+        ["#8b5a2b", "Café"],
+        ["#f2c94c", "Amarillo"],
+        ["#eb5757", "Rojo"],
+        ["#ff7a00", "Naranja"],
+        ["#28c76f", "Verde"],
+        ["#2f80ed", "Azul"],
+        ["#9b51e0", "Morado"],
+        ["#111827", "Negro"]
+      ];
+      const value = String(selectedColor || "#2f80ed").toLowerCase();
+      return colors.map(([color, label]) => `<option value="${escapeAttr(color)}" ${color.toLowerCase() === value ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
+    }
+
     function renderEditProducts() {
       const target = document.getElementById("editProducts");
       if (!target) return;
@@ -2745,51 +2780,104 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => `
-        <div class="compact-row">
-          <div>
-            <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
-            <small>Venta ${formatMoney(product.price || 0)} · Costo ${formatMoney(product.cost || 0)} · Gana ${formatMoney(Number(product.price || 0) - Number(product.cost || 0))} · ${stockLabel(product)}</small>
+      target.innerHTML = data.products.map(product => {
+        const stock = productStock(product);
+        const stockValue = stock === null ? "" : String(stock);
+        const gain = Number(product.price || 0) - Number(product.cost || 0);
+
+        if (editingProductId === product.id) {
+          return `
+            <div class="compact-row product-edit-row">
+              <div class="product-edit-grid">
+                <input class="wide" id="${escapeAttr(productEditInputId(product.id, "name"))}" value="${escapeAttr(product.name || "")}" placeholder="Nombre" autocomplete="off" />
+                <input id="${escapeAttr(productEditInputId(product.id, "price"))}" type="number" min="0" step="10" value="${escapeAttr(product.price || 0)}" placeholder="Precio" />
+                <input id="${escapeAttr(productEditInputId(product.id, "cost"))}" type="number" min="0" step="10" value="${escapeAttr(product.cost || 0)}" placeholder="Costo" />
+                <input id="${escapeAttr(productEditInputId(product.id, "stock"))}" type="number" min="0" step="1" value="${escapeAttr(stockValue)}" placeholder="Stock vacío = libre" />
+                <select id="${escapeAttr(productEditInputId(product.id, "color"))}">${productColorOptions(product.color)}</select>
+                <button class="secondary-action" onclick="saveEditedProduct('${escapeJs(product.id)}')">Guardar</button>
+                <button class="secondary-action" onclick="cancelEditProduct()">Cancelar</button>
+                <button class="danger-action wide" onclick="removeProduct('${escapeJs(product.id)}')">Borrar producto</button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="compact-row product-compact-row">
+            <div>
+              <div class="product-main-line">
+                <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
+                <span class="product-stock-chip">${escapeHtml(stockLabel(product))}</span>
+              </div>
+              <small>${formatMoney(product.price || 0)} venta · ${formatMoney(product.cost || 0)} costo · ${formatMoney(gain)} gana</small>
+            </div>
+            <div class="compact-actions">
+              <button class="icon-btn" onclick="startEditProduct('${escapeJs(product.id)}')">Editar</button>
+              <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
+            </div>
           </div>
-          <div class="compact-actions">
-            <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
-    function quickEditProduct(id) {
+    function startEditProduct(id) {
+      editingProductId = id;
+      renderEditProducts();
+      setTimeout(() => {
+        const input = document.getElementById(productEditInputId(id, "name"));
+        if (input) input.focus();
+      }, 0);
+    }
+
+    function cancelEditProduct() {
+      editingProductId = null;
+      renderEditProducts();
+    }
+
+    function saveEditedProduct(id) {
       const product = data.products.find(p => p.id === id);
       if (!product) return;
 
-      const name = prompt("Nombre del producto", product.name);
-      if (name === null) return;
+      const nameInput = document.getElementById(productEditInputId(id, "name"));
+      const priceInput = document.getElementById(productEditInputId(id, "price"));
+      const costInput = document.getElementById(productEditInputId(id, "cost"));
+      const stockInput = document.getElementById(productEditInputId(id, "stock"));
+      const colorInput = document.getElementById(productEditInputId(id, "color"));
 
-      const price = prompt("Precio de venta", String(product.price || 0));
-      if (price === null) return;
+      const name = nameInput ? nameInput.value.trim() : "";
+      const price = Math.max(0, Number(priceInput ? priceInput.value || 0 : 0));
+      const cost = Math.max(0, Number(costInput ? costInput.value || 0 : 0));
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
+      const color = colorInput ? colorInput.value : product.color;
 
-      const cost = prompt("Costo para ti", String(product.cost || 0));
-      if (cost === null) return;
-
-      const currentStock = productStock(product);
-      const stockText = prompt("Stock actual. Deja vacío para vender sin límite", currentStock === null ? "" : String(currentStock));
-      if (stockText === null) return;
-      const stock = parseOptionalStock(stockText);
+      if (!name) {
+        toast("El nombre no puede quedar vacío");
+        return;
+      }
+      if (!price) {
+        toast("Ingresa un precio");
+        return;
+      }
       if (stock === undefined) {
-        toast("Stock inválido");
+        toast("Ingresa un stock válido");
         return;
       }
 
-      product.name = name.trim() || product.name;
-      product.price = Math.max(0, Number(price || 0));
-      product.cost = Math.max(0, Number(cost || 0));
+      product.name = name;
+      product.price = price;
+      product.cost = cost;
       product.stock = stock;
+      product.color = color || "#2f80ed";
 
+      editingProductId = null;
       persist();
       renderEditProducts();
       renderProducts();
       toast("Producto actualizado");
+    }
+
+    function quickEditProduct(id) {
+      startEditProduct(id);
     }
 
     function saveProductsFromForm() {
