@@ -60,6 +60,46 @@
 
     .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .stat { border: 1px solid var(--line); background: var(--card); border-radius: 18px; padding: 13px; }
+
+    .mascot-area { position: relative; min-height: 220px; margin-top: 22px; overflow: hidden; border-radius: 28px; }
+    .mascot-stage { position: absolute; left: 0; right: 0; bottom: 0; top: 0; opacity: 1; transition: opacity .35s ease; }
+    .mascot-stage.is-hidden { opacity: 0; }
+    .mascot-floor { position: absolute; left: 12px; right: 12px; bottom: 10px; height: 58px; border-radius: 999px; background: radial-gradient(circle at center, rgba(40,199,111,.18), rgba(47,128,237,.06) 60%, transparent 76%); filter: blur(2px); }
+    .mascot-cat { position: absolute; left: 24px; bottom: 20px; width: 136px; height: 136px; object-fit: contain; filter: drop-shadow(0 18px 22px rgba(0,0,0,.34)); transform-origin: bottom center; }
+    .mascot-bubble { position: absolute; top: 10px; right: 12px; max-width: 220px; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: var(--text); font-size: 14px; font-weight: 800; line-height: 1.35; backdrop-filter: blur(6px); box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+    .mascot-bubble small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .mascot-prop { position: absolute; right: 34px; bottom: 34px; font-size: 42px; filter: drop-shadow(0 8px 12px rgba(0,0,0,.28)); transform-origin: center center; }
+    .mascot-note { position: absolute; left: 18px; bottom: 0; color: rgba(255,255,255,.28); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; }
+    .settings-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 15px; margin-top: 6px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); }
+    .settings-toggle strong { display: block; font-size: 15px; }
+    .settings-toggle small { color: var(--muted); display: block; margin-top: 3px; }
+    .toggle-btn { border: 0; min-width: 118px; border-radius: 999px; padding: 12px 16px; font-weight: 900; cursor: pointer; color: white; background: linear-gradient(135deg, #4b5563, #1f2937); }
+    .toggle-btn.on { background: linear-gradient(135deg, #28c76f, #119b52); color: #08130d; }
+
+    @keyframes mascotBounce { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
+    @keyframes mascotWiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+    @keyframes mascotSleep { 0%,100% { transform: translateY(0) scale(0.98); } 50% { transform: translateY(4px) scale(1); } }
+    @keyframes mascotSnack { 0%,100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(6px) rotate(2deg); } }
+    @keyframes yarnRoll { 0% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(-18px) rotate(-22deg); } 100% { transform: translateX(0) rotate(0deg); } }
+    @keyframes butterflyFloat { 0%,100% { transform: translate(0,0) rotate(0deg); } 25% { transform: translate(-12px,-18px) rotate(-8deg); } 75% { transform: translate(10px,-10px) rotate(7deg); } }
+    @keyframes sparklePop { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.18) rotate(12deg); } }
+    .mascot-scene-play .mascot-cat { animation: mascotBounce 1.4s ease-in-out infinite; }
+    .mascot-scene-play .mascot-prop { animation: yarnRoll 1.6s ease-in-out infinite; }
+    .mascot-scene-eat .mascot-cat, .mascot-scene-drink .mascot-cat { animation: mascotSnack 1.8s ease-in-out infinite; }
+    .mascot-scene-sleep .mascot-cat { animation: mascotSleep 2.6s ease-in-out infinite; }
+    .mascot-scene-sleep .mascot-prop { animation: sparklePop 2.2s ease-in-out infinite; }
+    .mascot-scene-chase .mascot-cat { animation: mascotWiggle 1.5s ease-in-out infinite; }
+    .mascot-scene-chase .mascot-prop { animation: butterflyFloat 2s ease-in-out infinite; }
+    .mascot-scene-greet .mascot-cat, .mascot-scene-clean .mascot-cat { animation: mascotBounce 1.7s ease-in-out infinite; }
+    .mascot-scene-greet .mascot-prop, .mascot-scene-clean .mascot-prop { animation: sparklePop 1.6s ease-in-out infinite; }
+
+    @media (max-width: 520px) {
+      .mascot-area { min-height: 200px; }
+      .mascot-cat { width: 122px; height: 122px; left: 16px; }
+      .mascot-bubble { max-width: 190px; font-size: 13px; padding: 11px 12px; }
+      .mascot-prop { right: 22px; font-size: 36px; }
+      .toggle-btn { min-width: 106px; }
+    }
     .stat small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
     .stat strong { display: block; font-size: 20px; letter-spacing: -0.4px; }
 
@@ -876,6 +916,16 @@
         <button class="tile historial" onclick="go('historial')"><span>Historial</span></button>
         <button class="tile editar" onclick="go('editar')"><span>Editar</span></button>
       </div>
+
+      <div id="mascotArea" class="mascot-area">
+        <div id="mascotStage" class="mascot-stage mascot-scene-play">
+          <div class="mascot-floor"></div>
+          <img id="mascotCat" class="mascot-cat" src="prisma_icon.png" alt="Gatita Prisma" />
+          <div id="mascotBubble" class="mascot-bubble">La gatita anda jugando.<small>Las animaciones se pueden apagar en Ajustes.</small></div>
+          <div id="mascotProp" class="mascot-prop" aria-hidden="true">🧶</div>
+          <div class="mascot-note">Mascota Prisma</div>
+        </div>
+      </div>
     </section>
 
     <section id="venta" class="screen">
@@ -1026,6 +1076,16 @@
         <div class="form">
           <input id="settingsProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Nueva clave de 4 números" autocomplete="new-password" />
           <button class="secondary-action" onclick="saveProfitPinFromSettings()">Guardar clave</button>
+        </div>
+
+        <div class="label">Animaciones</div>
+        <p class="edit-help">Muestra a la gatita abajo en Inicio haciendo cosas al azar.</p>
+        <div class="settings-toggle">
+          <div>
+            <strong>Gatita animada</strong>
+            <small id="mascotToggleHelp">Activa o desactiva las animaciones.</small>
+          </div>
+          <button id="mascotToggleBtn" class="toggle-btn" onclick="toggleMascotAnimations()">Activadas</button>
         </div>
 
         <div class="label">Borrar datos</div>
@@ -1286,7 +1346,8 @@
       nextReceiptNumber: 1,
       settings: {
         appTitle: "Prisma",
-        profitPin: ""
+        profitPin: "",
+        mascotAnimations: true
       }
     };
 
@@ -1301,6 +1362,18 @@
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
     let navStack = ["home"];
+    let mascotTimer = null;
+    let mascotSceneKey = "";
+
+    const mascotScenes = [
+      { key: "play", prop: "🧶", text: "La gatita está jugando con una bola de lana.", note: "Hoy anda juguetona." },
+      { key: "eat", prop: "🐟", text: "La gatita encontró un snack y está comiendo feliz.", note: "Parece que le gustó mucho." },
+      { key: "drink", prop: "🥛", text: "La gatita se tomó una pausa para tomar leche.", note: "Un descanso bien merecido." },
+      { key: "sleep", prop: "💤", text: "La gatita se quedó dormidita un rato.", note: "Modo siesta activado." },
+      { key: "chase", prop: "🦋", text: "La gatita está persiguiendo una mariposa.", note: "No para quieta." },
+      { key: "greet", prop: "✨", text: "La gatita vino a saludar desde abajo.", note: "Te acompaña un ratito." },
+      { key: "clean", prop: "🪄", text: "La gatita anda arreglándose el pelito.", note: "Muy elegante hoy." }
+    ];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -1384,7 +1457,8 @@
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      return { appTitle, profitPin };
+      const mascotAnimations = settings.mascotAnimations !== false;
+      return { appTitle, profitPin, mascotAnimations };
     }
 
     function getSettings() {
@@ -1479,6 +1553,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderAppTitle();
       renderHomeStats();
+      updateMascotVisibility();
     }
 
     function makeId() {
@@ -1600,7 +1675,10 @@
       document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
       document.getElementById(id).classList.add("active");
 
-      if (id === "home") renderHomeStats();
+      if (id === "home") {
+        renderHomeStats();
+        updateMascotVisibility();
+      }
       if (id === "venta") renderProducts();
       if (id === "nombres") renderNamesPage();
       if (id === "historial") renderHistory();
@@ -2543,6 +2621,17 @@
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+
+      const toggleBtn = document.getElementById("mascotToggleBtn");
+      const toggleHelp = document.getElementById("mascotToggleHelp");
+      if (toggleBtn) {
+        const enabled = settings.mascotAnimations !== false;
+        toggleBtn.textContent = enabled ? "Activadas" : "Desactivadas";
+        toggleBtn.classList.toggle("on", enabled);
+      }
+      if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
+        ? "La gatita aparece y cambia de actividad al azar."
+        : "Las animaciones están apagadas.";
     }
 
     function saveAppTitleSetting() {
@@ -2571,6 +2660,82 @@
       toast("Clave guardada");
     }
 
+
+
+
+    function areMascotAnimationsEnabled() {
+      return getSettings().mascotAnimations !== false;
+    }
+
+    function toggleMascotAnimations() {
+      const settings = getSettings();
+      settings.mascotAnimations = settings.mascotAnimations === false;
+      persist();
+      renderSettingsPanel();
+      updateMascotVisibility();
+      toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
+    }
+
+    function setMascotScene(scene) {
+      const stage = document.getElementById("mascotStage");
+      const bubble = document.getElementById("mascotBubble");
+      const prop = document.getElementById("mascotProp");
+      if (!stage || !bubble || !prop) return;
+
+      if (!scene) {
+        stage.className = "mascot-stage is-hidden";
+        bubble.innerHTML = "";
+        prop.textContent = "";
+        mascotSceneKey = "";
+        return;
+      }
+
+      mascotSceneKey = scene.key;
+      stage.className = "mascot-stage mascot-scene-" + scene.key;
+      bubble.innerHTML = escapeHtml(scene.text) + "<small>" + escapeHtml(scene.note || "") + "</small>";
+      prop.textContent = scene.prop || "✨";
+    }
+
+    function chooseRandomMascotScene() {
+      if (!areMascotAnimationsEnabled()) return null;
+      const shouldHide = Math.random() < 0.18;
+      if (shouldHide) return null;
+
+      const candidates = mascotScenes.filter(scene => scene.key !== mascotSceneKey);
+      const pool = candidates.length ? candidates : mascotScenes;
+      return pool[Math.floor(Math.random() * pool.length)] || mascotScenes[0];
+    }
+
+    function scheduleMascotScene() {
+      clearTimeout(mascotTimer);
+      if (!areMascotAnimationsEnabled()) return;
+      const delay = 9000 + Math.floor(Math.random() * 14000);
+      mascotTimer = setTimeout(() => {
+        setMascotScene(chooseRandomMascotScene());
+        scheduleMascotScene();
+      }, delay);
+    }
+
+    function updateMascotVisibility() {
+      const area = document.getElementById("mascotArea");
+      if (!area) return;
+
+      if (!areMascotAnimationsEnabled()) {
+        area.style.display = "none";
+        clearTimeout(mascotTimer);
+        mascotTimer = null;
+        return;
+      }
+
+      area.style.display = "block";
+      if (!mascotSceneKey) setMascotScene(chooseRandomMascotScene() || mascotScenes[0]);
+      scheduleMascotScene();
+    }
+
+    function initMascotArea() {
+      mascotSceneKey = "";
+      updateMascotVisibility();
+    }
 
     function openClientEdit(id) {
       const client = data.clients.find(c => c.id === id);
@@ -3954,6 +4119,7 @@
     renderAppTitle();
     renderHomeStats();
     renderProducts();
+    initMascotArea();
   </script>
 
 </body>
