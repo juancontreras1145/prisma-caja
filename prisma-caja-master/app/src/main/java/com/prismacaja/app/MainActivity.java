@@ -3,8 +3,10 @@ package com.prismacaja.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
@@ -22,9 +24,16 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
@@ -161,6 +170,119 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private String getInstalledVersionName() {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return info.versionName == null ? "" : info.versionName;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private long getInstalledVersionCode() {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return info.getLongVersionCode();
+            }
+            return info.versionCode;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void openExternalUrl(String url) {
+        try {
+            if (url == null) return;
+            Uri uri = Uri.parse(url);
+            String scheme = uri.getScheme();
+            if (scheme == null || !(scheme.equalsIgnoreCase("https") || scheme.equalsIgnoreCase("http"))) {
+                return;
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir la actualización", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String readStream(InputStream stream) throws Exception {
+        StringBuilder builder = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+        }
+        return builder.toString();
+    }
+
+    private void checkLatestRelease() {
+        new Thread(() -> {
+            JSONObject result = new JSONObject();
+            HttpURLConnection connection = null;
+            try {
+                URL apiUrl = new URL("https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest");
+                connection = (HttpURLConnection) apiUrl.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(12000);
+                connection.setReadTimeout(12000);
+                connection.setRequestProperty("Accept", "application/vnd.github+json");
+                connection.setRequestProperty("User-Agent", "PrismaCajaAndroid");
+
+                int status = connection.getResponseCode();
+                if (status == 404) {
+                    result.put("ok", false);
+                    result.put("error", "no-release");
+                } else if (status < 200 || status >= 300) {
+                    result.put("ok", false);
+                    result.put("error", "http-" + status);
+                } else {
+                    String body = readStream(connection.getInputStream());
+                    JSONObject release = new JSONObject(body);
+                    String downloadUrl = "";
+                    JSONArray assets = release.optJSONArray("assets");
+                    if (assets != null) {
+                        for (int i = 0; i < assets.length(); i++) {
+                            JSONObject asset = assets.optJSONObject(i);
+                            if (asset == null) continue;
+                            String name = asset.optString("name", "").toLowerCase();
+                            if (name.endsWith(".apk")) {
+                                downloadUrl = asset.optString("browser_download_url", "");
+                                break;
+                            }
+                        }
+                    }
+
+                    result.put("ok", true);
+                    result.put("tag_name", release.optString("tag_name", release.optString("name", "")));
+                    result.put("name", release.optString("name", ""));
+                    result.put("html_url", release.optString("html_url", "https://github.com/juancontreras1145/prisma-caja/releases"));
+                    result.put("download_url", downloadUrl.isEmpty() ? result.optString("html_url") : downloadUrl);
+                }
+            } catch (Exception e) {
+                try {
+                    result.put("ok", false);
+                    result.put("error", "network");
+                } catch (Exception ignored) {
+                }
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+
+            String script = "window.handleNativeUpdateResult && window.handleNativeUpdateResult(" + result.toString() + ")";
+            activityRunOnUiThread(script);
+        }).start();
+    }
+
+    private void activityRunOnUiThread(String script) {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript(script, null);
+            }
+        });
     }
 
     private String normalizePhone(String phone) {
@@ -402,6 +524,26 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void openWhatsapp(String phone, String text) {
             activity.runOnUiThread(() -> activity.openWhatsappNumber(phone, text));
+        }
+
+        @JavascriptInterface
+        public String getVersionName() {
+            return activity.getInstalledVersionName();
+        }
+
+        @JavascriptInterface
+        public long getVersionCode() {
+            return activity.getInstalledVersionCode();
+        }
+
+        @JavascriptInterface
+        public void openUrl(String url) {
+            activity.runOnUiThread(() -> activity.openExternalUrl(url));
+        }
+
+        @JavascriptInterface
+        public void checkForUpdate() {
+            activity.checkLatestRelease();
         }
 
         @JavascriptInterface
