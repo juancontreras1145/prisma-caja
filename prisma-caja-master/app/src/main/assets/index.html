@@ -40,7 +40,7 @@
 
     header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
     h1, h2, p { margin: 0; }
-    h1 { font-size: 24px; letter-spacing: -0.8px; line-height: 1.05; }
+    h1 { font-size: clamp(42px, 11vw, 58px); letter-spacing: -1.8px; line-height: .95; }
     .subtitle { color: var(--muted); font-size: 13px; margin-top: 5px; line-height: 1.35; }
     .head-actions { display: flex; gap: 8px; }
     .mini-btn { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px; min-width: 42px; height: 42px; padding: 0 12px; font-weight: 950; cursor: pointer; }
@@ -60,8 +60,76 @@
 
     .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .stat { border: 1px solid var(--line); background: var(--card); border-radius: 18px; padding: 13px; }
-    .stat small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
-    .stat strong { display: block; font-size: 20px; letter-spacing: -0.4px; }
+
+    .mascot-area {
+      position: relative;
+      min-height: 150px;
+      margin-top: 20px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .mascot-stage {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .28s ease;
+    }
+
+    .mascot-stage.show { opacity: 1; }
+    .mascot-stage.is-hidden { opacity: 0; }
+
+    .mascot-actor {
+      position: absolute;
+      left: 16px;
+      bottom: 4px;
+      width: 150px;
+      height: 118px;
+      transform-origin: bottom center;
+      transform: scale(var(--mascot-scale, 1));
+    }
+
+    .mascot-stage.side-right .mascot-actor {
+      left: auto;
+      right: 16px;
+      transform: scaleX(-1) scale(var(--mascot-scale, 1));
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      left: 18px;
+      bottom: 10px;
+      width: 96px;
+      height: 22px;
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(0,0,0,.32), transparent 72%);
+      filter: blur(2px);
+      opacity: .38;
+    }
+
+    .mascot-sprite {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 150px;
+      height: 118px;
+      background-image: url("mascot_sprite_play.png");
+      background-repeat: no-repeat;
+      background-size: 500% 200%;
+      background-position: 0% 0%;
+      filter: drop-shadow(0 12px 16px rgba(0,0,0,.26));
+      image-rendering: auto;
+    }
+
+    @keyframes mascotFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .mascot-stage.show .mascot-actor { animation: mascotFadeIn .35s ease; }
+
+    @media (max-width: 520px) {
+      .mascot-area { min-height: 138px; }
+      .mascot-actor { width: 132px; height: 104px; }
+      .mascot-sprite { width: 132px; height: 104px; }
+      .mascot-shadow { width: 84px; height: 20px; left: 16px; }
+    }
 
     .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .back { border: 1px solid var(--line); border-radius: 15px; background: var(--card); color: var(--text); padding: 12px 15px; font-weight: 950; cursor: pointer; }
@@ -416,6 +484,7 @@
     .edit-tile.clients { background: linear-gradient(135deg, rgba(0,163,255,.22), rgba(15,28,48,.82)); }
     .edit-tile.products { background: linear-gradient(135deg, rgba(0,230,118,.20), rgba(15,28,48,.82)); }
     .edit-tile.backup { background: linear-gradient(135deg, rgba(139,92,246,.22), rgba(15,28,48,.82)); }
+    .edit-tile.settings { background: linear-gradient(135deg, rgba(0,229,255,.20), rgba(15,28,48,.82)); }
     .edit-tile.danger { background: linear-gradient(135deg, rgba(255,77,109,.22), rgba(15,28,48,.82)); }
     .edit-panel { margin-top: 14px; display: none; }
     .edit-panel.active { display: block; }
@@ -432,6 +501,20 @@
     }
     .compact-row strong { display: block; font-size: 16px; }
     .compact-row small { color: var(--muted); font-size: 12px; display: block; margin-top: 4px; }
+    .product-add-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .product-add-grid .wide, .product-add-grid .big-action { grid-column: 1 / -1; }
+    .product-add-grid input, .product-add-grid select { padding: 12px 13px; border-radius: 15px; font-size: 15px; }
+    .product-add-grid .big-action { margin-top: 2px; padding: 14px; }
+    .product-compact-row { padding: 10px 11px; border-radius: 16px; }
+    .product-compact-row strong { font-size: 15px; line-height: 1.15; }
+    .product-compact-row small { font-size: 11.5px; line-height: 1.25; }
+    .product-main-line { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .product-stock-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 7px; background: rgba(255,255,255,.08); color: var(--muted); font-size: 11px; font-weight: 900; }
+    .product-edit-row { grid-template-columns: 1fr; align-items: stretch; padding: 11px; }
+    .product-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .product-edit-grid .wide { grid-column: 1 / -1; }
+    .product-edit-grid input, .product-edit-grid select { padding: 11px 12px; border-radius: 14px; font-size: 14px; }
+    .product-edit-grid button { margin-top: 0; }
     .compact-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .icon-btn {
       border: 0;
@@ -486,6 +569,49 @@
     }
     .history-group.open .history-group-body {
       display: block;
+    }
+
+    .history-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0 12px;
+    }
+
+    .history-tab {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      color: var(--muted);
+      padding: 13px 8px;
+      font-size: 13px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .history-tab.active {
+      background: linear-gradient(135deg, rgba(37,211,102,.22), rgba(0,163,255,.18));
+      border-color: rgba(37,211,102,.45);
+      color: #d8fff0;
+      box-shadow: 0 12px 28px rgba(0,0,0,.16);
+    }
+
+    .pending-summary {
+      display: grid;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .receipt-table-head.accumulated,
+    .receipt-item.accumulated {
+      grid-template-columns: 1fr 42px 82px 50px;
+      gap: 6px;
+    }
+
+    .receipt-item-date {
+      text-align: right;
+      color: #4b5563;
+      font-weight: 700;
     }
     .pin-display {
       border: 1px solid var(--line);
@@ -713,6 +839,65 @@
       padding-bottom: 0;
     }
 
+    .product:disabled {
+      opacity: .48;
+      filter: grayscale(.25);
+      cursor: not-allowed;
+    }
+
+    .inventory-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .inventory-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 128px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .inventory-row strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .inventory-row small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .inventory-controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .inventory-controls input {
+      width: 100%;
+      padding: 12px 10px;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .inventory-controls button {
+      border: 1px solid rgba(0,230,118,.30);
+      background: rgba(0,230,118,.12);
+      color: #d8fff0;
+      border-radius: 14px;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
 
     /* Borrado seguro de boletas */
     .safe-delete-zone {
@@ -763,14 +948,28 @@
       display: none !important;
     }
 
+
+    #profitPinModal.modal.show,
+    #setProfitPinModal.modal.show {
+      align-items: center !important;
+      justify-content: center !important;
+      padding-top: 16px !important;
+      padding-bottom: 16px !important;
+    }
+
+    #profitPinModal .sheet,
+    #setProfitPinModal .sheet {
+      width: min(430px, 100%) !important;
+      margin: auto !important;
+    }
+
 </style>
 </head>
 <body>
   <main class="app">
     <header>
       <div>
-        <h1 class="rainbow-title">Prisma</h1>
-        <p class="subtitle">Ventas · boletas · abonos · ganancias</p>
+        <h1 id="appTitle" class="rainbow-title">Prisma</h1>
       </div>
     </header>
 
@@ -787,6 +986,15 @@
         <button class="tile abono" onclick="openAbono()"><span>Abono</span></button>
         <button class="tile historial" onclick="go('historial')"><span>Historial</span></button>
         <button class="tile editar" onclick="go('editar')"><span>Editar</span></button>
+      </div>
+
+      <div id="mascotArea" class="mascot-area">
+        <div id="mascotStage" class="mascot-stage is-hidden">
+          <div id="mascotActor" class="mascot-actor">
+            <div class="mascot-shadow"></div>
+            <div id="mascotSprite" class="mascot-sprite" aria-hidden="true"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -840,7 +1048,13 @@
         <button class="secret-btn" onclick="openProfitPin()">Ganancias</button>
       </div>
 
-      <div class="label">Movimientos</div>
+      <div class="history-tabs" role="tablist" aria-label="Filtros de historial">
+        <button id="historyTabBoletas" class="history-tab active" onclick="setHistoryTab('boletas')">Boletas</button>
+        <button id="historyTabAbonos" class="history-tab" onclick="setHistoryTab('abonos')">Abonos</button>
+        <button id="historyTabPendientes" class="history-tab" onclick="setHistoryTab('pendientes')">Pendientes Acumulados</button>
+      </div>
+
+      <div class="label" id="historyLabel">Boletas</div>
       <div id="historyList"></div>
     </section>
 
@@ -859,7 +1073,12 @@
         <button class="edit-tile products" onclick="openEditPanel('products')">
           <span>📦</span>
           Productos
-          <small>Precios, costos y colores</small>
+          <small>Precios, costos, colores y stock</small>
+        </button>
+        <button class="edit-tile settings" onclick="openEditPanel('settings')">
+          <span>⚙️</span>
+          Ajustes
+          <small>Clave, título y datos</small>
         </button>
         <button class="edit-tile backup" onclick="openEditPanel('backup')">
           <span>💾</span>
@@ -881,7 +1100,7 @@
         <p class="edit-help">Agrega clientes con WhatsApp opcional: 8 dígitos o +56 9 9945 6548.</p>
         <div class="form">
           <input id="newName" placeholder="Nombre del cliente" autocomplete="off" />
-          <input id="newPhone" placeholder="WhatsApp opcional: 8 dígitos o +56 9 9945 6548 o +56 9 9945 6548" autocomplete="off" />
+          <input id="newPhone" placeholder="WhatsApp opcional: 8 dígitos o +56 9 9945 6548" autocomplete="off" />
           <button class="big-action" onclick="addClient()">Agregar cliente</button>
         </div>
         <div class="label">Clientes guardados</div>
@@ -893,11 +1112,12 @@
           <h2>Productos</h2>
           <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
         </div>
-        <p class="edit-help">El costo se usa para calcular ganancias. Toca “Editar” en un producto para cambiar precio o costo.</p>
-        <div class="form">
-          <input id="newProductName" placeholder="Nombre producto. Ej: Papas" autocomplete="off" />
-          <input id="newProductPrice" type="number" min="0" step="10" placeholder="Precio venta. Ej: 500" />
-          <input id="newProductCost" type="number" min="0" step="10" placeholder="Costo para ti. Ej: 300" />
+        <p class="edit-help">Define precio, costo y stock desde aquí. Si dejas el stock vacío, ese producto se podrá vender sin límite.</p>
+        <div class="form product-add-grid">
+          <input id="newProductName" class="wide" placeholder="Nombre producto. Ej: Papas" autocomplete="off" />
+          <input id="newProductPrice" type="number" min="0" step="10" placeholder="Precio venta" />
+          <input id="newProductCost" type="number" min="0" step="10" placeholder="Costo" />
+          <input id="newProductStock" type="number" min="0" step="1" placeholder="Stock opcional" />
           <select id="newProductColor">
             <option value="#8b5a2b">Café</option>
             <option value="#f2c94c">Amarillo</option>
@@ -912,6 +1132,41 @@
         </div>
         <div class="label">Productos guardados</div>
         <div id="editProducts" class="compact-list"></div>
+      </div>
+
+      <div id="editPanelSettings" class="edit-panel">
+        <div class="panel-head">
+          <h2>Ajustes</h2>
+          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+        </div>
+
+        <div class="label">Título principal</div>
+        <p class="edit-help">Cambia el nombre grande que aparece al inicio.</p>
+        <div class="form">
+          <input id="settingsAppTitle" placeholder="Prisma" autocomplete="off" />
+          <button class="secondary-action" onclick="saveAppTitleSetting()">Guardar título</button>
+        </div>
+
+        <div class="label">Clave de Ganancias</div>
+        <p class="edit-help">La app ya no trae clave fija. Guarda una clave numérica de 4 dígitos.</p>
+        <div class="form">
+          <input id="settingsProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Nueva clave de 4 números" autocomplete="new-password" />
+          <button class="secondary-action" onclick="saveProfitPinFromSettings()">Guardar clave</button>
+        </div>
+
+        <div class="label">Animaciones</div>
+        <p class="edit-help">Muestra una gatita abajo en Inicio con animación cuadro por cuadro.</p>
+        <div class="settings-toggle">
+          <div>
+            <strong>Gatita animada</strong>
+            <small id="mascotToggleHelp">Activa o desactiva las animaciones.</small>
+          </div>
+          <button id="mascotToggleBtn" class="toggle-btn" onclick="toggleMascotAnimations()">Activadas</button>
+        </div>
+
+        <div class="label">Borrar datos</div>
+        <p class="edit-help">Reinicia clientes, productos, historial, título y clave.</p>
+        <button class="danger-action" onclick="resetAll()">Borrar datos</button>
       </div>
 
       <div id="editPanelBackup" class="edit-panel">
@@ -1022,7 +1277,7 @@
 
   <div id="receiptModal" class="modal">
     <div class="sheet">
-      <h2>Boleta</h2>
+      <h2 id="receiptModalTitle">Boleta</h2>
       <p class="muted">Si el cliente tiene WhatsApp guardado, se intentará abrir directo su conversación. Si no tiene número, se abrirá compartir genérico.</p>
 
       <div class="receipt-preview-wrap">
@@ -1062,6 +1317,24 @@
       </div>
 
       <button class="secondary-action" onclick="closeModal('profitPinModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <div id="setProfitPinModal" class="modal">
+    <div class="sheet">
+      <h2>Crear clave de Ganancias</h2>
+      <p class="muted">Primero crea una clave numérica de 4 dígitos. No viene una clave por defecto.</p>
+
+      <div class="label">Nueva clave</div>
+      <input id="initialProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Ej: 1234" autocomplete="new-password" />
+
+      <div class="label">Repetir clave</div>
+      <input id="initialProfitPinConfirm" type="password" inputmode="numeric" maxlength="4" placeholder="Repite la clave" autocomplete="new-password" />
+
+      <div class="ticket-actions">
+        <button class="big-action" onclick="saveInitialProfitPin()">Guardar clave</button>
+        <button class="secondary-action" onclick="closeModal('setProfitPinModal')">Cancelar</button>
+      </div>
     </div>
   </div>
 
@@ -1143,15 +1416,15 @@
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
 
     const defaultData = {
-      clients: [
-        { id: "c1", name: "Ana", phone: "" },
-        { id: "c2", name: "Camila", phone: "" },
-        { id: "c3", name: "Claudio Otaiza", phone: "" },
-        { id: "c4", name: "Juan", phone: "" }
-      ],
+      clients: [],
       products: [],
       movements: [],
-      nextReceiptNumber: 1
+      nextReceiptNumber: 1,
+      settings: {
+        appTitle: "Prisma",
+        profitPin: "",
+        mascotAnimations: true
+      }
     };
 
     let data = loadData();
@@ -1161,9 +1434,31 @@
     let selectedSaleMethod = "Efectivo";
     let selectedPaymentMethod = "Efectivo";
     let selectedPaymentSaleIds = [];
+    let editingProductId = null;
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
+    let currentAccumulatedReceipt = null;
+    let activeHistoryTab = "boletas";
     let navStack = ["home"];
+    let mascotTimer = null;
+    let mascotFrameTimer = null;
+    let mascotSceneKey = "";
+    let mascotSequenceIndex = 0;
+
+    const mascotFrames = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 }
+    ];
+
+    const mascotPlaySequence = [0, 1, 2, 3, 4, 3, 2, 1, 5, 6, 7, 8, 7, 6, 5, 8, 9, 8, 7, 6];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -1214,9 +1509,8 @@
       let movements = Array.isArray(imported.movements) ? imported.movements.map(normalizeMovement) : [];
       movements.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-      if (isLegacyDefaultProductSet(products) && movements.length === 0) {
-        products = [];
-      }
+      products = removeLegacyDefaultProducts(products);
+      clients = removeLegacyDefaultClients(clients, movements);
 
       let maxBoleta = 0;
       movements.forEach(m => {
@@ -1234,12 +1528,44 @@
 
       movements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+      const settings = normalizeSettings(imported.settings || {});
+
       return {
-        clients: clients.length ? clients : base.clients,
+        clients,
         products,
         movements,
-        nextReceiptNumber
+        nextReceiptNumber,
+        settings
       };
+    }
+
+    function normalizeSettings(settings = {}) {
+      const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
+      const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
+      const mascotAnimations = settings.mascotAnimations !== false;
+      return { appTitle, profitPin, mascotAnimations };
+    }
+
+    function getSettings() {
+      if (!data.settings) data.settings = normalizeSettings({});
+      data.settings = normalizeSettings(data.settings);
+      return data.settings;
+    }
+
+    function renderAppTitle() {
+      const settings = getSettings();
+      const title = settings.appTitle || "Prisma";
+      const titleEl = document.getElementById("appTitle");
+      if (titleEl) titleEl.textContent = title;
+      document.title = title;
+    }
+
+    function normalizePin(value) {
+      return String(value || "").replace(/\D/g, "").slice(0, 4);
+    }
+
+    function getProfitPin() {
+      return normalizePin(getSettings().profitPin);
     }
 
     function normalizeMovement(m) {
@@ -1267,10 +1593,12 @@
             qty: Number(item.qty || 1),
             price: Number(item.price || 0),
             cost: Math.max(0, Number(item.cost || 0)),
-            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1)))
+            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1))),
+            stockBefore: normalizeStockValue(item.stockBefore ?? null),
+            stockAfter: normalizeStockValue(item.stockAfter ?? null)
           })) : [],
           total,
-          status: m.status || (amountPaid >= total ? "pagado" : "fiado"),
+          status: paymentStatus,
           method: m.method || "",
           lastPaymentMethod: m.lastPaymentMethod || m.method || "",
           amountPaid,
@@ -1306,8 +1634,12 @@
     }
 
     function persist() {
+      data.settings = normalizeSettings(data.settings || {});
+      syncAllSalePaymentStates();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderAppTitle();
       renderHomeStats();
+      updateMascotVisibility();
     }
 
     function makeId() {
@@ -1429,7 +1761,10 @@
       document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
       document.getElementById(id).classList.add("active");
 
-      if (id === "home") renderHomeStats();
+      if (id === "home") {
+        renderHomeStats();
+        updateMascotVisibility();
+      }
       if (id === "venta") renderProducts();
       if (id === "nombres") renderNamesPage();
       if (id === "historial") renderHistory();
@@ -1484,8 +1819,25 @@
       return new Date(value).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
     }
 
+    function formatCsvDateTime(value) {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+    }
+
     function formatDateOnly(value) {
       return new Date(value).toLocaleDateString("es-CL");
+    }
+
+    function formatShortDate(value) {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
     }
 
     function formatReceiptNumber(n) {
@@ -1535,14 +1887,98 @@
         name: String(product.name || "Producto"),
         price: Math.max(0, Number(product.price || 0)),
         cost: Math.max(0, Number(product.cost || product.unitCost || product.purchasePrice || 0)),
-        color: product.color || cssColors[product.css] || "#2f80ed"
+        color: product.color || cssColors[product.css] || "#2f80ed",
+        stock: normalizeStockValue(product.stock ?? product.inventory ?? product.qtyStock ?? product.quantityStock ?? null)
       };
     }
 
-    function isLegacyDefaultProductSet(products) {
-      if (!Array.isArray(products) || products.length !== 4) return false;
-      const ids = products.map(p => String(p.id || "")).sort().join("|");
-      return ids === "bachata|chocman|mani|super8";
+    function normalizeStockValue(value) {
+      if (value === null || value === undefined || value === "") return null;
+      const n = Number(value);
+      if (!Number.isFinite(n)) return null;
+      return Math.max(0, Math.floor(n));
+    }
+
+    function productStock(product) {
+      if (!product) return null;
+      return normalizeStockValue(product.stock);
+    }
+
+    function productHasStockControl(product) {
+      return productStock(product) !== null;
+    }
+
+    function stockInputId(productId) {
+      return "stock-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function stockLabel(product) {
+      const stock = productStock(product);
+      if (stock === null) return "Stock libre";
+      if (stock <= 0) return "Sin stock";
+      return "Stock " + stock;
+    }
+
+    function parseOptionalStock(raw) {
+      const text = String(raw ?? "").trim();
+      if (text === "") return null;
+      const n = Number(text);
+      if (!Number.isFinite(n) || n < 0) return undefined;
+      return Math.max(0, Math.floor(n));
+    }
+
+    function isLegacyDefaultProduct(product) {
+      const legacy = {
+        chocman: { name: "chocman", price: 350, color: "#8b5a2b" },
+        mani: { name: "maní", altName: "mani", price: 650, color: "#f2c94c" },
+        bachata: { name: "bachata", price: 400, color: "#eb5757" },
+        super8: { name: "super 8", altName: "super8", price: 400, color: "#ff7a00" }
+      };
+      const id = String(product.id || "").toLowerCase();
+      const item = legacy[id];
+      if (!item) return false;
+
+      const name = normalize(product.name || "");
+      const expectedName = normalize(item.name);
+      const expectedAltName = item.altName ? normalize(item.altName) : "";
+      const price = Number(product.price || 0);
+      const cost = Number(product.cost || 0);
+      const color = String(product.color || "").toLowerCase();
+
+      return (name === expectedName || (expectedAltName && name === expectedAltName))
+        && price === item.price
+        && cost === 0
+        && color === item.color;
+    }
+
+    function removeLegacyDefaultProducts(products) {
+      if (!Array.isArray(products)) return [];
+      return products.filter(product => !isLegacyDefaultProduct(product));
+    }
+
+    function isLegacyDefaultClient(client) {
+      const legacy = {
+        c1: "ana",
+        c2: "camila",
+        c3: "claudio otaiza",
+        c4: "juan"
+      };
+      const id = String(client.id || "").toLowerCase();
+      const expectedName = legacy[id];
+      if (!expectedName) return false;
+      return normalize(client.name || "") === expectedName && !sanitizePhone(client.phone || "");
+    }
+
+    function removeLegacyDefaultClients(clients, movements = []) {
+      if (!Array.isArray(clients)) return [];
+      const usedClientIds = new Set((movements || [])
+        .map(m => String(m.clientId || ""))
+        .filter(Boolean));
+
+      return clients.filter(client => {
+        if (!isLegacyDefaultClient(client)) return true;
+        return usedClientIds.has(String(client.id || ""));
+      });
     }
 
     function renderProducts() {
@@ -1553,10 +1989,25 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => {
+      const visibleProducts = data.products.filter(product => {
+        const stock = productStock(product);
+        return stock === null || stock > 0 || selectedCart[product.id];
+      });
+
+      if (!visibleProducts.length) {
+        target.innerHTML = '<div class="empty">No hay productos con stock disponible. Agrega stock en Editar &gt; Productos.</div>';
+        updateSelectionUI();
+        return;
+      }
+
+      target.innerHTML = visibleProducts.map(product => {
         const qty = selectedCart[product.id] || 0;
+        const stock = productStock(product);
+        const limited = stock !== null;
+        const reachedStock = limited && qty >= stock;
+        const disabled = reachedStock;
         return `
-          <button class="product ${qty ? "selected" : ""}" style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
+          <button class="product ${qty ? "selected" : ""}" ${disabled ? "disabled" : ""} style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
             <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small></span>
             ${qty ? `<b class="qty-badge">×${qty}</b>` : ""}
           </button>
@@ -1566,7 +2017,15 @@
     }
 
     function addProductToSelection(id) {
-      selectedCart[id] = (selectedCart[id] || 0) + 1;
+      const product = data.products.find(p => p.id === id);
+      if (!product) return;
+      const stock = productStock(product);
+      const currentQty = selectedCart[id] || 0;
+      if (stock !== null && currentQty >= stock) {
+        toast("No queda más stock de " + product.name);
+        return;
+      }
+      selectedCart[id] = currentQty + 1;
       renderProducts();
     }
 
@@ -1579,6 +2038,7 @@
           price: Number(product.price || 0),
           cost: Math.max(0, Number(product.cost || 0)),
           color: product.color,
+          stock: productStock(product),
           qty: selectedCart[product.id],
           total: Number(product.price || 0) * selectedCart[product.id]
         }));
@@ -1604,7 +2064,9 @@
         return;
       }
 
-      itemsTarget.innerHTML = items.map(item => `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`).join("");
+      itemsTarget.innerHTML = items.map(item => {
+        return `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`;
+      }).join("");
       totalTarget.textContent = formatMoney(getSelectedTotal());
       chooseBtn.disabled = false;
       clearBtn.disabled = false;
@@ -1707,10 +2169,46 @@
       document.getElementById("saleTransferBtn").classList.toggle("selected", method === "Transferencia");
     }
 
+    function validateStockForSale(items) {
+      for (const item of items) {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (stock !== null && Number(item.qty || 0) > stock) {
+          return { product: product || item, stock, qty: Number(item.qty || 0) };
+        }
+      }
+      return null;
+    }
+
+    function discountStockForSale(items) {
+      items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (!product || stock === null) return;
+        product.stock = Math.max(0, stock - Number(item.qty || 0));
+      });
+    }
+
+    function restoreStockForSale(sale) {
+      if (!sale || !Array.isArray(sale.items)) return;
+      sale.items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id)
+          || data.products.find(p => normalize(p.name) === normalize(item.name));
+        if (!product || !productHasStockControl(product)) return;
+        product.stock = Math.max(0, Number(productStock(product) || 0) + Number(item.qty || 0));
+      });
+    }
+
     function saveSale() {
       const items = getSelectedItems();
       if (!items.length) {
         toast("No hay productos seleccionados");
+        return;
+      }
+
+      const stockProblem = validateStockForSale(items);
+      if (stockProblem) {
+        toast(`${stockProblem.product.name || "Producto"}: stock ${stockProblem.stock}, seleccionado ${stockProblem.qty}`);
         return;
       }
 
@@ -1731,7 +2229,9 @@
           qty: item.qty,
           price: item.price,
           cost: item.cost,
-          total: item.total
+          total: item.total,
+          stockBefore: item.stock,
+          stockAfter: item.stock === null ? null : Math.max(0, Number(item.stock || 0) - Number(item.qty || 0))
         })),
         total,
         status: selectedSaleStatus,
@@ -1749,12 +2249,14 @@
         day: now.toISOString().slice(0, 10)
       };
 
+      discountStockForSale(items);
       data.movements.unshift(newSale);
 
       persist();
       closeModal("saleModal");
       selectedCart = {};
       currentReceiptSaleId = newSale.id;
+      currentAccumulatedReceipt = null;
 
       const preview = document.getElementById("afterSaleReceiptPreview");
       if (preview) {
@@ -1797,6 +2299,34 @@
 
     function getSaleRemaining(sale) {
       return Math.max(0, Number(sale.total || 0) - Number(sale.amountPaid || 0));
+    }
+
+    function syncSalePaymentState(sale) {
+      if (!sale || sale.type !== "venta") return sale;
+
+      const total = Math.max(0, Number(sale.total || 0));
+      const paid = Math.min(total, Math.max(0, Number(sale.amountPaid || 0)));
+      sale.amountPaid = paid;
+
+      if (total > 0 && paid >= total) {
+        sale.status = "pagado";
+        sale.paymentStatus = "pagado";
+        if (!sale.lastPaymentMethod) sale.lastPaymentMethod = sale.method || "Pagado";
+      } else if (paid > 0) {
+        sale.status = "abonado";
+        sale.paymentStatus = "abonado";
+      } else {
+        sale.status = "fiado";
+        sale.paymentStatus = "fiado";
+      }
+
+      return sale;
+    }
+
+    function syncAllSalePaymentStates() {
+      data.movements.forEach(m => {
+        if (m.type === "venta") syncSalePaymentState(m);
+      });
     }
 
     function getSaleStateText(sale) {
@@ -1946,10 +2476,7 @@
           method: selectedPaymentMethod,
           createdAt: now
         });
-        sale.paymentStatus = getSaleRemaining(sale) <= 0 ? "pagado" : "abonado";
-        if (getSaleRemaining(sale) <= 0) {
-          sale.status = "pagado";
-        }
+        syncSalePaymentState(sale);
 
         applied.push({
           saleId: sale.id,
@@ -1976,6 +2503,7 @@
 
       persist();
       closeModal("paymentModal");
+      activeHistoryTab = "boletas";
       toast("Abono guardado");
       go("historial");
     }
@@ -2000,12 +2528,43 @@
     }
 
 
+    function setHistoryTab(tab) {
+      activeHistoryTab = tab;
+      renderHistory();
+    }
+
+    function updateHistoryTabs() {
+      const labels = {
+        boletas: "Boletas",
+        abonos: "Abonos",
+        pendientes: "Pendientes Acumulados"
+      };
+
+      document.getElementById("historyTabBoletas")?.classList.toggle("active", activeHistoryTab === "boletas");
+      document.getElementById("historyTabAbonos")?.classList.toggle("active", activeHistoryTab === "abonos");
+      document.getElementById("historyTabPendientes")?.classList.toggle("active", activeHistoryTab === "pendientes");
+
+      const label = document.getElementById("historyLabel");
+      if (label) label.textContent = labels[activeHistoryTab] || "Boletas";
+    }
+
     function renderHistory() {
       const target = document.getElementById("historyList");
       if (!target) return;
 
-      if (!data.movements.length) {
-        target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
+      syncAllSalePaymentStates();
+      updateHistoryTabs();
+
+      if (activeHistoryTab === "pendientes") {
+        renderPendingAccumulated(target);
+        return;
+      }
+
+      const movements = data.movements.filter(m => activeHistoryTab === "abonos" ? m.type === "abono" : m.type === "venta");
+      const emptyText = activeHistoryTab === "abonos" ? "Todavía no hay abonos." : "Todavía no hay boletas.";
+
+      if (!movements.length) {
+        target.innerHTML = `<div class="empty">${emptyText}</div>`;
         return;
       }
 
@@ -2024,7 +2583,7 @@
         month: []
       };
 
-      data.movements.forEach(m => {
+      movements.forEach(m => {
         const diffDays = Math.floor((now - new Date(m.createdAt)) / 86400000);
         if (diffDays < 3) byGroup.recent.push(m);
         else if (diffDays < 7) byGroup.three.push(m);
@@ -2038,12 +2597,139 @@
         .join("");
 
       if (!target.innerHTML) {
-        target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
+        target.innerHTML = `<div class="empty">${emptyText}</div>`;
       }
       setTimeout(hideHistoryDeleteButtons, 0);
+    }
 
-      setTimeout(hideHistoryDeleteButtons, 0);
+    function pendingClientKeyFromSale(sale) {
+      if (sale.clientId) return "id:" + sale.clientId;
+      return "name:" + normalize(sale.clientName || "sin cliente");
+    }
 
+    function getClientForSale(sale) {
+      return data.clients.find(c =>
+        c.id === sale.clientId ||
+        normalize(c.name) === normalize(sale.clientName || "")
+      ) || null;
+    }
+
+    function getPendingAccumulatedClients() {
+      const map = new Map();
+
+      getSales().forEach(sale => {
+        const pending = getSaleRemaining(sale);
+        if (pending <= 0) return;
+
+        const key = pendingClientKeyFromSale(sale);
+        const client = getClientForSale(sale);
+        const current = map.get(key) || {
+          key,
+          clientId: client?.id || sale.clientId || "",
+          clientName: client?.name || sale.clientName || "Cliente",
+          clientPhone: sanitizePhone(client?.phone || sale.clientPhone || ""),
+          sales: [],
+          pending: 0,
+          total: 0,
+          paid: 0
+        };
+
+        current.sales.push(sale);
+        current.pending += pending;
+        current.total += Number(sale.total || 0);
+        current.paid += Number(sale.amountPaid || 0);
+        if (!current.clientPhone) current.clientPhone = sanitizePhone(client?.phone || sale.clientPhone || "");
+        map.set(key, current);
+      });
+
+      return [...map.values()].sort((a, b) => b.pending - a.pending || a.clientName.localeCompare(b.clientName));
+    }
+
+    function renderPendingAccumulated(target) {
+      const clients = getPendingAccumulatedClients();
+
+      if (!clients.length) {
+        target.innerHTML = '<div class="empty">No hay clientes con boletas pendientes.</div>';
+        return;
+      }
+
+      target.innerHTML = clients.map(client => {
+        const receiptNumbers = client.sales.map(sale => formatReceiptNumber(sale.boletaNumber)).join(", ");
+        const dates = [...new Set(client.sales.map(sale => formatShortDate(sale.createdAt)).filter(Boolean))].join(", ");
+        return `
+          <div class="card">
+            <div class="card-left">
+              <strong>${escapeHtml(client.clientName)}</strong>
+              <div class="pending-summary">
+                <small>${client.sales.length} boleta(s) pendiente(s) · ${escapeHtml(dates || "Sin fecha")}</small>
+                <small>Boletas ${escapeHtml(receiptNumbers)}</small>
+                <small>Total acumulado: ${formatMoney(client.pending)}</small>
+              </div>
+              <span class="badge debt">Pendiente</span>
+            </div>
+            <div class="card-actions">
+              <button class="share-btn" onclick="showAccumulatedReceipt('${escapeAttr(encodeURIComponent(client.key))}')">Boleta acumulada</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function buildAccumulatedReceiptFromKey(encodedKey) {
+      const key = decodeURIComponent(String(encodedKey || ""));
+      const client = getPendingAccumulatedClients().find(item => item.key === key);
+      if (!client) return null;
+
+      const itemMap = new Map();
+      client.sales.forEach(sale => {
+        const dateLabel = formatShortDate(sale.createdAt);
+        (sale.items || []).forEach(item => {
+          const name = String(item.name || "Producto");
+          const itemKey = `${normalize(name)}|${dateLabel}|${Number(item.price || 0)}`;
+          const current = itemMap.get(itemKey) || {
+            name,
+            qty: 0,
+            total: 0,
+            dateLabel
+          };
+          current.qty += Number(item.qty || 0);
+          current.total += Number(item.total || 0);
+          itemMap.set(itemKey, current);
+        });
+      });
+
+      return {
+        id: "acumulado-" + key,
+        type: "acumulado",
+        clientId: client.clientId,
+        clientName: client.clientName,
+        clientPhone: client.clientPhone,
+        sales: client.sales,
+        receiptNumbers: client.sales.map(sale => formatReceiptNumber(sale.boletaNumber)),
+        items: [...itemMap.values()],
+        total: client.total,
+        amountPaid: client.paid,
+        remaining: client.pending,
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function showAccumulatedReceipt(encodedKey) {
+      const receipt = buildAccumulatedReceiptFromKey(encodedKey);
+      if (!receipt || !receipt.sales.length) {
+        toast("No hay boletas pendientes para este cliente");
+        return;
+      }
+
+      currentReceiptSaleId = null;
+      currentAccumulatedReceipt = receipt;
+
+      setReceiptModalTitle("Boleta acumulada");
+      const target = document.getElementById("receiptPreview");
+      target.innerHTML = "";
+      target.appendChild(createAccumulatedReceiptNode(receipt));
+      removeReceiptDeleteButton();
+      openModal("receiptModal");
     }
 
     function renderHistoryGroup(group, movements) {
@@ -2138,12 +2824,12 @@
               return true;
             });
           }
-          sale.paymentStatus = getSaleRemaining(sale) <= 0 ? "pagado" : (Number(sale.amountPaid || 0) > 0 ? "abonado" : "fiado");
-          sale.status = getSaleRemaining(sale) <= 0 ? "pagado" : "fiado";
+          syncSalePaymentState(sale);
         });
       }
 
       if (movement.type === "venta") {
+        restoreStockForSale(movement);
         data.movements = data.movements.filter(m => {
           if (m.type !== "abono") return true;
           if (!Array.isArray(m.applied)) return true;
@@ -2183,6 +2869,7 @@
       const map = {
         clients: "editPanelClients",
         products: "editPanelProducts",
+        settings: "editPanelSettings",
         backup: "editPanelBackup",
         data: "editPanelData"
       };
@@ -2191,16 +2878,167 @@
       document.getElementById(id).classList.add("active");
       if (panel === "clients") renderEditClients();
       if (panel === "products") renderEditProducts();
+      if (panel === "settings") renderSettingsPanel();
     }
 
     function closeEditPanels() {
-      ["editPanelClients", "editPanelProducts", "editPanelBackup", "editPanelData"].forEach(id => {
+      editingProductId = null;
+      ["editPanelClients", "editPanelProducts", "editPanelSettings", "editPanelBackup", "editPanelData"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
       });
     }
 
 
+
+    function renderSettingsPanel() {
+      const settings = getSettings();
+      const titleInput = document.getElementById("settingsAppTitle");
+      const pinInput = document.getElementById("settingsProfitPin");
+      if (titleInput) titleInput.value = settings.appTitle || "Prisma";
+      if (pinInput) pinInput.value = "";
+
+      const toggleBtn = document.getElementById("mascotToggleBtn");
+      const toggleHelp = document.getElementById("mascotToggleHelp");
+      if (toggleBtn) {
+        const enabled = settings.mascotAnimations !== false;
+        toggleBtn.textContent = enabled ? "Activadas" : "Desactivadas";
+        toggleBtn.classList.toggle("on", enabled);
+      }
+      if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
+        ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
+        : "Las animaciones están apagadas.";
+    }
+
+    function saveAppTitleSetting() {
+      const input = document.getElementById("settingsAppTitle");
+      const title = input ? input.value.trim() : "";
+      if (!title) {
+        toast("Escribe un título");
+        return;
+      }
+      getSettings().appTitle = title;
+      persist();
+      renderSettingsPanel();
+      toast("Título actualizado");
+    }
+
+    function saveProfitPinFromSettings() {
+      const input = document.getElementById("settingsProfitPin");
+      const pin = normalizePin(input ? input.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      getSettings().profitPin = pin;
+      persist();
+      renderSettingsPanel();
+      toast("Clave guardada");
+    }
+
+
+
+
+    function areMascotAnimationsEnabled() {
+      return getSettings().mascotAnimations !== false;
+    }
+
+    function clearMascotTimers() {
+      clearTimeout(mascotTimer);
+      clearInterval(mascotFrameTimer);
+      mascotTimer = null;
+      mascotFrameTimer = null;
+    }
+
+    function toggleMascotAnimations() {
+      const settings = getSettings();
+      settings.mascotAnimations = settings.mascotAnimations === false;
+      persist();
+      renderSettingsPanel();
+      updateMascotVisibility();
+      toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
+    }
+
+    function setMascotFrame(frameIndex) {
+      const sprite = document.getElementById("mascotSprite");
+      if (!sprite) return;
+      const frame = mascotFrames[frameIndex] || mascotFrames[0];
+      const x = (frame.col * 100) / 4;
+      const y = (frame.row * 100) / 1;
+      sprite.style.backgroundPosition = x + "% " + y + "%";
+    }
+
+    function hideMascotStage() {
+      const stage = document.getElementById("mascotStage");
+      if (!stage) return;
+      stage.classList.remove("show", "side-right", "side-left");
+      stage.classList.add("is-hidden");
+      mascotSceneKey = "";
+    }
+
+    function playMascotSequenceNow() {
+      if (!areMascotAnimationsEnabled()) return;
+      const area = document.getElementById("mascotArea");
+      const stage = document.getElementById("mascotStage");
+      const actor = document.getElementById("mascotActor");
+      if (!area || !stage || !actor) return;
+
+      clearMascotTimers();
+      area.style.display = "block";
+      mascotSceneKey = "play";
+      mascotSequenceIndex = 0;
+
+      stage.className = "mascot-stage show " + (Math.random() < 0.5 ? "side-left" : "side-right");
+      actor.style.setProperty("--mascot-scale", (0.96 + Math.random() * 0.10).toFixed(2));
+      setMascotFrame(mascotPlaySequence[0]);
+
+      mascotFrameTimer = setInterval(() => {
+        mascotSequenceIndex += 1;
+        if (mascotSequenceIndex >= mascotPlaySequence.length) {
+          clearInterval(mascotFrameTimer);
+          mascotFrameTimer = null;
+          mascotTimer = setTimeout(() => {
+            hideMascotStage();
+            scheduleMascotScene();
+          }, 700);
+          return;
+        }
+        setMascotFrame(mascotPlaySequence[mascotSequenceIndex]);
+      }, 130);
+    }
+
+    function scheduleMascotScene() {
+      clearMascotTimers();
+      if (!areMascotAnimationsEnabled()) return;
+      const delay = 9000 + Math.floor(Math.random() * 14000);
+      mascotTimer = setTimeout(() => {
+        playMascotSequenceNow();
+      }, delay);
+    }
+
+    function updateMascotVisibility() {
+      const area = document.getElementById("mascotArea");
+      if (!area) return;
+
+      if (!areMascotAnimationsEnabled()) {
+        area.style.display = "none";
+        clearMascotTimers();
+        hideMascotStage();
+        return;
+      }
+
+      area.style.display = "block";
+      if (!mascotSceneKey) {
+        clearMascotTimers();
+        mascotTimer = setTimeout(() => playMascotSequenceNow(), 2200);
+      }
+    }
+
+    function initMascotArea() {
+      mascotSceneKey = "";
+      hideMascotStage();
+      updateMascotVisibility();
+    }
 
     function openClientEdit(id) {
       const client = data.clients.find(c => c.id === id);
@@ -2273,7 +3111,7 @@
               ${hasPhone ? `<button class="icon-btn" onclick="openClientWhatsappTest('${escapeJs(client.id)}')">WhatsApp</button>` : ""}
               ${hasPhone ? `<button class="icon-btn" onclick="copyClientPhone('${escapeJs(client.id)}')">Copiar</button>` : ""}
               <button class="icon-btn" onclick="openClientEdit('${escapeJs(client.id)}')">${editLabel}</button>
-              <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">×</button></span>
+              <button class="icon-btn danger" onclick="removeClient('${escapeJs(client.id)}')">Borrar</button>
             </div>
           </div>
         `;
@@ -2304,9 +3142,28 @@
     }
 
     function removeClient(id) {
-      data.clients = data.clients.filter(client => client.id !== id);
+      const client = data.clients.find(c => c.id === id);
+      if (!client) return;
+
+      const pendingSales = data.movements.filter(m => m.type === "venta" && m.clientId === id && getSaleRemaining(m) > 0);
+      const message = pendingSales.length
+        ? `¿Borrar a ${client.name}? Tiene ${pendingSales.length} boleta(s) pendiente(s). El historial queda guardado, pero ya no aparecerá para nuevos abonos.`
+        : `¿Borrar a ${client.name}? No borra ventas antiguas.`;
+
+      if (!confirm(message)) return;
+
+      data.clients = data.clients.filter(c => c.id !== id);
+      if (selectedClient && selectedClient.id === id) selectedClient = null;
+
       persist();
       renderEditClients();
+
+      const namesScreen = document.getElementById("nombres");
+      if (namesScreen && namesScreen.classList.contains("active")) renderNamesPage();
+
+      const abonoScreen = document.getElementById("abono");
+      if (abonoScreen && abonoScreen.classList.contains("active")) renderAbonoList();
+
       toast("Cliente eliminado");
     }
 
@@ -2315,10 +3172,12 @@
       const priceInput = document.getElementById("newProductPrice");
       const costInput = document.getElementById("newProductCost");
       const colorInput = document.getElementById("newProductColor");
+      const stockInput = document.getElementById("newProductStock");
       const name = nameInput.value.trim();
       const price = Math.max(0, Number(priceInput.value || 0));
       const cost = Math.max(0, Number(costInput.value || 0));
       const color = colorInput.value || "#2f80ed";
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
 
       if (!name) {
         toast("Escribe el nombre del producto");
@@ -2328,18 +3187,24 @@
         toast("Ingresa un precio");
         return;
       }
+      if (stock === undefined) {
+        toast("Ingresa un stock válido");
+        return;
+      }
 
       data.products.push({
         id: "prod-" + makeId(),
         name,
         price,
         cost,
-        color
+        color,
+        stock
       });
 
       nameInput.value = "";
       priceInput.value = "";
       costInput.value = "";
+      if (stockInput) stockInput.value = "";
       persist();
       renderEditProducts();
       toast("Producto agregado");
@@ -2355,6 +3220,25 @@
       toast("Producto quitado");
     }
 
+    function productEditInputId(productId, field) {
+      return "edit-product-" + field + "-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function productColorOptions(selectedColor) {
+      const colors = [
+        ["#8b5a2b", "Café"],
+        ["#f2c94c", "Amarillo"],
+        ["#eb5757", "Rojo"],
+        ["#ff7a00", "Naranja"],
+        ["#28c76f", "Verde"],
+        ["#2f80ed", "Azul"],
+        ["#9b51e0", "Morado"],
+        ["#111827", "Negro"]
+      ];
+      const value = String(selectedColor || "#2f80ed").toLowerCase();
+      return colors.map(([color, label]) => `<option value="${escapeAttr(color)}" ${color.toLowerCase() === value ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
+    }
+
     function renderEditProducts() {
       const target = document.getElementById("editProducts");
       if (!target) return;
@@ -2364,41 +3248,104 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => `
-        <div class="compact-row">
-          <div>
-            <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
-            <small>Venta ${formatMoney(product.price || 0)} · Costo ${formatMoney(product.cost || 0)} · Gana ${formatMoney(Number(product.price || 0) - Number(product.cost || 0))}</small>
+      target.innerHTML = data.products.map(product => {
+        const stock = productStock(product);
+        const stockValue = stock === null ? "" : String(stock);
+        const gain = Number(product.price || 0) - Number(product.cost || 0);
+
+        if (editingProductId === product.id) {
+          return `
+            <div class="compact-row product-edit-row">
+              <div class="product-edit-grid">
+                <input class="wide" id="${escapeAttr(productEditInputId(product.id, "name"))}" value="${escapeAttr(product.name || "")}" placeholder="Nombre" autocomplete="off" />
+                <input id="${escapeAttr(productEditInputId(product.id, "price"))}" type="number" min="0" step="10" value="${escapeAttr(product.price || 0)}" placeholder="Precio" />
+                <input id="${escapeAttr(productEditInputId(product.id, "cost"))}" type="number" min="0" step="10" value="${escapeAttr(product.cost || 0)}" placeholder="Costo" />
+                <input id="${escapeAttr(productEditInputId(product.id, "stock"))}" type="number" min="0" step="1" value="${escapeAttr(stockValue)}" placeholder="Stock vacío = libre" />
+                <select id="${escapeAttr(productEditInputId(product.id, "color"))}">${productColorOptions(product.color)}</select>
+                <button class="secondary-action" onclick="saveEditedProduct('${escapeJs(product.id)}')">Guardar</button>
+                <button class="secondary-action" onclick="cancelEditProduct()">Cancelar</button>
+                <button class="danger-action wide" onclick="removeProduct('${escapeJs(product.id)}')">Borrar producto</button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="compact-row product-compact-row">
+            <div>
+              <div class="product-main-line">
+                <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
+                <span class="product-stock-chip">${escapeHtml(stockLabel(product))}</span>
+              </div>
+              <small>${formatMoney(product.price || 0)} venta · ${formatMoney(product.cost || 0)} costo · ${formatMoney(gain)} gana</small>
+            </div>
+            <div class="compact-actions">
+              <button class="icon-btn" onclick="startEditProduct('${escapeJs(product.id)}')">Editar</button>
+              <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
+            </div>
           </div>
-          <div class="compact-actions">
-            <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <span class="history-delete-hidden"><button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">×</button></span>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
-    function quickEditProduct(id) {
+    function startEditProduct(id) {
+      editingProductId = id;
+      renderEditProducts();
+      setTimeout(() => {
+        const input = document.getElementById(productEditInputId(id, "name"));
+        if (input) input.focus();
+      }, 0);
+    }
+
+    function cancelEditProduct() {
+      editingProductId = null;
+      renderEditProducts();
+    }
+
+    function saveEditedProduct(id) {
       const product = data.products.find(p => p.id === id);
       if (!product) return;
 
-      const name = prompt("Nombre del producto", product.name);
-      if (name === null) return;
+      const nameInput = document.getElementById(productEditInputId(id, "name"));
+      const priceInput = document.getElementById(productEditInputId(id, "price"));
+      const costInput = document.getElementById(productEditInputId(id, "cost"));
+      const stockInput = document.getElementById(productEditInputId(id, "stock"));
+      const colorInput = document.getElementById(productEditInputId(id, "color"));
 
-      const price = prompt("Precio de venta", String(product.price || 0));
-      if (price === null) return;
+      const name = nameInput ? nameInput.value.trim() : "";
+      const price = Math.max(0, Number(priceInput ? priceInput.value || 0 : 0));
+      const cost = Math.max(0, Number(costInput ? costInput.value || 0 : 0));
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
+      const color = colorInput ? colorInput.value : product.color;
 
-      const cost = prompt("Costo para ti", String(product.cost || 0));
-      if (cost === null) return;
+      if (!name) {
+        toast("El nombre no puede quedar vacío");
+        return;
+      }
+      if (!price) {
+        toast("Ingresa un precio");
+        return;
+      }
+      if (stock === undefined) {
+        toast("Ingresa un stock válido");
+        return;
+      }
 
-      product.name = name.trim() || product.name;
-      product.price = Math.max(0, Number(price || 0));
-      product.cost = Math.max(0, Number(cost || 0));
+      product.name = name;
+      product.price = price;
+      product.cost = cost;
+      product.stock = stock;
+      product.color = color || "#2f80ed";
 
+      editingProductId = null;
       persist();
       renderEditProducts();
       renderProducts();
       toast("Producto actualizado");
+    }
+
+    function quickEditProduct(id) {
+      startEditProduct(id);
     }
 
     function saveProductsFromForm() {
@@ -2407,7 +3354,8 @@
         name: document.getElementById("prod-name-" + product.id).value.trim() || product.name,
         price: Math.max(0, Number(document.getElementById("prod-price-" + product.id).value || 0)),
         cost: Math.max(0, Number(document.getElementById("prod-cost-" + product.id).value || 0)),
-        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed"
+        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed",
+        stock: parseOptionalStock(document.getElementById("prod-stock-" + product.id)?.value ?? product.stock) ?? null
       }));
       persist();
       renderEditProducts();
@@ -2433,7 +3381,7 @@
           rows.push([
             "venta",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             formatReceiptNumber(m.boletaNumber),
             plainMovementProducts(m),
             Number(m.total || 0),
@@ -2448,7 +3396,7 @@
           rows.push([
             "abono",
             m.clientName || "",
-            formatDateTime(m.createdAt),
+            formatCsvDateTime(m.createdAt),
             (m.applied || []).map(a => formatReceiptNumber(a.boletaNumber)).join(", "),
             "",
             "",
@@ -2462,7 +3410,7 @@
         }
       });
 
-      const csv = rows.map(row => row.map(csvCell).join(";")).join("\n");
+      const csv = "sep=;\r\n" + rows.map(row => row.map(csvCell).join(";")).join("\r\n");
       const csvContent = "\ufeff" + csv;
       const filename = "prisma-historial.csv";
 
@@ -2476,7 +3424,13 @@
     }
 
     function csvCell(value) {
-      return `"${String(value ?? "").replaceAll('"', '""')}"`;
+      const clean = String(value ?? "")
+        .replace(/\uFEFF/g, "")
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim()
+        .replaceAll('"', '""');
+      return `"${clean}"`;
     }
 
     function crearPayloadRespaldo() {
@@ -2488,7 +3442,8 @@
           clients: data.clients,
           products: data.products,
           movements: data.movements,
-          nextReceiptNumber: data.nextReceiptNumber
+          nextReceiptNumber: data.nextReceiptNumber,
+          settings: getSettings()
         }
       };
     }
@@ -2581,6 +3536,14 @@
 
     function openProfitPin() {
       profitPinValue = "";
+      if (!getProfitPin()) {
+        const pin = document.getElementById("initialProfitPin");
+        const confirmPin = document.getElementById("initialProfitPinConfirm");
+        if (pin) pin.value = "";
+        if (confirmPin) confirmPin.value = "";
+        openModal("setProfitPinModal");
+        return;
+      }
       updateProfitPinDisplay();
       openModal("profitPinModal");
     }
@@ -2606,7 +3569,7 @@
     }
 
     function submitProfitPin() {
-      if (profitPinValue !== "1145") {
+      if (profitPinValue !== getProfitPin()) {
         profitPinValue = "";
         updateProfitPinDisplay();
         toast("Clave incorrecta");
@@ -2618,6 +3581,30 @@
       const profitRange = document.getElementById("profitRange");
       if (profitRange) profitRange.value = "all";
       renderProfitDashboard();
+    }
+
+    function saveInitialProfitPin() {
+      const pinInput = document.getElementById("initialProfitPin");
+      const confirmInput = document.getElementById("initialProfitPinConfirm");
+      const pin = normalizePin(pinInput ? pinInput.value : "");
+      const confirmPin = normalizePin(confirmInput ? confirmInput.value : "");
+      if (pin.length !== 4) {
+        toast("La clave debe tener 4 números");
+        return;
+      }
+      if (pin !== confirmPin) {
+        toast("Las claves no coinciden");
+        return;
+      }
+
+      getSettings().profitPin = pin;
+      persist();
+      closeModal("setProfitPinModal");
+      openModal("profitModal");
+      const profitRange = document.getElementById("profitRange");
+      if (profitRange) profitRange.value = "all";
+      renderProfitDashboard();
+      toast("Clave creada");
     }
 
 
@@ -2985,16 +3972,7 @@
 
       if (!ok) return;
 
-      if (Array.isArray(data.movements)) {
-        data.movements = data.movements.filter(m => m.id !== sale.id);
-      }
-
-      if (Array.isArray(data.sales)) {
-        data.sales = data.sales.filter(m => m.id !== sale.id);
-      }
-
-      if (typeof renumberReceipts === "function") renumberReceipts();
-      persist();
+      deleteMovement(sale.id);
 
       closeModal("receiptModal");
       closeModal("afterSaleModal");
@@ -3003,6 +3981,17 @@
       if (typeof renderHomeStats === "function") renderHomeStats();
 
       alert("Boleta eliminada.");
+    }
+
+    function setReceiptModalTitle(text) {
+      const title = document.getElementById("receiptModalTitle");
+      if (title) title.textContent = text;
+    }
+
+    function removeReceiptDeleteButton() {
+      const modal = document.getElementById("receiptModal");
+      const zone = modal?.querySelector(".safe-delete-zone");
+      if (zone) zone.remove();
     }
 
     function ensureReceiptDeleteButton() {
@@ -3029,6 +4018,8 @@
         return;
       }
       currentReceiptSaleId = id;
+      currentAccumulatedReceipt = null;
+      setReceiptModalTitle("Boleta");
       const target = document.getElementById("receiptPreview");
       target.innerHTML = "";
       target.appendChild(createReceiptNode(sale));
@@ -3038,6 +4029,53 @@
 
     function currentSale() {
       return getSaleById(currentReceiptSaleId);
+    }
+
+    function currentReceipt() {
+      return currentAccumulatedReceipt || currentSale();
+    }
+
+    function createAccumulatedReceiptNode(receipt) {
+      const card = document.createElement("div");
+      card.className = "receipt-card";
+
+      const itemsHtml = (receipt.items || []).map(item => `
+        <div class="receipt-item accumulated">
+          <div class="receipt-item-name">${escapeHtml(item.name)}</div>
+          <div class="receipt-item-qty">${item.qty}</div>
+          <div class="receipt-item-total">${formatMoney(item.total)}</div>
+          <div class="receipt-item-date">${escapeHtml(item.dateLabel || "")}</div>
+        </div>
+      `).join("");
+
+      card.innerHTML = `
+        <div class="receipt-head">
+          <div class="receipt-title">CLIENTE: ${escapeHtml((receipt.clientName || "CLIENTE").toUpperCase())}</div>
+          <div class="receipt-sub">Pendientes acumulados · ${escapeHtml(formatDateTime(receipt.createdAt))}</div>
+        </div>
+
+        <div class="receipt-meta">
+          <div class="receipt-row"><span class="receipt-left">Boletas</span><span class="receipt-right">${escapeHtml((receipt.receiptNumbers || []).join(", "))}</span></div>
+          <div class="receipt-row"><span class="receipt-left">Pago</span><span class="receipt-right">Pendiente</span></div>
+          <div class="receipt-row"><span class="receipt-left">Pendiente total</span><span class="receipt-right">${escapeHtml(formatMoney(receipt.remaining))}</span></div>
+        </div>
+        <div class="receipt-section">
+          <div class="receipt-table-head accumulated"><div>Producto</div><div style="text-align:right">Cant.</div><div style="text-align:right">Total</div><div style="text-align:right">Fecha</div></div>
+          ${itemsHtml}
+        </div>
+
+        <div class="receipt-summary">
+          <div class="receipt-line"><span>Total</span><strong>${formatMoney(receipt.total)}</strong></div>
+          <div class="receipt-line"><span>Abonado</span><span>${formatMoney(receipt.amountPaid || 0)}</span></div>
+          <div class="receipt-line"><span>Saldo acumulado</span><span>${formatMoney(receipt.remaining)}</span></div>
+        </div>
+
+        <div class="receipt-footer">
+          <div>Boletas acumuladas</div>
+          <div style="margin-top:8px;">Gracias por su compra</div>
+        </div>
+      `;
+      return card;
     }
 
     function createReceiptNode(sale) {
@@ -3095,8 +4133,9 @@
 
     function setShareBusy(isBusy) {
       document.querySelectorAll('button[onclick="compartirImagenWhatsApp()"]').forEach(button => {
+        if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
         button.classList.toggle("share-busy", isBusy);
-        button.textContent = isBusy ? "Abriendo WhatsApp..." : "Compartir imagen";
+        button.textContent = isBusy ? "Abriendo WhatsApp..." : button.dataset.originalText;
       });
     }
 
@@ -3122,8 +4161,8 @@
     async function compartirImagenWhatsApp() {
       if (shareBusy) return;
 
-      const sale = currentSale();
-      if (!sale) {
+      const receipt = currentReceipt();
+      if (!receipt) {
         alert("No hay boleta seleccionada.");
         return;
       }
@@ -3132,9 +4171,12 @@
       setShareBusy(true);
 
       try {
-        const blob = await buildReceiptImageCanvas(sale);
-        const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
-        const phone = phoneForSale(sale);
+        const isAccumulated = receipt.type === "acumulado";
+        const blob = isAccumulated ? await buildAccumulatedReceiptImageCanvas(receipt) : await buildReceiptImageCanvas(receipt);
+        const filename = isAccumulated
+          ? `pendientes-${safeFileName(receipt.clientName || "cliente")}.png`
+          : `boleta-${formatReceiptNumber(receipt.boletaNumber)}-${safeFileName(receipt.clientName || "cliente")}.png`;
+        const phone = isAccumulated ? sanitizePhone(receipt.clientPhone || "") : phoneForSale(receipt);
 
         if (window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function" && phone) {
           const dataUrl = await blobToDataUrl(blob);
@@ -3333,6 +4375,138 @@
     }
 
 
+    async function buildAccumulatedReceiptImageCanvas(receipt) {
+      const scale = window.AndroidBridge ? 1.35 : 2;
+      const width = 760;
+      const margin = 42;
+      const items = receipt.items || [];
+      const height = 710 + Math.max(1, items.length) * 68;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      let y = 58;
+      const black = "#111111";
+      const muted = "#4b5563";
+      const dash = "#9ca3af";
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = black;
+      ctx.font = "900 36px Arial";
+      fitCenteredCanvasText(ctx, "CLIENTE: " + (receipt.clientName || "CLIENTE").toUpperCase(), width / 2, y, width - margin * 2);
+      y += 36;
+
+      ctx.fillStyle = muted;
+      ctx.font = "24px Arial";
+      ctx.fillText("PENDIENTES ACUMULADOS", width / 2, y);
+      y += 40;
+
+      dashedLine(ctx, margin, y, width - margin, y, dash);
+      y += 34;
+
+      y = canvasPair(ctx, "Boletas", (receipt.receiptNumbers || []).join(", "), margin, width - margin, y);
+      y = canvasPair(ctx, "Pago", "Pendiente", margin, width - margin, y);
+      y = canvasPair(ctx, "Pendiente total", formatMoney(receipt.remaining), margin, width - margin, y);
+
+      y += 12;
+      dashedLine(ctx, margin, y, width - margin, y, dash);
+      y += 38;
+
+      ctx.fillStyle = muted;
+      ctx.textAlign = "left";
+      ctx.font = "900 18px Arial";
+      ctx.fillText("PRODUCTO", margin, y);
+      ctx.textAlign = "right";
+      ctx.fillText("CANT.", width - margin - 210, y);
+      ctx.fillText("TOTAL", width - margin - 72, y);
+      ctx.fillText("FECHA", width - margin, y);
+      y += 22;
+
+      dashedLine(ctx, margin, y, width - margin, y, dash);
+      y += 42;
+
+      items.forEach(item => {
+        ctx.textAlign = "left";
+        ctx.fillStyle = black;
+        ctx.font = "900 25px Arial";
+        fillCanvasTextEllipsis(ctx, item.name, margin, y, width - margin * 2 - 330);
+
+        ctx.textAlign = "right";
+        ctx.font = "25px Arial";
+        ctx.fillText(String(item.qty), width - margin - 220, y);
+
+        ctx.font = "900 25px Arial";
+        ctx.fillText(formatMoney(item.total), width - margin - 72, y);
+
+        ctx.font = "25px Arial";
+        ctx.fillText(item.dateLabel || "", width - margin, y);
+        y += 60;
+      });
+
+      y += 8;
+      dashedLine(ctx, margin, y, width - margin, y, dash);
+      y += 58;
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = black;
+      ctx.font = "28px Arial";
+      ctx.fillText("TOTAL", margin, y);
+      ctx.textAlign = "right";
+      ctx.font = "900 44px Arial";
+      ctx.fillText(formatMoney(receipt.total), width - margin, y);
+      y += 40;
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = black;
+      ctx.font = "24px Arial";
+      ctx.fillText("ABONADO", margin, y);
+      ctx.textAlign = "right";
+      ctx.fillText(formatMoney(receipt.amountPaid || 0), width - margin, y);
+      y += 34;
+
+      ctx.textAlign = "left";
+      ctx.fillText("SALDO ACUMULADO", margin, y);
+      ctx.textAlign = "right";
+      ctx.fillText(formatMoney(receipt.remaining), width - margin, y);
+      y += 56;
+
+      dashedLine(ctx, margin, y, width - margin, y, dash);
+      y += 36;
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = muted;
+      ctx.font = "24px Arial";
+      ctx.fillText("Boletas acumuladas", width / 2, y);
+      y += 30;
+      ctx.fillText("Gracias por su compra", width / 2, y);
+
+      return await new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error("No se pudo generar PNG"));
+        }, "image/png");
+      });
+    }
+
+    function fillCanvasTextEllipsis(ctx, text, x, y, maxWidth) {
+      let value = String(text || "");
+      if (ctx.measureText(value).width <= maxWidth) {
+        ctx.fillText(value, x, y);
+        return;
+      }
+
+      while (value.length > 1 && ctx.measureText(value + "…").width > maxWidth) {
+        value = value.slice(0, -1);
+      }
+      ctx.fillText(value + "…", x, y);
+    }
+
     function fitCenteredCanvasText(ctx, text, x, y, maxWidth) {
       let size = 36;
       while (size > 22) {
@@ -3441,8 +4615,11 @@
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
+    syncAllSalePaymentStates();
+    renderAppTitle();
     renderHomeStats();
     renderProducts();
+    initMascotArea();
   </script>
 
 </body>
