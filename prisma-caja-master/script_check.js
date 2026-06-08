@@ -1,11 +1,5 @@
-
-    const STORAGE_KEY = "cajaMinimalDataV2";
+const STORAGE_KEY = "cajaMinimalDataV2";
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
-    const APP_VERSION_NAME = "2.8";
-    const APP_VERSION_CODE = 19;
-    const UPDATE_REPO_API = "https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest";
-    const UPDATE_REPO_RELEASES_URL = "https://github.com/juancontreras1145/prisma-caja/releases";
-
 
     const defaultData = {
       clients: [],
@@ -31,8 +25,6 @@
     let currentReceiptSaleId = null;
     let currentAccumulatedReceipt = null;
     let activeHistoryTab = "boletas";
-    let latestUpdateInfo = null;
-    let updateCheckBusy = false;
     let navStack = ["home"];
     let mascotTimer = null;
     let mascotFrameTimer = null;
@@ -1502,203 +1494,6 @@
       if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
         ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
         : "Las animaciones están apagadas.";
-
-      renderUpdatePanel();
-    }
-
-    function getNativeVersionName() {
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionName === "function") {
-          const version = String(window.AndroidBridge.getVersionName() || "").trim();
-          if (version) return version;
-        }
-      } catch (err) {}
-      return APP_VERSION_NAME;
-    }
-
-    function getNativeVersionCode() {
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
-          const code = Number(window.AndroidBridge.getVersionCode());
-          if (Number.isFinite(code) && code > 0) return code;
-        }
-      } catch (err) {}
-      return APP_VERSION_CODE;
-    }
-
-    function cleanVersionLabel(version) {
-      return String(version || "").trim().replace(/^v/i, "") || "—";
-    }
-
-    function versionParts(version) {
-      const clean = cleanVersionLabel(version);
-      const parts = clean.match(/\d+/g) || [];
-      return parts.map(part => Number(part)).slice(0, 5);
-    }
-
-    function compareVersions(a, b) {
-      const left = versionParts(a);
-      const right = versionParts(b);
-      const length = Math.max(left.length, right.length, 3);
-      for (let i = 0; i < length; i += 1) {
-        const av = left[i] || 0;
-        const bv = right[i] || 0;
-        if (av > bv) return 1;
-        if (av < bv) return -1;
-      }
-      return 0;
-    }
-
-    function getBestUpdateUrl(release) {
-      const assets = Array.isArray(release && release.assets) ? release.assets : [];
-      const apk = assets.find(asset => String(asset.name || "").toLowerCase().endsWith(".apk"));
-      if (apk && apk.browser_download_url) return apk.browser_download_url;
-      return release && release.html_url ? release.html_url : UPDATE_REPO_RELEASES_URL;
-    }
-
-    function setUpdateStatus(text, state = "") {
-      const status = document.getElementById("updateStatusText");
-      if (!status) return;
-      status.textContent = text;
-      status.classList.toggle("available", state === "available");
-      status.classList.toggle("error", state === "error");
-    }
-
-    function renderUpdatePanel() {
-      const installed = cleanVersionLabel(getNativeVersionName());
-      const installedCode = getNativeVersionCode();
-      const installedText = document.getElementById("installedVersionText");
-      const latestText = document.getElementById("latestVersionText");
-      const checkBtn = document.getElementById("checkUpdateBtn");
-      const downloadBtn = document.getElementById("downloadUpdateBtn");
-
-      if (installedText) installedText.textContent = installedCode ? `${installed} (${installedCode})` : installed;
-      if (latestText) latestText.textContent = latestUpdateInfo ? cleanVersionLabel(latestUpdateInfo.version) : "Sin buscar";
-      if (checkBtn) {
-        checkBtn.disabled = updateCheckBusy;
-        checkBtn.textContent = updateCheckBusy ? "Buscando..." : "Buscar actualizaciones";
-      }
-
-      const hasDownload = latestUpdateInfo && latestUpdateInfo.hasUpdate && latestUpdateInfo.url;
-      if (downloadBtn) downloadBtn.style.display = hasDownload ? "block" : "none";
-    }
-
-    function applyUpdateRelease(release) {
-      const latestVersion = cleanVersionLabel(release.tag_name || release.name || release.version || "");
-      if (!latestVersion || latestVersion === "—") {
-        throw new Error("no-version");
-      }
-
-      const installedVersion = cleanVersionLabel(getNativeVersionName());
-      const hasUpdate = compareVersions(installedVersion, latestVersion) < 0;
-      const url = release.download_url || getBestUpdateUrl(release);
-
-      latestUpdateInfo = {
-        version: latestVersion,
-        installedVersion,
-        hasUpdate,
-        url
-      };
-
-      renderUpdatePanel();
-
-      if (hasUpdate) {
-        setUpdateStatus(`Hay una nueva versión disponible: ${latestVersion}`, "available");
-      } else {
-        setUpdateStatus(`Ya tienes la última versión instalada: ${installedVersion}`);
-      }
-    }
-
-    function handleUpdateError(err) {
-      console.error(err);
-      latestUpdateInfo = null;
-      renderUpdatePanel();
-      const text = err && err.message === "no-release"
-        ? "No encontré releases publicadas en GitHub. Publica una release con un APK para que aparezca aquí."
-        : "No se pudo buscar actualizaciones. Revisa internet o intenta más tarde.";
-      setUpdateStatus(text, "error");
-    }
-
-    window.handleNativeUpdateResult = function(result) {
-      try {
-        const payload = typeof result === "string" ? JSON.parse(result) : result;
-        if (!payload || payload.ok === false) {
-          throw new Error(payload && payload.error ? payload.error : "native-error");
-        }
-        applyUpdateRelease(payload);
-      } catch (err) {
-        handleUpdateError(err);
-      } finally {
-        updateCheckBusy = false;
-        renderUpdatePanel();
-      }
-    };
-
-    async function fetchUpdateReleaseFromWeb() {
-      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
-
-      try {
-        const response = await fetch(UPDATE_REPO_API + "?t=" + Date.now(), {
-          headers: { "Accept": "application/vnd.github+json" },
-          cache: "no-store",
-          signal: controller ? controller.signal : undefined
-        });
-
-        if (response.status === 404) throw new Error("no-release");
-        if (!response.ok) throw new Error("http-" + response.status);
-
-        return await response.json();
-      } finally {
-        if (timer) clearTimeout(timer);
-      }
-    }
-
-    async function checkForUpdates() {
-      if (updateCheckBusy) return;
-      updateCheckBusy = true;
-      latestUpdateInfo = null;
-      renderUpdatePanel();
-      setUpdateStatus("Buscando última versión en GitHub...");
-
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.checkForUpdate === "function") {
-          window.AndroidBridge.checkForUpdate();
-          return;
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-
-      try {
-        const release = await fetchUpdateReleaseFromWeb();
-        applyUpdateRelease(release);
-      } catch (err) {
-        handleUpdateError(err);
-      } finally {
-        updateCheckBusy = false;
-        renderUpdatePanel();
-      }
-    }
-
-    function openExternalUrl(url) {
-      const safeUrl = String(url || "").trim();
-      if (!/^https?:\/\//i.test(safeUrl)) return;
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.openUrl === "function") {
-          window.AndroidBridge.openUrl(safeUrl);
-          return;
-        }
-      } catch (err) {}
-      window.location.href = safeUrl;
-    }
-
-    function downloadFoundUpdate() {
-      if (!latestUpdateInfo || !latestUpdateInfo.url) {
-        setUpdateStatus("Primero busca una actualización.", "error");
-        return;
-      }
-      openExternalUrl(latestUpdateInfo.url);
     }
 
     function saveAppTitleSetting() {
@@ -3411,4 +3206,3 @@
     renderHomeStats();
     renderProducts();
     initMascotArea();
-  
