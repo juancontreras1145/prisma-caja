@@ -26,17 +26,24 @@
     let currentReceiptSaleId = null;
     let navStack = ["home"];
     let mascotTimer = null;
+    let mascotFrameTimer = null;
     let mascotSceneKey = "";
+    let mascotSequenceIndex = 0;
 
-    const mascotScenes = [
-      { key: "play", prop: "🧶", text: "La gatita está jugando con una bola de lana.", note: "Hoy anda juguetona." },
-      { key: "eat", prop: "🐟", text: "La gatita encontró un snack y está comiendo feliz.", note: "Parece que le gustó mucho." },
-      { key: "drink", prop: "🥛", text: "La gatita se tomó una pausa para tomar leche.", note: "Un descanso bien merecido." },
-      { key: "sleep", prop: "💤", text: "La gatita se quedó dormidita un rato.", note: "Modo siesta activado." },
-      { key: "chase", prop: "🦋", text: "La gatita está persiguiendo una mariposa.", note: "No para quieta." },
-      { key: "greet", prop: "✨", text: "La gatita vino a saludar desde abajo.", note: "Te acompaña un ratito." },
-      { key: "clean", prop: "🪄", text: "La gatita anda arreglándose el pelito.", note: "Muy elegante hoy." }
+    const mascotFrames = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 }
     ];
+
+    const mascotPlaySequence = [0, 1, 2, 3, 4, 3, 2, 1, 5, 6, 7, 8, 7, 6, 5, 8, 9, 8, 7, 6];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -1293,7 +1300,7 @@
         toggleBtn.classList.toggle("on", enabled);
       }
       if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
-        ? "La gatita aparece y cambia de actividad al azar."
+        ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
         : "Las animaciones están apagadas.";
     }
 
@@ -1330,6 +1337,13 @@
       return getSettings().mascotAnimations !== false;
     }
 
+    function clearMascotTimers() {
+      clearTimeout(mascotTimer);
+      clearInterval(mascotFrameTimer);
+      mascotTimer = null;
+      mascotFrameTimer = null;
+    }
+
     function toggleMascotAnimations() {
       const settings = getSettings();
       settings.mascotAnimations = settings.mascotAnimations === false;
@@ -1339,43 +1353,60 @@
       toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
     }
 
-    function setMascotScene(scene) {
-      const stage = document.getElementById("mascotStage");
-      const bubble = document.getElementById("mascotBubble");
-      const prop = document.getElementById("mascotProp");
-      if (!stage || !bubble || !prop) return;
-
-      if (!scene) {
-        stage.className = "mascot-stage is-hidden";
-        bubble.innerHTML = "";
-        prop.textContent = "";
-        mascotSceneKey = "";
-        return;
-      }
-
-      mascotSceneKey = scene.key;
-      stage.className = "mascot-stage mascot-scene-" + scene.key;
-      bubble.innerHTML = escapeHtml(scene.text) + "<small>" + escapeHtml(scene.note || "") + "</small>";
-      prop.textContent = scene.prop || "✨";
+    function setMascotFrame(frameIndex) {
+      const sprite = document.getElementById("mascotSprite");
+      if (!sprite) return;
+      const frame = mascotFrames[frameIndex] || mascotFrames[0];
+      const x = (frame.col * 100) / 4;
+      const y = (frame.row * 100) / 1;
+      sprite.style.backgroundPosition = x + "% " + y + "%";
     }
 
-    function chooseRandomMascotScene() {
-      if (!areMascotAnimationsEnabled()) return null;
-      const shouldHide = Math.random() < 0.18;
-      if (shouldHide) return null;
+    function hideMascotStage() {
+      const stage = document.getElementById("mascotStage");
+      if (!stage) return;
+      stage.classList.remove("show", "side-right", "side-left");
+      stage.classList.add("is-hidden");
+      mascotSceneKey = "";
+    }
 
-      const candidates = mascotScenes.filter(scene => scene.key !== mascotSceneKey);
-      const pool = candidates.length ? candidates : mascotScenes;
-      return pool[Math.floor(Math.random() * pool.length)] || mascotScenes[0];
+    function playMascotSequenceNow() {
+      if (!areMascotAnimationsEnabled()) return;
+      const area = document.getElementById("mascotArea");
+      const stage = document.getElementById("mascotStage");
+      const actor = document.getElementById("mascotActor");
+      if (!area || !stage || !actor) return;
+
+      clearMascotTimers();
+      area.style.display = "block";
+      mascotSceneKey = "play";
+      mascotSequenceIndex = 0;
+
+      stage.className = "mascot-stage show " + (Math.random() < 0.5 ? "side-left" : "side-right");
+      actor.style.setProperty("--mascot-scale", (0.96 + Math.random() * 0.10).toFixed(2));
+      setMascotFrame(mascotPlaySequence[0]);
+
+      mascotFrameTimer = setInterval(() => {
+        mascotSequenceIndex += 1;
+        if (mascotSequenceIndex >= mascotPlaySequence.length) {
+          clearInterval(mascotFrameTimer);
+          mascotFrameTimer = null;
+          mascotTimer = setTimeout(() => {
+            hideMascotStage();
+            scheduleMascotScene();
+          }, 700);
+          return;
+        }
+        setMascotFrame(mascotPlaySequence[mascotSequenceIndex]);
+      }, 130);
     }
 
     function scheduleMascotScene() {
-      clearTimeout(mascotTimer);
+      clearMascotTimers();
       if (!areMascotAnimationsEnabled()) return;
       const delay = 9000 + Math.floor(Math.random() * 14000);
       mascotTimer = setTimeout(() => {
-        setMascotScene(chooseRandomMascotScene());
-        scheduleMascotScene();
+        playMascotSequenceNow();
       }, delay);
     }
 
@@ -1385,18 +1416,21 @@
 
       if (!areMascotAnimationsEnabled()) {
         area.style.display = "none";
-        clearTimeout(mascotTimer);
-        mascotTimer = null;
+        clearMascotTimers();
+        hideMascotStage();
         return;
       }
 
       area.style.display = "block";
-      if (!mascotSceneKey) setMascotScene(chooseRandomMascotScene() || mascotScenes[0]);
-      scheduleMascotScene();
+      if (!mascotSceneKey) {
+        clearMascotTimers();
+        mascotTimer = setTimeout(() => playMascotSequenceNow(), 2200);
+      }
     }
 
     function initMascotArea() {
       mascotSceneKey = "";
+      hideMascotStage();
       updateMascotVisibility();
     }
 

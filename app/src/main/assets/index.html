@@ -63,7 +63,7 @@
 
     .mascot-area {
       position: relative;
-      min-height: 155px;
+      min-height: 150px;
       margin-top: 20px;
       overflow: hidden;
       pointer-events: none;
@@ -72,89 +72,63 @@
     .mascot-stage {
       position: absolute;
       inset: 0;
-      opacity: 1;
-      transition: opacity .35s ease;
+      opacity: 0;
+      transition: opacity .28s ease;
     }
 
+    .mascot-stage.show { opacity: 1; }
     .mascot-stage.is-hidden { opacity: 0; }
 
-    .mascot-cat {
+    .mascot-actor {
       position: absolute;
-      bottom: 10px;
-      width: 118px;
+      left: 16px;
+      bottom: 4px;
+      width: 150px;
       height: 118px;
-      object-fit: contain;
-      filter: drop-shadow(0 14px 18px rgba(0,0,0,.32));
       transform-origin: bottom center;
-      opacity: .96;
+      transform: scale(var(--mascot-scale, 1));
+    }
+
+    .mascot-stage.side-right .mascot-actor {
+      left: auto;
+      right: 16px;
+      transform: scaleX(-1) scale(var(--mascot-scale, 1));
     }
 
     .mascot-shadow {
       position: absolute;
-      bottom: 14px;
-      width: 112px;
-      height: 24px;
+      left: 18px;
+      bottom: 10px;
+      width: 96px;
+      height: 22px;
       border-radius: 999px;
-      background: radial-gradient(circle at center, rgba(0,0,0,.32), transparent 70%);
+      background: radial-gradient(circle at center, rgba(0,0,0,.32), transparent 72%);
       filter: blur(2px);
-      opacity: .55;
+      opacity: .38;
     }
 
-    @keyframes catIdle {
-      0%,100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(-1deg); }
+    .mascot-sprite {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 150px;
+      height: 118px;
+      background-image: url("mascot_sprite_play.png");
+      background-repeat: no-repeat;
+      background-size: 500% 200%;
+      background-position: 0% 0%;
+      filter: drop-shadow(0 12px 16px rgba(0,0,0,.26));
+      image-rendering: auto;
     }
 
-    @keyframes catWalkLeft {
-      0% { transform: translateX(42px) rotate(0deg); opacity: .05; }
-      12% { opacity: .96; }
-      50% { transform: translateX(-16px) rotate(-2deg); opacity: .96; }
-      88% { opacity: .96; }
-      100% { transform: translateX(-62px) rotate(1deg); opacity: .05; }
-    }
-
-    @keyframes catWalkRight {
-      0% { transform: translateX(-52px) rotate(0deg) scaleX(-1); opacity: .05; }
-      12% { opacity: .96; }
-      50% { transform: translateX(10px) rotate(2deg) scaleX(-1); opacity: .96; }
-      88% { opacity: .96; }
-      100% { transform: translateX(58px) rotate(-1deg) scaleX(-1); opacity: .05; }
-    }
-
-    @keyframes catPeek {
-      0%,100% { transform: translateY(38px) scale(.92); opacity: .35; }
-      35%,70% { transform: translateY(0) scale(1); opacity: .96; }
-    }
-
-    @keyframes catNap {
-      0%,100% { transform: translateY(0) scale(.98) rotate(-2deg); }
-      50% { transform: translateY(3px) scale(1) rotate(-2deg); }
-    }
-
-    @keyframes shadowPulse {
-      0%,100% { transform: scaleX(1); opacity: .45; }
-      50% { transform: scaleX(.88); opacity: .28; }
-    }
-
-    .mascot-scene-idle .mascot-cat { left: 24px; animation: catIdle 2.8s ease-in-out infinite; }
-    .mascot-scene-idle .mascot-shadow { left: 26px; animation: shadowPulse 2.8s ease-in-out infinite; }
-
-    .mascot-scene-walk-left .mascot-cat { right: 34px; animation: catWalkLeft 6.8s ease-in-out infinite; }
-    .mascot-scene-walk-left .mascot-shadow { right: 38px; animation: shadowPulse 1.8s ease-in-out infinite; }
-
-    .mascot-scene-walk-right .mascot-cat { left: 28px; animation: catWalkRight 6.8s ease-in-out infinite; }
-    .mascot-scene-walk-right .mascot-shadow { left: 32px; animation: shadowPulse 1.8s ease-in-out infinite; }
-
-    .mascot-scene-peek .mascot-cat { right: 26px; animation: catPeek 5.5s ease-in-out infinite; }
-    .mascot-scene-peek .mascot-shadow { right: 30px; animation: shadowPulse 2.2s ease-in-out infinite; }
-
-    .mascot-scene-nap .mascot-cat { left: 24px; animation: catNap 3.2s ease-in-out infinite; }
-    .mascot-scene-nap .mascot-shadow { left: 28px; animation: shadowPulse 3.2s ease-in-out infinite; }
+    @keyframes mascotFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .mascot-stage.show .mascot-actor { animation: mascotFadeIn .35s ease; }
 
     @media (max-width: 520px) {
-      .mascot-area { min-height: 140px; }
-      .mascot-cat { width: 104px; height: 104px; }
-      .mascot-shadow { width: 98px; }
+      .mascot-area { min-height: 138px; }
+      .mascot-actor { width: 132px; height: 104px; }
+      .mascot-sprite { width: 132px; height: 104px; }
+      .mascot-shadow { width: 84px; height: 20px; left: 16px; }
     }
 
     .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -972,9 +946,11 @@
       </div>
 
       <div id="mascotArea" class="mascot-area">
-        <div id="mascotStage" class="mascot-stage mascot-scene-idle">
-          <div class="mascot-shadow"></div>
-          <img id="mascotCat" class="mascot-cat" src="prisma_icon.png" alt="" />
+        <div id="mascotStage" class="mascot-stage is-hidden">
+          <div id="mascotActor" class="mascot-actor">
+            <div class="mascot-shadow"></div>
+            <div id="mascotSprite" class="mascot-sprite" aria-hidden="true"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1130,7 +1106,7 @@
         </div>
 
         <div class="label">Animaciones</div>
-        <p class="edit-help">Muestra una gatita pequeña abajo en Inicio con movimientos suaves.</p>
+        <p class="edit-help">Muestra una gatita abajo en Inicio con animación cuadro por cuadro.</p>
         <div class="settings-toggle">
           <div>
             <strong>Gatita animada</strong>
@@ -1414,15 +1390,24 @@
     let currentReceiptSaleId = null;
     let navStack = ["home"];
     let mascotTimer = null;
+    let mascotFrameTimer = null;
     let mascotSceneKey = "";
+    let mascotSequenceIndex = 0;
 
-    const mascotScenes = [
-      { key: "idle" },
-      { key: "walk-left" },
-      { key: "walk-right" },
-      { key: "peek" },
-      { key: "nap" }
+    const mascotFrames = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 }
     ];
+
+    const mascotPlaySequence = [0, 1, 2, 3, 4, 3, 2, 1, 5, 6, 7, 8, 7, 6, 5, 8, 9, 8, 7, 6];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -2679,7 +2664,7 @@
         toggleBtn.classList.toggle("on", enabled);
       }
       if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
-        ? "La gatita aparece abajo con movimientos discretos."
+        ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
         : "Las animaciones están apagadas.";
     }
 
@@ -2716,6 +2701,13 @@
       return getSettings().mascotAnimations !== false;
     }
 
+    function clearMascotTimers() {
+      clearTimeout(mascotTimer);
+      clearInterval(mascotFrameTimer);
+      mascotTimer = null;
+      mascotFrameTimer = null;
+    }
+
     function toggleMascotAnimations() {
       const settings = getSettings();
       settings.mascotAnimations = settings.mascotAnimations === false;
@@ -2725,37 +2717,60 @@
       toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
     }
 
-    function setMascotScene(scene) {
-      const stage = document.getElementById("mascotStage");
-      if (!stage) return;
-
-      if (!scene) {
-        stage.className = "mascot-stage is-hidden";
-        mascotSceneKey = "";
-        return;
-      }
-
-      mascotSceneKey = scene.key;
-      stage.className = "mascot-stage mascot-scene-" + scene.key;
+    function setMascotFrame(frameIndex) {
+      const sprite = document.getElementById("mascotSprite");
+      if (!sprite) return;
+      const frame = mascotFrames[frameIndex] || mascotFrames[0];
+      const x = (frame.col * 100) / 4;
+      const y = (frame.row * 100) / 1;
+      sprite.style.backgroundPosition = x + "% " + y + "%";
     }
 
-    function chooseRandomMascotScene() {
-      if (!areMascotAnimationsEnabled()) return null;
-      const shouldHide = Math.random() < 0.10;
-      if (shouldHide) return null;
+    function hideMascotStage() {
+      const stage = document.getElementById("mascotStage");
+      if (!stage) return;
+      stage.classList.remove("show", "side-right", "side-left");
+      stage.classList.add("is-hidden");
+      mascotSceneKey = "";
+    }
 
-      const candidates = mascotScenes.filter(scene => scene.key !== mascotSceneKey);
-      const pool = candidates.length ? candidates : mascotScenes;
-      return pool[Math.floor(Math.random() * pool.length)] || mascotScenes[0];
+    function playMascotSequenceNow() {
+      if (!areMascotAnimationsEnabled()) return;
+      const area = document.getElementById("mascotArea");
+      const stage = document.getElementById("mascotStage");
+      const actor = document.getElementById("mascotActor");
+      if (!area || !stage || !actor) return;
+
+      clearMascotTimers();
+      area.style.display = "block";
+      mascotSceneKey = "play";
+      mascotSequenceIndex = 0;
+
+      stage.className = "mascot-stage show " + (Math.random() < 0.5 ? "side-left" : "side-right");
+      actor.style.setProperty("--mascot-scale", (0.96 + Math.random() * 0.10).toFixed(2));
+      setMascotFrame(mascotPlaySequence[0]);
+
+      mascotFrameTimer = setInterval(() => {
+        mascotSequenceIndex += 1;
+        if (mascotSequenceIndex >= mascotPlaySequence.length) {
+          clearInterval(mascotFrameTimer);
+          mascotFrameTimer = null;
+          mascotTimer = setTimeout(() => {
+            hideMascotStage();
+            scheduleMascotScene();
+          }, 700);
+          return;
+        }
+        setMascotFrame(mascotPlaySequence[mascotSequenceIndex]);
+      }, 130);
     }
 
     function scheduleMascotScene() {
-      clearTimeout(mascotTimer);
+      clearMascotTimers();
       if (!areMascotAnimationsEnabled()) return;
       const delay = 9000 + Math.floor(Math.random() * 14000);
       mascotTimer = setTimeout(() => {
-        setMascotScene(chooseRandomMascotScene());
-        scheduleMascotScene();
+        playMascotSequenceNow();
       }, delay);
     }
 
@@ -2765,18 +2780,21 @@
 
       if (!areMascotAnimationsEnabled()) {
         area.style.display = "none";
-        clearTimeout(mascotTimer);
-        mascotTimer = null;
+        clearMascotTimers();
+        hideMascotStage();
         return;
       }
 
       area.style.display = "block";
-      if (!mascotSceneKey) setMascotScene(chooseRandomMascotScene() || mascotScenes[0]);
-      scheduleMascotScene();
+      if (!mascotSceneKey) {
+        clearMascotTimers();
+        mascotTimer = setTimeout(() => playMascotSequenceNow(), 2200);
+      }
     }
 
     function initMascotArea() {
       mascotSceneKey = "";
+      hideMascotStage();
       updateMascotVisibility();
     }
 
