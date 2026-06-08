@@ -1,6 +1,10 @@
-
-    const STORAGE_KEY = "cajaMinimalDataV2";
+const STORAGE_KEY = "cajaMinimalDataV2";
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
+
+    const APP_VERSION_NAME = "2.8";
+    const APP_VERSION_CODE = 19;
+    const UPDATE_REPO_API = "https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest";
+    const UPDATE_REPO_RELEASES_URL = "https://github.com/juancontreras1145/prisma-caja/releases";
 
     const defaultData = {
       clients: [],
@@ -9,7 +13,8 @@
       nextReceiptNumber: 1,
       settings: {
         appTitle: "Prisma",
-        profitPin: ""
+        profitPin: "",
+        mascotAnimations: true
       }
     };
 
@@ -20,9 +25,31 @@
     let selectedSaleMethod = "Efectivo";
     let selectedPaymentMethod = "Efectivo";
     let selectedPaymentSaleIds = [];
+    let editingProductId = null;
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
     let navStack = ["home"];
+    let mascotTimer = null;
+    let mascotFrameTimer = null;
+    let mascotSceneKey = "";
+    let mascotSequenceIndex = 0;
+    let latestUpdateInfo = null;
+    let updateCheckBusy = false;
+
+    const mascotFrames = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 }
+    ];
+
+    const mascotPlaySequence = [0, 1, 2, 3, 4, 3, 2, 1, 5, 6, 7, 8, 7, 6, 5, 8, 9, 8, 7, 6];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -106,7 +133,8 @@
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      return { appTitle, profitPin };
+      const mascotAnimations = settings.mascotAnimations !== false;
+      return { appTitle, profitPin, mascotAnimations };
     }
 
     function getSettings() {
@@ -156,7 +184,9 @@
             qty: Number(item.qty || 1),
             price: Number(item.price || 0),
             cost: Math.max(0, Number(item.cost || 0)),
-            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1)))
+            total: Number(item.total || (Number(item.price || 0) * Number(item.qty || 1))),
+            stockBefore: normalizeStockValue(item.stockBefore ?? null),
+            stockAfter: normalizeStockValue(item.stockAfter ?? null)
           })) : [],
           total,
           status: m.status || (amountPaid >= total ? "pagado" : "fiado"),
@@ -199,6 +229,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderAppTitle();
       renderHomeStats();
+      updateMascotVisibility();
     }
 
     function makeId() {
@@ -320,7 +351,10 @@
       document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
       document.getElementById(id).classList.add("active");
 
-      if (id === "home") renderHomeStats();
+      if (id === "home") {
+        renderHomeStats();
+        updateMascotVisibility();
+      }
       if (id === "venta") renderProducts();
       if (id === "nombres") renderNamesPage();
       if (id === "historial") renderHistory();
@@ -437,8 +471,44 @@
         name: String(product.name || "Producto"),
         price: Math.max(0, Number(product.price || 0)),
         cost: Math.max(0, Number(product.cost || product.unitCost || product.purchasePrice || 0)),
-        color: product.color || cssColors[product.css] || "#2f80ed"
+        color: product.color || cssColors[product.css] || "#2f80ed",
+        stock: normalizeStockValue(product.stock ?? product.inventory ?? product.qtyStock ?? product.quantityStock ?? null)
       };
+    }
+
+    function normalizeStockValue(value) {
+      if (value === null || value === undefined || value === "") return null;
+      const n = Number(value);
+      if (!Number.isFinite(n)) return null;
+      return Math.max(0, Math.floor(n));
+    }
+
+    function productStock(product) {
+      if (!product) return null;
+      return normalizeStockValue(product.stock);
+    }
+
+    function productHasStockControl(product) {
+      return productStock(product) !== null;
+    }
+
+    function stockInputId(productId) {
+      return "stock-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function stockLabel(product) {
+      const stock = productStock(product);
+      if (stock === null) return "Stock libre";
+      if (stock <= 0) return "Sin stock";
+      return "Stock " + stock;
+    }
+
+    function parseOptionalStock(raw) {
+      const text = String(raw ?? "").trim();
+      if (text === "") return null;
+      const n = Number(text);
+      if (!Number.isFinite(n) || n < 0) return undefined;
+      return Math.max(0, Math.floor(n));
     }
 
     function isLegacyDefaultProduct(product) {
@@ -503,10 +573,25 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => {
+      const visibleProducts = data.products.filter(product => {
+        const stock = productStock(product);
+        return stock === null || stock > 0 || selectedCart[product.id];
+      });
+
+      if (!visibleProducts.length) {
+        target.innerHTML = '<div class="empty">No hay productos con stock disponible. Agrega stock en Editar &gt; Productos.</div>';
+        updateSelectionUI();
+        return;
+      }
+
+      target.innerHTML = visibleProducts.map(product => {
         const qty = selectedCart[product.id] || 0;
+        const stock = productStock(product);
+        const limited = stock !== null;
+        const reachedStock = limited && qty >= stock;
+        const disabled = reachedStock;
         return `
-          <button class="product ${qty ? "selected" : ""}" style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
+          <button class="product ${qty ? "selected" : ""}" ${disabled ? "disabled" : ""} style="background:${gradient(product.color)}" onclick="addProductToSelection('${escapeJs(product.id)}')">
             <span>${escapeHtml(product.name)}<br><small>${formatMoney(product.price)}</small></span>
             ${qty ? `<b class="qty-badge">×${qty}</b>` : ""}
           </button>
@@ -516,7 +601,15 @@
     }
 
     function addProductToSelection(id) {
-      selectedCart[id] = (selectedCart[id] || 0) + 1;
+      const product = data.products.find(p => p.id === id);
+      if (!product) return;
+      const stock = productStock(product);
+      const currentQty = selectedCart[id] || 0;
+      if (stock !== null && currentQty >= stock) {
+        toast("No queda más stock de " + product.name);
+        return;
+      }
+      selectedCart[id] = currentQty + 1;
       renderProducts();
     }
 
@@ -529,6 +622,7 @@
           price: Number(product.price || 0),
           cost: Math.max(0, Number(product.cost || 0)),
           color: product.color,
+          stock: productStock(product),
           qty: selectedCart[product.id],
           total: Number(product.price || 0) * selectedCart[product.id]
         }));
@@ -554,7 +648,9 @@
         return;
       }
 
-      itemsTarget.innerHTML = items.map(item => `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`).join("");
+      itemsTarget.innerHTML = items.map(item => {
+        return `<div>${escapeHtml(item.name)} ×${item.qty} · ${formatMoney(item.total)}</div>`;
+      }).join("");
       totalTarget.textContent = formatMoney(getSelectedTotal());
       chooseBtn.disabled = false;
       clearBtn.disabled = false;
@@ -657,10 +753,46 @@
       document.getElementById("saleTransferBtn").classList.toggle("selected", method === "Transferencia");
     }
 
+    function validateStockForSale(items) {
+      for (const item of items) {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (stock !== null && Number(item.qty || 0) > stock) {
+          return { product: product || item, stock, qty: Number(item.qty || 0) };
+        }
+      }
+      return null;
+    }
+
+    function discountStockForSale(items) {
+      items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id);
+        const stock = productStock(product);
+        if (!product || stock === null) return;
+        product.stock = Math.max(0, stock - Number(item.qty || 0));
+      });
+    }
+
+    function restoreStockForSale(sale) {
+      if (!sale || !Array.isArray(sale.items)) return;
+      sale.items.forEach(item => {
+        const product = data.products.find(p => p.id === item.id)
+          || data.products.find(p => normalize(p.name) === normalize(item.name));
+        if (!product || !productHasStockControl(product)) return;
+        product.stock = Math.max(0, Number(productStock(product) || 0) + Number(item.qty || 0));
+      });
+    }
+
     function saveSale() {
       const items = getSelectedItems();
       if (!items.length) {
         toast("No hay productos seleccionados");
+        return;
+      }
+
+      const stockProblem = validateStockForSale(items);
+      if (stockProblem) {
+        toast(`${stockProblem.product.name || "Producto"}: stock ${stockProblem.stock}, seleccionado ${stockProblem.qty}`);
         return;
       }
 
@@ -681,7 +813,9 @@
           qty: item.qty,
           price: item.price,
           cost: item.cost,
-          total: item.total
+          total: item.total,
+          stockBefore: item.stock,
+          stockAfter: item.stock === null ? null : Math.max(0, Number(item.stock || 0) - Number(item.qty || 0))
         })),
         total,
         status: selectedSaleStatus,
@@ -699,6 +833,7 @@
         day: now.toISOString().slice(0, 10)
       };
 
+      discountStockForSale(items);
       data.movements.unshift(newSale);
 
       persist();
@@ -1094,6 +1229,7 @@
       }
 
       if (movement.type === "venta") {
+        restoreStockForSale(movement);
         data.movements = data.movements.filter(m => {
           if (m.type !== "abono") return true;
           if (!Array.isArray(m.applied)) return true;
@@ -1146,6 +1282,7 @@
     }
 
     function closeEditPanels() {
+      editingProductId = null;
       ["editPanelClients", "editPanelProducts", "editPanelSettings", "editPanelBackup", "editPanelData"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
@@ -1160,6 +1297,19 @@
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+
+      const toggleBtn = document.getElementById("mascotToggleBtn");
+      const toggleHelp = document.getElementById("mascotToggleHelp");
+      if (toggleBtn) {
+        const enabled = settings.mascotAnimations !== false;
+        toggleBtn.textContent = enabled ? "Activadas" : "Desactivadas";
+        toggleBtn.classList.toggle("on", enabled);
+      }
+      if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
+        ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
+        : "Las animaciones están apagadas.";
+
+      renderUpdatePanel();
     }
 
     function saveAppTitleSetting() {
@@ -1188,6 +1338,305 @@
       toast("Clave guardada");
     }
 
+    function getNativeVersionName() {
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionName === "function") {
+          const version = String(window.AndroidBridge.getVersionName() || "").trim();
+          if (version) return version;
+        }
+      } catch (err) {}
+      return APP_VERSION_NAME;
+    }
+
+    function getNativeVersionCode() {
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
+          const code = Number(window.AndroidBridge.getVersionCode());
+          if (Number.isFinite(code) && code > 0) return code;
+        }
+      } catch (err) {}
+      return APP_VERSION_CODE;
+    }
+
+    function cleanVersionLabel(version) {
+      return String(version || "").trim().replace(/^v/i, "") || "—";
+    }
+
+    function versionParts(version) {
+      const clean = cleanVersionLabel(version);
+      const parts = clean.match(/\d+/g) || [];
+      return parts.map(part => Number(part)).slice(0, 5);
+    }
+
+    function compareVersions(a, b) {
+      const left = versionParts(a);
+      const right = versionParts(b);
+      const length = Math.max(left.length, right.length, 3);
+      for (let i = 0; i < length; i += 1) {
+        const av = left[i] || 0;
+        const bv = right[i] || 0;
+        if (av > bv) return 1;
+        if (av < bv) return -1;
+      }
+      return 0;
+    }
+
+    function getBestUpdateUrl(release) {
+      const assets = Array.isArray(release && release.assets) ? release.assets : [];
+      const apk = assets.find(asset => String(asset.name || "").toLowerCase().endsWith(".apk"));
+      if (apk && apk.browser_download_url) return apk.browser_download_url;
+      if (release && release.download_url) return release.download_url;
+      return release && release.html_url ? release.html_url : UPDATE_REPO_RELEASES_URL;
+    }
+
+    function setUpdateStatus(text, state = "") {
+      const status = document.getElementById("updateStatusText");
+      if (!status) return;
+      status.textContent = text;
+      status.classList.toggle("available", state === "available");
+      status.classList.toggle("error", state === "error");
+    }
+
+    function renderUpdatePanel() {
+      const installed = cleanVersionLabel(getNativeVersionName());
+      const installedCode = getNativeVersionCode();
+      const installedText = document.getElementById("installedVersionText");
+      const latestText = document.getElementById("latestVersionText");
+      const checkBtn = document.getElementById("checkUpdateBtn");
+      const downloadBtn = document.getElementById("downloadUpdateBtn");
+
+      if (installedText) installedText.textContent = installedCode ? `${installed} (${installedCode})` : installed;
+      if (latestText) latestText.textContent = latestUpdateInfo ? cleanVersionLabel(latestUpdateInfo.version) : "Sin buscar";
+      if (checkBtn) {
+        checkBtn.disabled = updateCheckBusy;
+        checkBtn.textContent = updateCheckBusy ? "Buscando..." : "Buscar actualizaciones";
+      }
+
+      const hasDownload = latestUpdateInfo && latestUpdateInfo.hasUpdate && latestUpdateInfo.url;
+      if (downloadBtn) downloadBtn.style.display = hasDownload ? "block" : "none";
+    }
+
+    function applyUpdateRelease(release) {
+      const latestVersion = cleanVersionLabel(release.tag_name || release.name || release.version || "");
+      if (!latestVersion || latestVersion === "—") {
+        throw new Error("no-version");
+      }
+
+      const installedVersion = cleanVersionLabel(getNativeVersionName());
+      const hasUpdate = compareVersions(installedVersion, latestVersion) < 0;
+      const url = getBestUpdateUrl(release);
+
+      latestUpdateInfo = {
+        version: latestVersion,
+        installedVersion,
+        hasUpdate,
+        url
+      };
+
+      renderUpdatePanel();
+
+      if (hasUpdate) {
+        setUpdateStatus(`Hay una nueva versión disponible: ${latestVersion}`, "available");
+      } else {
+        setUpdateStatus(`Ya tienes la última versión instalada: ${installedVersion}`);
+      }
+    }
+
+    function handleUpdateError(err) {
+      console.error(err);
+      latestUpdateInfo = null;
+      renderUpdatePanel();
+      const text = err && err.message === "no-release"
+        ? "No encontré releases publicadas en GitHub. Publica una release con un APK para que aparezca aquí."
+        : "No se pudo buscar actualizaciones. Revisa internet o intenta más tarde.";
+      setUpdateStatus(text, "error");
+    }
+
+    window.handleNativeUpdateResult = function(result) {
+      try {
+        const payload = typeof result === "string" ? JSON.parse(result) : result;
+        if (!payload || payload.ok === false) {
+          throw new Error(payload && payload.error ? payload.error : "native-error");
+        }
+        applyUpdateRelease(payload);
+      } catch (err) {
+        handleUpdateError(err);
+      } finally {
+        updateCheckBusy = false;
+        renderUpdatePanel();
+      }
+    };
+
+    async function fetchUpdateReleaseFromWeb() {
+      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
+
+      try {
+        const response = await fetch(UPDATE_REPO_API + "?t=" + Date.now(), {
+          headers: { "Accept": "application/vnd.github+json" },
+          cache: "no-store",
+          signal: controller ? controller.signal : undefined
+        });
+
+        if (response.status === 404) throw new Error("no-release");
+        if (!response.ok) throw new Error("http-" + response.status);
+
+        return await response.json();
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
+
+    async function checkForUpdates() {
+      if (updateCheckBusy) return;
+      updateCheckBusy = true;
+      latestUpdateInfo = null;
+      renderUpdatePanel();
+      setUpdateStatus("Buscando última versión en GitHub...");
+
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.checkForUpdate === "function") {
+          window.AndroidBridge.checkForUpdate();
+          return;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+
+      try {
+        const release = await fetchUpdateReleaseFromWeb();
+        applyUpdateRelease(release);
+      } catch (err) {
+        handleUpdateError(err);
+      } finally {
+        updateCheckBusy = false;
+        renderUpdatePanel();
+      }
+    }
+
+    function downloadFoundUpdate() {
+      if (!latestUpdateInfo || !latestUpdateInfo.url) {
+        toast("Primero busca actualizaciones");
+        return;
+      }
+
+      const url = latestUpdateInfo.url;
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.openUrl === "function") {
+          window.AndroidBridge.openUrl(url);
+          return;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+
+      window.open(url, "_blank");
+    }
+
+
+
+
+
+    function areMascotAnimationsEnabled() {
+      return getSettings().mascotAnimations !== false;
+    }
+
+    function clearMascotTimers() {
+      clearTimeout(mascotTimer);
+      clearInterval(mascotFrameTimer);
+      mascotTimer = null;
+      mascotFrameTimer = null;
+    }
+
+    function toggleMascotAnimations() {
+      const settings = getSettings();
+      settings.mascotAnimations = settings.mascotAnimations === false;
+      persist();
+      renderSettingsPanel();
+      updateMascotVisibility();
+      toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
+    }
+
+    function setMascotFrame(frameIndex) {
+      const sprite = document.getElementById("mascotSprite");
+      if (!sprite) return;
+      const frame = mascotFrames[frameIndex] || mascotFrames[0];
+      const x = (frame.col * 100) / 4;
+      const y = (frame.row * 100) / 1;
+      sprite.style.backgroundPosition = x + "% " + y + "%";
+    }
+
+    function hideMascotStage() {
+      const stage = document.getElementById("mascotStage");
+      if (!stage) return;
+      stage.classList.remove("show", "side-right", "side-left");
+      stage.classList.add("is-hidden");
+      mascotSceneKey = "";
+    }
+
+    function playMascotSequenceNow() {
+      if (!areMascotAnimationsEnabled()) return;
+      const area = document.getElementById("mascotArea");
+      const stage = document.getElementById("mascotStage");
+      const actor = document.getElementById("mascotActor");
+      if (!area || !stage || !actor) return;
+
+      clearMascotTimers();
+      area.style.display = "block";
+      mascotSceneKey = "play";
+      mascotSequenceIndex = 0;
+
+      stage.className = "mascot-stage show " + (Math.random() < 0.5 ? "side-left" : "side-right");
+      actor.style.setProperty("--mascot-scale", (0.96 + Math.random() * 0.10).toFixed(2));
+      setMascotFrame(mascotPlaySequence[0]);
+
+      mascotFrameTimer = setInterval(() => {
+        mascotSequenceIndex += 1;
+        if (mascotSequenceIndex >= mascotPlaySequence.length) {
+          clearInterval(mascotFrameTimer);
+          mascotFrameTimer = null;
+          mascotTimer = setTimeout(() => {
+            hideMascotStage();
+            scheduleMascotScene();
+          }, 700);
+          return;
+        }
+        setMascotFrame(mascotPlaySequence[mascotSequenceIndex]);
+      }, 130);
+    }
+
+    function scheduleMascotScene() {
+      clearMascotTimers();
+      if (!areMascotAnimationsEnabled()) return;
+      const delay = 9000 + Math.floor(Math.random() * 14000);
+      mascotTimer = setTimeout(() => {
+        playMascotSequenceNow();
+      }, delay);
+    }
+
+    function updateMascotVisibility() {
+      const area = document.getElementById("mascotArea");
+      if (!area) return;
+
+      if (!areMascotAnimationsEnabled()) {
+        area.style.display = "none";
+        clearMascotTimers();
+        hideMascotStage();
+        return;
+      }
+
+      area.style.display = "block";
+      if (!mascotSceneKey) {
+        clearMascotTimers();
+        mascotTimer = setTimeout(() => playMascotSequenceNow(), 2200);
+      }
+    }
+
+    function initMascotArea() {
+      mascotSceneKey = "";
+      hideMascotStage();
+      updateMascotVisibility();
+    }
 
     function openClientEdit(id) {
       const client = data.clients.find(c => c.id === id);
@@ -1321,10 +1770,12 @@
       const priceInput = document.getElementById("newProductPrice");
       const costInput = document.getElementById("newProductCost");
       const colorInput = document.getElementById("newProductColor");
+      const stockInput = document.getElementById("newProductStock");
       const name = nameInput.value.trim();
       const price = Math.max(0, Number(priceInput.value || 0));
       const cost = Math.max(0, Number(costInput.value || 0));
       const color = colorInput.value || "#2f80ed";
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
 
       if (!name) {
         toast("Escribe el nombre del producto");
@@ -1334,18 +1785,24 @@
         toast("Ingresa un precio");
         return;
       }
+      if (stock === undefined) {
+        toast("Ingresa un stock válido");
+        return;
+      }
 
       data.products.push({
         id: "prod-" + makeId(),
         name,
         price,
         cost,
-        color
+        color,
+        stock
       });
 
       nameInput.value = "";
       priceInput.value = "";
       costInput.value = "";
+      if (stockInput) stockInput.value = "";
       persist();
       renderEditProducts();
       toast("Producto agregado");
@@ -1361,6 +1818,25 @@
       toast("Producto quitado");
     }
 
+    function productEditInputId(productId, field) {
+      return "edit-product-" + field + "-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function productColorOptions(selectedColor) {
+      const colors = [
+        ["#8b5a2b", "Café"],
+        ["#f2c94c", "Amarillo"],
+        ["#eb5757", "Rojo"],
+        ["#ff7a00", "Naranja"],
+        ["#28c76f", "Verde"],
+        ["#2f80ed", "Azul"],
+        ["#9b51e0", "Morado"],
+        ["#111827", "Negro"]
+      ];
+      const value = String(selectedColor || "#2f80ed").toLowerCase();
+      return colors.map(([color, label]) => `<option value="${escapeAttr(color)}" ${color.toLowerCase() === value ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
+    }
+
     function renderEditProducts() {
       const target = document.getElementById("editProducts");
       if (!target) return;
@@ -1370,41 +1846,104 @@
         return;
       }
 
-      target.innerHTML = data.products.map(product => `
-        <div class="compact-row">
-          <div>
-            <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
-            <small>Venta ${formatMoney(product.price || 0)} · Costo ${formatMoney(product.cost || 0)} · Gana ${formatMoney(Number(product.price || 0) - Number(product.cost || 0))}</small>
+      target.innerHTML = data.products.map(product => {
+        const stock = productStock(product);
+        const stockValue = stock === null ? "" : String(stock);
+        const gain = Number(product.price || 0) - Number(product.cost || 0);
+
+        if (editingProductId === product.id) {
+          return `
+            <div class="compact-row product-edit-row">
+              <div class="product-edit-grid">
+                <input class="wide" id="${escapeAttr(productEditInputId(product.id, "name"))}" value="${escapeAttr(product.name || "")}" placeholder="Nombre" autocomplete="off" />
+                <input id="${escapeAttr(productEditInputId(product.id, "price"))}" type="number" min="0" step="10" value="${escapeAttr(product.price || 0)}" placeholder="Precio" />
+                <input id="${escapeAttr(productEditInputId(product.id, "cost"))}" type="number" min="0" step="10" value="${escapeAttr(product.cost || 0)}" placeholder="Costo" />
+                <input id="${escapeAttr(productEditInputId(product.id, "stock"))}" type="number" min="0" step="1" value="${escapeAttr(stockValue)}" placeholder="Stock vacío = libre" />
+                <select id="${escapeAttr(productEditInputId(product.id, "color"))}">${productColorOptions(product.color)}</select>
+                <button class="secondary-action" onclick="saveEditedProduct('${escapeJs(product.id)}')">Guardar</button>
+                <button class="secondary-action" onclick="cancelEditProduct()">Cancelar</button>
+                <button class="danger-action wide" onclick="removeProduct('${escapeJs(product.id)}')">Borrar producto</button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="compact-row product-compact-row">
+            <div>
+              <div class="product-main-line">
+                <strong><span class="mini-color-dot" style="background:${escapeAttr(product.color || "#2f80ed")}"></span>${escapeHtml(product.name)}</strong>
+                <span class="product-stock-chip">${escapeHtml(stockLabel(product))}</span>
+              </div>
+              <small>${formatMoney(product.price || 0)} venta · ${formatMoney(product.cost || 0)} costo · ${formatMoney(gain)} gana</small>
+            </div>
+            <div class="compact-actions">
+              <button class="icon-btn" onclick="startEditProduct('${escapeJs(product.id)}')">Editar</button>
+              <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
+            </div>
           </div>
-          <div class="compact-actions">
-            <button class="icon-btn" onclick="quickEditProduct('${escapeJs(product.id)}')">Editar</button>
-            <button class="icon-btn danger" onclick="removeProduct('${escapeJs(product.id)}')">Borrar</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
-    function quickEditProduct(id) {
+    function startEditProduct(id) {
+      editingProductId = id;
+      renderEditProducts();
+      setTimeout(() => {
+        const input = document.getElementById(productEditInputId(id, "name"));
+        if (input) input.focus();
+      }, 0);
+    }
+
+    function cancelEditProduct() {
+      editingProductId = null;
+      renderEditProducts();
+    }
+
+    function saveEditedProduct(id) {
       const product = data.products.find(p => p.id === id);
       if (!product) return;
 
-      const name = prompt("Nombre del producto", product.name);
-      if (name === null) return;
+      const nameInput = document.getElementById(productEditInputId(id, "name"));
+      const priceInput = document.getElementById(productEditInputId(id, "price"));
+      const costInput = document.getElementById(productEditInputId(id, "cost"));
+      const stockInput = document.getElementById(productEditInputId(id, "stock"));
+      const colorInput = document.getElementById(productEditInputId(id, "color"));
 
-      const price = prompt("Precio de venta", String(product.price || 0));
-      if (price === null) return;
+      const name = nameInput ? nameInput.value.trim() : "";
+      const price = Math.max(0, Number(priceInput ? priceInput.value || 0 : 0));
+      const cost = Math.max(0, Number(costInput ? costInput.value || 0 : 0));
+      const stock = parseOptionalStock(stockInput ? stockInput.value : "");
+      const color = colorInput ? colorInput.value : product.color;
 
-      const cost = prompt("Costo para ti", String(product.cost || 0));
-      if (cost === null) return;
+      if (!name) {
+        toast("El nombre no puede quedar vacío");
+        return;
+      }
+      if (!price) {
+        toast("Ingresa un precio");
+        return;
+      }
+      if (stock === undefined) {
+        toast("Ingresa un stock válido");
+        return;
+      }
 
-      product.name = name.trim() || product.name;
-      product.price = Math.max(0, Number(price || 0));
-      product.cost = Math.max(0, Number(cost || 0));
+      product.name = name;
+      product.price = price;
+      product.cost = cost;
+      product.stock = stock;
+      product.color = color || "#2f80ed";
 
+      editingProductId = null;
       persist();
       renderEditProducts();
       renderProducts();
       toast("Producto actualizado");
+    }
+
+    function quickEditProduct(id) {
+      startEditProduct(id);
     }
 
     function saveProductsFromForm() {
@@ -1413,7 +1952,8 @@
         name: document.getElementById("prod-name-" + product.id).value.trim() || product.name,
         price: Math.max(0, Number(document.getElementById("prod-price-" + product.id).value || 0)),
         cost: Math.max(0, Number(document.getElementById("prod-cost-" + product.id).value || 0)),
-        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed"
+        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed",
+        stock: parseOptionalStock(document.getElementById("prod-stock-" + product.id)?.value ?? product.stock) ?? null
       }));
       persist();
       renderEditProducts();
@@ -2030,16 +2570,7 @@
 
       if (!ok) return;
 
-      if (Array.isArray(data.movements)) {
-        data.movements = data.movements.filter(m => m.id !== sale.id);
-      }
-
-      if (Array.isArray(data.sales)) {
-        data.sales = data.sales.filter(m => m.id !== sale.id);
-      }
-
-      if (typeof renumberReceipts === "function") renumberReceipts();
-      persist();
+      deleteMovement(sale.id);
 
       closeModal("receiptModal");
       closeModal("afterSaleModal");
@@ -2489,4 +3020,4 @@
     renderAppTitle();
     renderHomeStats();
     renderProducts();
-  
+    initMascotArea();
