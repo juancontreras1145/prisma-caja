@@ -1,4 +1,5 @@
-    const APP_VERSION = "2.8";
+
+    const APP_VERSION = "2.9";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -26,6 +27,8 @@
     let editingProductId = null;
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
+    let currentReceiptCustom = null;
+    let historyTab = "boletas";
     let navStack = ["home"];
 
     function structuredDefault() {
@@ -165,7 +168,7 @@
             stockAfter: normalizeStockValue(item.stockAfter ?? null)
           })) : [],
           total,
-          status: m.status || (amountPaid >= total ? "pagado" : "fiado"),
+          status: amountPaid >= total ? "pagado" : (m.status || "fiado"),
           method: m.method || "",
           lastPaymentMethod: m.lastPaymentMethod || m.method || "",
           amountPaid,
@@ -1004,9 +1007,7 @@
           createdAt: now
         });
         sale.paymentStatus = getSaleRemaining(sale) <= 0 ? "pagado" : "abonado";
-        if (getSaleRemaining(sale) <= 0) {
-          sale.status = "pagado";
-        }
+        sale.status = getSaleRemaining(sale) <= 0 ? "pagado" : "fiado";
 
         applied.push({
           saleId: sale.id,
@@ -1034,7 +1035,9 @@
       persist();
       closeModal("paymentModal");
       toast("Abono guardado");
+      historyTab = "boletas";
       go("historial");
+      renderHistory();
     }
 
 
@@ -1057,12 +1060,31 @@
     }
 
 
+    function setHistoryTab(tab) {
+      historyTab = tab === "abonos" ? "abonos" : "boletas";
+      renderHistory();
+    }
+
+    function updateHistoryTabs() {
+      const boletasBtn = document.getElementById("historyTabBoletas");
+      const abonosBtn = document.getElementById("historyTabAbonos");
+      const label = document.getElementById("historySectionLabel");
+      if (boletasBtn) boletasBtn.classList.toggle("active", historyTab === "boletas");
+      if (abonosBtn) abonosBtn.classList.toggle("active", historyTab === "abonos");
+      if (label) label.textContent = historyTab === "abonos" ? "Abonos" : "Boletas y pendientes";
+    }
+
     function renderHistory() {
       const target = document.getElementById("historyList");
       if (!target) return;
+      updateHistoryTabs();
 
-      if (!data.movements.length) {
-        target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
+      const movements = data.movements.filter(m => historyTab === "abonos" ? m.type === "abono" : m.type === "venta");
+      const pendingHtml = historyTab === "boletas" ? renderPendingAccumulatedSection() : "";
+
+      if (!movements.length) {
+        target.innerHTML = pendingHtml || '<div class="empty">Todavía no hay movimientos.</div>';
+        setTimeout(hideHistoryDeleteButtons, 0);
         return;
       }
 
@@ -1081,7 +1103,7 @@
         month: []
       };
 
-      data.movements.forEach(m => {
+      movements.forEach(m => {
         const diffDays = Math.floor((now - new Date(m.createdAt)) / 86400000);
         if (diffDays < 3) byGroup.recent.push(m);
         else if (diffDays < 7) byGroup.three.push(m);
@@ -1089,18 +1111,17 @@
         else byGroup.month.push(m);
       });
 
-      target.innerHTML = groups
+      const groupsHtml = groups
         .filter(group => byGroup[group.key].length)
         .map(group => renderHistoryGroup(group, byGroup[group.key]))
         .join("");
+
+      target.innerHTML = pendingHtml + groupsHtml;
 
       if (!target.innerHTML) {
         target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
       }
       setTimeout(hideHistoryDeleteButtons, 0);
-
-      setTimeout(hideHistoryDeleteButtons, 0);
-
     }
 
     function renderHistoryGroup(group, movements) {
@@ -1173,6 +1194,127 @@
           </div>
         </div>
       `;
+    }
+
+    function getPendingAccumulatedClients() {
+      const map = new Map();
+      getSales().forEach(sale => {
+        const remaining = getSaleRemaining(sale);
+        if (remaining <= 0) return;
+        const key = sale.clientId || normalize(sale.clientName || "cliente");
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            clientId: sale.clientId || "",
+            clientName: sale.clientName || "Cliente",
+            clientPhone: sanitizePhone(sale.clientPhone || phoneForSale(sale) || ""),
+            sales: [],
+            totalPending: 0,
+            itemCount: 0
+          });
+        }
+        const group = map.get(key);
+        group.sales.push(sale);
+        group.totalPending += remaining;
+        group.itemCount += (sale.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
+        if (!group.clientPhone) group.clientPhone = sanitizePhone(sale.clientPhone || phoneForSale(sale) || "");
+      });
+      return Array.from(map.values()).sort((a, b) => a.clientName.localeCompare(b.clientName, "es"));
+    }
+
+    function renderPendingAccumulatedSection() {
+      const groups = getPendingAccumulatedClients();
+      if (!groups.length) return "";
+
+      const cards = groups.map(group => `
+        <div class="pending-card">
+          <div class="pending-card-main">
+            <div>
+              <strong>${escapeHtml(group.clientName)}</strong>
+              <small>${group.sales.length} boleta${group.sales.length === 1 ? "" : "s"} pendiente${group.sales.length === 1 ? "" : "s"} · ${group.itemCount} producto${group.itemCount === 1 ? "" : "s"}</small>
+            </div>
+            <strong>${formatMoney(group.totalPending)}</strong>
+          </div>
+          <button class="share-btn" onclick="showAccumulatedReceipt('${escapeJs(group.key)}')">Boleta acumulada</button>
+        </div>
+      `).join("");
+
+      return `
+        <div class="pending-section">
+          <div class="pending-head">
+            <div>
+              <strong>Pendientes acumulados</strong>
+              <small>Comparte una sola boleta con todas las ventas pendientes por cliente.</small>
+            </div>
+            <strong>${groups.length}</strong>
+          </div>
+          <div class="pending-list">${cards}</div>
+        </div>
+      `;
+    }
+
+    function shortReceiptDate(value) {
+      const date = new Date(value || Date.now());
+      if (Number.isNaN(date.getTime())) return "--/--";
+      return String(date.getDate()).padStart(2, "0") + "/" + String(date.getMonth() + 1).padStart(2, "0");
+    }
+
+    function buildAccumulatedReceipt(group) {
+      const items = [];
+      group.sales.forEach(sale => {
+        const saleRemaining = getSaleRemaining(sale);
+        if (saleRemaining <= 0) return;
+        const paidRatio = Number(sale.total || 0) > 0 ? Math.min(1, Math.max(0, Number(sale.amountPaid || 0) / Number(sale.total || 0))) : 0;
+        (sale.items || []).forEach(item => {
+          const itemTotal = Number(item.total || (Number(item.price || 0) * Number(item.qty || 1)));
+          const itemPending = Math.max(0, Math.round(itemTotal * (1 - paidRatio)));
+          if (itemPending <= 0) return;
+          items.push({
+            id: item.id || makeId(),
+            name: item.name || "Producto",
+            qty: Number(item.qty || 1),
+            price: Number(item.price || 0),
+            cost: Number(item.cost || 0),
+            total: itemPending,
+            date: shortReceiptDate(sale.createdAt),
+            boletaNumber: sale.boletaNumber
+          });
+        });
+      });
+
+      return {
+        id: "accumulated-" + group.key,
+        type: "acumulada",
+        accumulated: true,
+        boletaNumber: "Pendientes",
+        clientId: group.clientId,
+        clientName: group.clientName,
+        clientPhone: group.clientPhone,
+        items,
+        total: items.reduce((sum, item) => sum + Number(item.total || 0), 0),
+        amountPaid: 0,
+        paymentStatus: "fiado",
+        status: "fiado",
+        method: "",
+        lastPaymentMethod: "",
+        createdAt: new Date().toISOString(),
+        sourceSales: group.sales.map(sale => sale.id)
+      };
+    }
+
+    function showAccumulatedReceipt(key) {
+      const group = getPendingAccumulatedClients().find(item => item.key === key);
+      if (!group) {
+        toast("No hay pendientes para este cliente");
+        return;
+      }
+      currentReceiptSaleId = null;
+      currentReceiptCustom = buildAccumulatedReceipt(group);
+      const target = document.getElementById("receiptPreview");
+      target.innerHTML = "";
+      target.appendChild(createReceiptNode(currentReceiptCustom));
+      document.querySelectorAll("#receiptModal .safe-delete-zone").forEach(node => node.remove());
+      openModal("receiptModal");
     }
 
     function deleteMovement(id) {
@@ -2380,6 +2522,10 @@
         alert("No hay boleta seleccionada.");
         return;
       }
+      if (sale.accumulated) {
+        alert("La boleta acumulada solo se comparte. Para eliminar, abre una boleta individual.");
+        return;
+      }
 
       const number = sale.boletaNumber ? formatReceiptNumber(sale.boletaNumber) : "";
       const client = sale.clientName || "cliente";
@@ -2427,6 +2573,7 @@
         return;
       }
       currentReceiptSaleId = id;
+      currentReceiptCustom = null;
       const target = document.getElementById("receiptPreview");
       target.innerHTML = "";
       target.appendChild(createReceiptNode(sale));
@@ -2435,21 +2582,30 @@
     }
 
     function currentSale() {
-      return getSaleById(currentReceiptSaleId);
+      return currentReceiptCustom || getSaleById(currentReceiptSaleId);
     }
 
     function createReceiptNode(sale) {
       const card = document.createElement("div");
-      card.className = "receipt-card";
+      card.className = "receipt-card" + (sale.accumulated ? " accumulated" : "");
 
       const remaining = getSaleRemaining(sale);
       const headerName = sale.clientName || "CLIENTE";
-      const paymentLabel = remaining <= 0 ? (sale.lastPaymentMethod || sale.method || "Pagado") : (Number(sale.amountPaid || 0) > 0 ? "Abono parcial" : "Sin pago");
-      const stampHtml = remaining <= 0
+      const paymentLabel = sale.accumulated
+        ? "Pendiente acumulado"
+        : (remaining <= 0 ? (sale.lastPaymentMethod || sale.method || "Pagado") : (Number(sale.amountPaid || 0) > 0 ? "Abono parcial" : "Sin pago"));
+      const stampHtml = sale.accumulated ? '' : (remaining <= 0
         ? '<div class="receipt-paid-stamp">PAGADO</div>'
-        : (Number(sale.amountPaid || 0) > 0 ? '<div class="receipt-abonado-stamp">ABONADO</div>' : '');
+        : (Number(sale.amountPaid || 0) > 0 ? '<div class="receipt-abonado-stamp">ABONADO</div>' : ''));
 
-      const itemsHtml = (sale.items || []).map(item => `
+      const itemsHtml = (sale.items || []).map(item => sale.accumulated ? `
+        <div class="receipt-item">
+          <div class="receipt-item-name">${escapeHtml(item.name)}</div>
+          <div class="receipt-item-qty">${item.qty}</div>
+          <div class="receipt-item-total">${formatMoney(item.total)}</div>
+          <div class="receipt-item-date">${escapeHtml(item.date || "")}</div>
+        </div>
+      ` : `
         <div class="receipt-item">
           <div class="receipt-item-name">${escapeHtml(item.name)}</div>
           <div class="receipt-item-qty">${item.qty}</div>
@@ -2460,16 +2616,21 @@
       card.innerHTML = `
         <div class="receipt-head">
           <div class="receipt-title">CLIENTE: ${escapeHtml(headerName.toUpperCase())}</div>
-          <div class="receipt-sub">${escapeHtml(formatDateTime(sale.createdAt))}</div>
+          <div class="receipt-sub">${sale.accumulated ? "Pendientes al " + escapeHtml(shortReceiptDate(new Date())) : escapeHtml(formatDateTime(sale.createdAt))}</div>
         </div>
 
         <div class="receipt-meta">
-          <div class="receipt-row"><span class="receipt-left">Boleta</span><span class="receipt-right">${escapeHtml(formatReceiptNumber(sale.boletaNumber))}</span></div>
+          <div class="receipt-row"><span class="receipt-left">Boleta</span><span class="receipt-right">${sale.accumulated ? "Acumulada" : escapeHtml(formatReceiptNumber(sale.boletaNumber))}</span></div>
           <div class="receipt-row"><span class="receipt-left">Pago</span><span class="receipt-right">${escapeHtml(paymentLabel)}</span></div>
           <div class="receipt-row"><span class="receipt-left">Pendiente</span><span class="receipt-right">${escapeHtml(formatMoney(remaining))}</span></div>
         </div>
         <div class="receipt-section">
-          <div class="receipt-table-head"><div>Producto</div><div style="text-align:right">Cant.</div><div style="text-align:right">Subtotal</div></div>
+          <div class="receipt-table-head">
+            <div>Producto</div>
+            <div style="text-align:right">Cant.</div>
+            <div style="text-align:right">Subtotal</div>
+            ${sale.accumulated ? '<div style="text-align:right">Fecha</div>' : ''}
+          </div>
           ${itemsHtml}
         </div>
 
@@ -2482,7 +2643,7 @@
         ${stampHtml}
 
         <div class="receipt-footer">
-          <div>Boleta ${escapeHtml(formatReceiptNumber(sale.boletaNumber))}</div>
+          <div>${sale.accumulated ? "Boleta acumulada de pendientes" : "Boleta " + escapeHtml(formatReceiptNumber(sale.boletaNumber))}</div>
           <div style="margin-top:8px;">Gracias por su compra</div>
         </div>
       `;
@@ -2493,8 +2654,9 @@
 
     function setShareBusy(isBusy) {
       document.querySelectorAll('button[onclick="compartirImagenWhatsApp()"]').forEach(button => {
+        if (!button.dataset.originalText) button.dataset.originalText = button.textContent || "Compartir con cliente";
         button.classList.toggle("share-busy", isBusy);
-        button.textContent = isBusy ? "Abriendo WhatsApp..." : "Compartir imagen";
+        button.textContent = isBusy ? "Abriendo WhatsApp..." : button.dataset.originalText;
       });
     }
 
@@ -2531,7 +2693,9 @@
 
       try {
         const blob = await buildReceiptImageCanvas(sale);
-        const filename = `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
+        const filename = sale.accumulated
+          ? `boleta-acumulada-${safeFileName(sale.clientName || "cliente")}.png`
+          : `boleta-${formatReceiptNumber(sale.boletaNumber)}-${safeFileName(sale.clientName || "cliente")}.png`;
         const phone = phoneForSale(sale);
 
         if (window.AndroidBridge && typeof window.AndroidBridge.shareImageToPhone === "function" && phone) {
@@ -2592,7 +2756,8 @@
       const margin = 42;
       const items = sale.items || [];
       const remaining = getSaleRemaining(sale);
-      const height = 700 + Math.max(1, items.length) * 74;
+      const isAccumulated = !!sale.accumulated;
+      const height = 700 + Math.max(1, items.length) * (isAccumulated ? 82 : 74);
 
       const canvas = document.createElement("canvas");
       canvas.width = width * scale;
@@ -2616,14 +2781,14 @@
 
       ctx.fillStyle = muted;
       ctx.font = "24px Arial";
-      ctx.fillText(formatDateTime(sale.createdAt), width / 2, y);
+      ctx.fillText(isAccumulated ? "Pendientes al " + shortReceiptDate(new Date()) : formatDateTime(sale.createdAt), width / 2, y);
       y += 40;
 
       dashedLine(ctx, margin, y, width - margin, y, dash);
       y += 34;
 
-      y = canvasPair(ctx, "Boleta", formatReceiptNumber(sale.boletaNumber), margin, width - margin, y);
-      y = canvasPair(ctx, "Pago", remaining <= 0 ? (sale.lastPaymentMethod || sale.method || "Pagado") : (Number(sale.amountPaid || 0) > 0 ? "Abono parcial" : "Sin pago"), margin, width - margin, y);
+      y = canvasPair(ctx, "Boleta", isAccumulated ? "Acumulada" : formatReceiptNumber(sale.boletaNumber), margin, width - margin, y);
+      y = canvasPair(ctx, "Pago", isAccumulated ? "Pendiente acumulado" : (remaining <= 0 ? (sale.lastPaymentMethod || sale.method || "Pagado") : (Number(sale.amountPaid || 0) > 0 ? "Abono parcial" : "Sin pago")), margin, width - margin, y);
       y = canvasPair(ctx, "Pendiente", formatMoney(remaining), margin, width - margin, y);
 
       y += 12;
@@ -2635,8 +2800,11 @@
       ctx.font = "900 18px Arial";
       ctx.fillText("PRODUCTO", margin, y);
       ctx.textAlign = "right";
-      ctx.fillText("CANT.", width - margin - 130, y);
-      ctx.fillText("SUBTOTAL", width - margin, y);
+      const qtyX = isAccumulated ? width - margin - 190 : width - margin - 130;
+      const subtotalX = isAccumulated ? width - margin - 76 : width - margin;
+      ctx.fillText("CANT.", qtyX, y);
+      ctx.fillText("SUBTOTAL", subtotalX, y);
+      if (isAccumulated) ctx.fillText("FECHA", width - margin, y);
       y += 22;
 
       dashedLine(ctx, margin, y, width - margin, y, dash);
@@ -2646,15 +2814,21 @@
         ctx.textAlign = "left";
         ctx.fillStyle = black;
         ctx.font = "900 26px Arial";
-        ctx.fillText(item.name, margin, y);
+        fitLeftCanvasText(ctx, item.name, margin, y, isAccumulated ? 285 : 360, 26, 20);
 
         ctx.textAlign = "right";
         ctx.font = "26px Arial";
-        ctx.fillText(String(item.qty), width - margin - 140, y);
+        ctx.fillText(String(item.qty), qtyX, y);
 
         ctx.font = "900 26px Arial";
-        ctx.fillText(formatMoney(item.total), width - margin, y);
-        y += 56;
+        ctx.fillText(formatMoney(item.total), subtotalX, y);
+
+        if (isAccumulated) {
+          ctx.font = "22px Arial";
+          ctx.fillStyle = muted;
+          ctx.fillText(String(item.date || ""), width - margin, y);
+        }
+        y += isAccumulated ? 64 : 56;
       });
 
       y += 8;
@@ -2684,7 +2858,7 @@
       ctx.fillText(formatMoney(remaining), width - margin, y);
       y += 56;
 
-      if (remaining <= 0) {
+      if (!isAccumulated && remaining <= 0) {
         ctx.save();
         ctx.translate(width / 2, y + 35);
         ctx.rotate(-0.12);
@@ -2697,7 +2871,7 @@
         ctx.fillText("PAGADO", 0, 10);
         ctx.restore();
         y += 90;
-      } else if (Number(sale.amountPaid || 0) > 0) {
+      } else if (!isAccumulated && Number(sale.amountPaid || 0) > 0) {
         ctx.save();
         ctx.translate(width / 2, y + 35);
         ctx.rotate(-0.12);
@@ -2718,7 +2892,7 @@
       ctx.textAlign = "center";
       ctx.fillStyle = muted;
       ctx.font = "24px Arial";
-      ctx.fillText("Boleta " + formatReceiptNumber(sale.boletaNumber), width / 2, y);
+      ctx.fillText(isAccumulated ? "Boleta acumulada de pendientes" : "Boleta " + formatReceiptNumber(sale.boletaNumber), width / 2, y);
       y += 30;
       ctx.fillText("Gracias por su compra", width / 2, y);
 
@@ -2730,6 +2904,17 @@
       });
     }
 
+
+    function fitLeftCanvasText(ctx, text, x, y, maxWidth, startSize = 26, minSize = 18) {
+      let size = startSize;
+      while (size > minSize) {
+        ctx.font = "900 " + size + "px Arial";
+        if (ctx.measureText(String(text || "")).width <= maxWidth) break;
+        size -= 1;
+      }
+      ctx.textAlign = "left";
+      ctx.fillText(String(text || ""), x, y);
+    }
 
     function fitCenteredCanvasText(ctx, text, x, y, maxWidth) {
       let size = 36;
