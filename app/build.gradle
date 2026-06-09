@@ -2,6 +2,12 @@ plugins {
     id "com.android.application"
 }
 
+def releaseKeystorePath = System.getenv("PRISMA_KEYSTORE_PATH")
+def releaseKeystorePassword = System.getenv("PRISMA_KEYSTORE_PASSWORD")
+def releaseKeyAlias = System.getenv("PRISMA_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("PRISMA_KEY_PASSWORD")
+def canSignRelease = releaseKeystorePath && releaseKeystorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace "com.prismacaja.app"
     compileSdk 35
@@ -10,8 +16,28 @@ android {
         applicationId "com.prismacaja.app"
         minSdk 23
         targetSdk 35
-        versionCode 20
-        versionName "2.9"
+        versionCode 21
+        versionName "3.0"
+    }
+
+    signingConfigs {
+        release {
+            if (canSignRelease) {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseKeystorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (canSignRelease) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 }
 
