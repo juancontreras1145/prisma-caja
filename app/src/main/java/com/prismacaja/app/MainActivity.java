@@ -25,6 +25,14 @@ import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
@@ -161,6 +169,110 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             Toast.makeText(this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void openExternalBrowser(String url) {
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                Toast.makeText(this, "No hay enlace de descarga", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir la actualización", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String readUrl(String urlText) throws Exception {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(urlText);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept", "application/vnd.github+json");
+            connection.setRequestProperty("User-Agent", "PrismaCaja-Android");
+            connection.setConnectTimeout(12000);
+            connection.setReadTimeout(12000);
+
+            int code = connection.getResponseCode();
+            InputStream stream = code >= 200 && code < 300
+                    ? connection.getInputStream()
+                    : connection.getErrorStream();
+
+            if (stream == null) {
+                throw new Exception("GitHub respondió " + code);
+            }
+
+            StringBuilder builder = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line);
+                }
+            }
+
+            if (code < 200 || code >= 300) {
+                throw new Exception("GitHub respondió " + code);
+            }
+
+            return builder.toString();
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    private void sendUpdateResult(JSONObject payload) {
+        runOnUiThread(() -> {
+            if (webView == null) return;
+            String script = "window.onNativeUpdateResult && window.onNativeUpdateResult(" + payload.toString() + ")";
+            webView.evaluateJavascript(script, null);
+        });
+    }
+
+    private void checkGithubUpdatesNative() {
+        new Thread(() -> {
+            JSONObject payload = new JSONObject();
+            try {
+                String json = readUrl("https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest");
+                JSONObject release = new JSONObject(json);
+                JSONArray assets = release.optJSONArray("assets");
+
+                String apkUrl = "";
+                String apkName = "";
+                if (assets != null) {
+                    for (int i = 0; i < assets.length(); i++) {
+                        JSONObject asset = assets.optJSONObject(i);
+                        if (asset == null) continue;
+                        String name = asset.optString("name", "");
+                        if (name.toLowerCase().endsWith(".apk")) {
+                            apkName = name;
+                            apkUrl = asset.optString("browser_download_url", "");
+                            break;
+                        }
+                    }
+                }
+
+                String htmlUrl = release.optString("html_url", "");
+
+                payload.put("ok", true);
+                payload.put("tagName", release.optString("tag_name", ""));
+                payload.put("name", release.optString("name", ""));
+                payload.put("htmlUrl", htmlUrl);
+                payload.put("apkName", apkName);
+                payload.put("apkUrl", apkUrl.isEmpty() ? htmlUrl : apkUrl);
+            } catch (Exception e) {
+                try {
+                    payload.put("ok", false);
+                    payload.put("error", e.getMessage() == null ? "Error desconocido" : e.getMessage());
+                } catch (Exception ignored) {
+                }
+            }
+
+            sendUpdateResult(payload);
+        }).start();
     }
 
     private String normalizePhone(String phone) {
@@ -397,6 +509,26 @@ public class MainActivity extends Activity {
 
         AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public String getVersionName() {
+            return BuildConfig.VERSION_NAME;
+        }
+
+        @JavascriptInterface
+        public int getVersionCode() {
+            return BuildConfig.VERSION_CODE;
+        }
+
+        @JavascriptInterface
+        public void checkGithubUpdates() {
+            activity.checkGithubUpdatesNative();
+        }
+
+        @JavascriptInterface
+        public void openUpdateUrl(String url) {
+            activity.runOnUiThread(() -> activity.openExternalBrowser(url));
         }
 
         @JavascriptInterface

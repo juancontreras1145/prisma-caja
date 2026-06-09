@@ -1,4 +1,8 @@
-const STORAGE_KEY = "cajaMinimalDataV2";
+    const APP_VERSION = "2.8";
+    const GITHUB_UPDATE_OWNER = "juancontreras1145";
+    const GITHUB_UPDATE_REPO = "prisma-caja";
+
+    const STORAGE_KEY = "cajaMinimalDataV2";
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
 
     const defaultData = {
@@ -1265,6 +1269,7 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+      renderUpdatePanel();
     }
 
     function saveAppTitleSetting() {
@@ -1293,6 +1298,167 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       toast("Clave guardada");
     }
 
+
+    let foundUpdateDownloadUrl = "";
+    let foundUpdateVersion = "";
+
+    function normalizeVersion(value) {
+      return String(value || "")
+        .trim()
+        .replace(/^version\s*/i, "")
+        .replace(/^v/i, "")
+        .replace(/[^0-9.]/g, "");
+    }
+
+    function compareVersions(current, latest) {
+      const a = normalizeVersion(current).split(".").filter(Boolean).map(n => Number(n) || 0);
+      const b = normalizeVersion(latest).split(".").filter(Boolean).map(n => Number(n) || 0);
+      const max = Math.max(a.length, b.length, 1);
+      for (let i = 0; i < max; i++) {
+        const av = a[i] || 0;
+        const bv = b[i] || 0;
+        if (bv > av) return 1;
+        if (bv < av) return -1;
+      }
+      return 0;
+    }
+
+    function getInstalledVersionName() {
+      try {
+        if (window.AndroidBridge && typeof AndroidBridge.getVersionName === "function") {
+          return AndroidBridge.getVersionName() || APP_VERSION;
+        }
+      } catch (error) {}
+      return APP_VERSION;
+    }
+
+    function setUpdateMessage(message, type = "") {
+      const el = document.getElementById("updateStatusMessage");
+      if (!el) return;
+      el.className = "update-message" + (type ? " " + type : "");
+      el.textContent = message;
+    }
+
+    function renderUpdatePanel() {
+      const installed = getInstalledVersionName();
+      const installedEl = document.getElementById("installedVersionLabel");
+      const latestEl = document.getElementById("latestVersionLabel");
+      const downloadBtn = document.getElementById("downloadUpdateButton");
+      const checkBtn = document.getElementById("checkUpdatesButton");
+
+      if (installedEl) installedEl.textContent = installed;
+      if (latestEl && foundUpdateVersion) latestEl.textContent = foundUpdateVersion;
+      if (downloadBtn) downloadBtn.style.display = foundUpdateDownloadUrl ? "block" : "none";
+      if (checkBtn) checkBtn.disabled = false;
+    }
+
+    function parseUpdatePayload(payload) {
+      if (typeof payload === "string") {
+        try { return JSON.parse(payload); } catch (error) { return { ok: false, error: payload }; }
+      }
+      return payload || { ok: false, error: "Respuesta vacía" };
+    }
+
+    function handleUpdateResult(payload) {
+      const result = parseUpdatePayload(payload);
+      const checkBtn = document.getElementById("checkUpdatesButton");
+      const latestEl = document.getElementById("latestVersionLabel");
+      const downloadBtn = document.getElementById("downloadUpdateButton");
+      const installed = getInstalledVersionName();
+
+      if (checkBtn) checkBtn.disabled = false;
+
+      if (!result.ok) {
+        foundUpdateDownloadUrl = "";
+        foundUpdateVersion = "";
+        if (latestEl) latestEl.textContent = "No encontrada";
+        if (downloadBtn) downloadBtn.style.display = "none";
+        setUpdateMessage("No se pudo buscar la actualización: " + (result.error || "Error desconocido"), "err");
+        return;
+      }
+
+      const latest = normalizeVersion(result.tagName || result.version || result.name || "");
+      foundUpdateVersion = latest || "Desconocida";
+      foundUpdateDownloadUrl = result.apkUrl || result.downloadUrl || result.htmlUrl || "";
+
+      if (latestEl) latestEl.textContent = foundUpdateVersion;
+
+      if (!latest) {
+        if (downloadBtn) downloadBtn.style.display = "none";
+        setUpdateMessage("Se encontró el release, pero no se pudo leer el número de versión.", "warn");
+        return;
+      }
+
+      if (compareVersions(installed, latest) > 0) {
+        if (downloadBtn) downloadBtn.style.display = foundUpdateDownloadUrl ? "block" : "none";
+        setUpdateMessage("Hay una nueva versión disponible: " + latest, "ok");
+      } else {
+        foundUpdateDownloadUrl = "";
+        if (downloadBtn) downloadBtn.style.display = "none";
+        setUpdateMessage("Ya tienes la última versión instalada.", "ok");
+      }
+    }
+
+    window.onNativeUpdateResult = handleUpdateResult;
+
+    function checkForUpdates() {
+      const checkBtn = document.getElementById("checkUpdatesButton");
+      const latestEl = document.getElementById("latestVersionLabel");
+      const downloadBtn = document.getElementById("downloadUpdateButton");
+
+      foundUpdateDownloadUrl = "";
+      foundUpdateVersion = "";
+      if (checkBtn) checkBtn.disabled = true;
+      if (latestEl) latestEl.textContent = "Buscando...";
+      if (downloadBtn) downloadBtn.style.display = "none";
+      setUpdateMessage("Buscando actualización en GitHub...", "");
+
+      try {
+        if (window.AndroidBridge && typeof AndroidBridge.checkGithubUpdates === "function") {
+          AndroidBridge.checkGithubUpdates();
+          return;
+        }
+      } catch (error) {}
+
+      checkForUpdatesBrowser();
+    }
+
+    async function checkForUpdatesBrowser() {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_UPDATE_OWNER}/${GITHUB_UPDATE_REPO}/releases/latest`, {
+          headers: { "Accept": "application/vnd.github+json" }
+        });
+        if (!response.ok) throw new Error("GitHub respondió " + response.status);
+        const release = await response.json();
+        const assets = Array.isArray(release.assets) ? release.assets : [];
+        const apk = assets.find(asset => String(asset.name || "").toLowerCase().endsWith(".apk"));
+        handleUpdateResult({
+          ok: true,
+          tagName: release.tag_name || release.name || "",
+          name: release.name || "",
+          htmlUrl: release.html_url || "",
+          apkUrl: apk ? apk.browser_download_url : (release.html_url || "")
+        });
+      } catch (error) {
+        handleUpdateResult({ ok: false, error: error.message || String(error) });
+      }
+    }
+
+    function downloadFoundUpdate() {
+      if (!foundUpdateDownloadUrl) {
+        toast("Primero busca una actualización");
+        return;
+      }
+
+      try {
+        if (window.AndroidBridge && typeof AndroidBridge.openUpdateUrl === "function") {
+          AndroidBridge.openUpdateUrl(foundUpdateDownloadUrl);
+          return;
+        }
+      } catch (error) {}
+
+      window.location.href = foundUpdateDownloadUrl;
+    }
 
     function openClientEdit(id) {
       const client = data.clients.find(c => c.id === id);
@@ -2676,3 +2842,4 @@ const STORAGE_KEY = "cajaMinimalDataV2";
     renderAppTitle();
     renderHomeStats();
     renderProducts();
+  

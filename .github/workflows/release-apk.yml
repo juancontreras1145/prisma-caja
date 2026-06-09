@@ -1,15 +1,10 @@
-name: Release APK
+name: release-apk
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      version_tag:
-        description: "Tag de version para publicar (ej: v2.8)"
-        required: true
-        type: string
+      - 'v*'
 
 permissions:
   contents: write
@@ -17,8 +12,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.version_tag || github.ref_name }}
 
     steps:
       - name: Descargar repositorio
@@ -28,33 +21,28 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Instalar SDK necesario
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
+          gradle-version: '8.7'
 
       - name: Compilar APK debug
         run: gradle assembleDebug --no-daemon
 
-      - name: Preparar APK para release
+      - name: Preparar APK del release
         run: |
           mkdir -p release
-          cp app/build/outputs/apk/debug/app-debug.apk release/PrismaCaja-${RELEASE_TAG}.apk
+          cp app/build/outputs/apk/debug/app-debug.apk release/PrismaCaja-${GITHUB_REF_NAME}.apk
 
-      - name: Publicar GitHub Release
+      - name: Publicar APK en GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          target_commitish: ${{ github.sha }}
-          files: release/PrismaCaja-${{ env.RELEASE_TAG }}.apk
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: release/PrismaCaja-${{ github.ref_name }}.apk
