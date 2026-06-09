@@ -1,11 +1,6 @@
 const STORAGE_KEY = "cajaMinimalDataV2";
     const LEGACY_KEYS = ["cajaMinimalData", "cajaMinimalRealDataV2", "cajaMinimalRealDataV1", "cajaMinimalTermuxData"];
 
-    const APP_VERSION_NAME = "2.8";
-    const APP_VERSION_CODE = 19;
-    const UPDATE_REPO_API = "https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest";
-    const UPDATE_REPO_RELEASES_URL = "https://github.com/juancontreras1145/prisma-caja/releases";
-
     const defaultData = {
       clients: [],
       products: [],
@@ -13,8 +8,7 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       nextReceiptNumber: 1,
       settings: {
         appTitle: "Prisma",
-        profitPin: "",
-        mascotAnimations: true
+        profitPin: ""
       }
     };
 
@@ -29,27 +23,6 @@ const STORAGE_KEY = "cajaMinimalDataV2";
     let previousScreen = "venta";
     let currentReceiptSaleId = null;
     let navStack = ["home"];
-    let mascotTimer = null;
-    let mascotFrameTimer = null;
-    let mascotSceneKey = "";
-    let mascotSequenceIndex = 0;
-    let latestUpdateInfo = null;
-    let updateCheckBusy = false;
-
-    const mascotFrames = [
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-      { row: 0, col: 2 },
-      { row: 0, col: 3 },
-      { row: 0, col: 4 },
-      { row: 1, col: 0 },
-      { row: 1, col: 1 },
-      { row: 1, col: 2 },
-      { row: 1, col: 3 },
-      { row: 1, col: 4 }
-    ];
-
-    const mascotPlaySequence = [0, 1, 2, 3, 4, 3, 2, 1, 5, 6, 7, 8, 7, 6, 5, 8, 9, 8, 7, 6];
 
     function structuredDefault() {
       return JSON.parse(JSON.stringify(defaultData));
@@ -133,8 +106,7 @@ const STORAGE_KEY = "cajaMinimalDataV2";
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      const mascotAnimations = settings.mascotAnimations !== false;
-      return { appTitle, profitPin, mascotAnimations };
+      return { appTitle, profitPin };
     }
 
     function getSettings() {
@@ -229,7 +201,6 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderAppTitle();
       renderHomeStats();
-      updateMascotVisibility();
     }
 
     function makeId() {
@@ -351,10 +322,7 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
       document.getElementById(id).classList.add("active");
 
-      if (id === "home") {
-        renderHomeStats();
-        updateMascotVisibility();
-      }
+      if (id === "home") renderHomeStats();
       if (id === "venta") renderProducts();
       if (id === "nombres") renderNamesPage();
       if (id === "historial") renderHistory();
@@ -1297,19 +1265,6 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
-
-      const toggleBtn = document.getElementById("mascotToggleBtn");
-      const toggleHelp = document.getElementById("mascotToggleHelp");
-      if (toggleBtn) {
-        const enabled = settings.mascotAnimations !== false;
-        toggleBtn.textContent = enabled ? "Activadas" : "Desactivadas";
-        toggleBtn.classList.toggle("on", enabled);
-      }
-      if (toggleHelp) toggleHelp.textContent = (settings.mascotAnimations !== false)
-        ? "La gatita aparece abajo jugando con animación cuadro por cuadro."
-        : "Las animaciones están apagadas.";
-
-      renderUpdatePanel();
     }
 
     function saveAppTitleSetting() {
@@ -1338,305 +1293,6 @@ const STORAGE_KEY = "cajaMinimalDataV2";
       toast("Clave guardada");
     }
 
-    function getNativeVersionName() {
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionName === "function") {
-          const version = String(window.AndroidBridge.getVersionName() || "").trim();
-          if (version) return version;
-        }
-      } catch (err) {}
-      return APP_VERSION_NAME;
-    }
-
-    function getNativeVersionCode() {
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.getVersionCode === "function") {
-          const code = Number(window.AndroidBridge.getVersionCode());
-          if (Number.isFinite(code) && code > 0) return code;
-        }
-      } catch (err) {}
-      return APP_VERSION_CODE;
-    }
-
-    function cleanVersionLabel(version) {
-      return String(version || "").trim().replace(/^v/i, "") || "—";
-    }
-
-    function versionParts(version) {
-      const clean = cleanVersionLabel(version);
-      const parts = clean.match(/\d+/g) || [];
-      return parts.map(part => Number(part)).slice(0, 5);
-    }
-
-    function compareVersions(a, b) {
-      const left = versionParts(a);
-      const right = versionParts(b);
-      const length = Math.max(left.length, right.length, 3);
-      for (let i = 0; i < length; i += 1) {
-        const av = left[i] || 0;
-        const bv = right[i] || 0;
-        if (av > bv) return 1;
-        if (av < bv) return -1;
-      }
-      return 0;
-    }
-
-    function getBestUpdateUrl(release) {
-      const assets = Array.isArray(release && release.assets) ? release.assets : [];
-      const apk = assets.find(asset => String(asset.name || "").toLowerCase().endsWith(".apk"));
-      if (apk && apk.browser_download_url) return apk.browser_download_url;
-      if (release && release.download_url) return release.download_url;
-      return release && release.html_url ? release.html_url : UPDATE_REPO_RELEASES_URL;
-    }
-
-    function setUpdateStatus(text, state = "") {
-      const status = document.getElementById("updateStatusText");
-      if (!status) return;
-      status.textContent = text;
-      status.classList.toggle("available", state === "available");
-      status.classList.toggle("error", state === "error");
-    }
-
-    function renderUpdatePanel() {
-      const installed = cleanVersionLabel(getNativeVersionName());
-      const installedCode = getNativeVersionCode();
-      const installedText = document.getElementById("installedVersionText");
-      const latestText = document.getElementById("latestVersionText");
-      const checkBtn = document.getElementById("checkUpdateBtn");
-      const downloadBtn = document.getElementById("downloadUpdateBtn");
-
-      if (installedText) installedText.textContent = installedCode ? `${installed} (${installedCode})` : installed;
-      if (latestText) latestText.textContent = latestUpdateInfo ? cleanVersionLabel(latestUpdateInfo.version) : "Sin buscar";
-      if (checkBtn) {
-        checkBtn.disabled = updateCheckBusy;
-        checkBtn.textContent = updateCheckBusy ? "Buscando..." : "Buscar actualizaciones";
-      }
-
-      const hasDownload = latestUpdateInfo && latestUpdateInfo.hasUpdate && latestUpdateInfo.url;
-      if (downloadBtn) downloadBtn.style.display = hasDownload ? "block" : "none";
-    }
-
-    function applyUpdateRelease(release) {
-      const latestVersion = cleanVersionLabel(release.tag_name || release.name || release.version || "");
-      if (!latestVersion || latestVersion === "—") {
-        throw new Error("no-version");
-      }
-
-      const installedVersion = cleanVersionLabel(getNativeVersionName());
-      const hasUpdate = compareVersions(installedVersion, latestVersion) < 0;
-      const url = getBestUpdateUrl(release);
-
-      latestUpdateInfo = {
-        version: latestVersion,
-        installedVersion,
-        hasUpdate,
-        url
-      };
-
-      renderUpdatePanel();
-
-      if (hasUpdate) {
-        setUpdateStatus(`Hay una nueva versión disponible: ${latestVersion}`, "available");
-      } else {
-        setUpdateStatus(`Ya tienes la última versión instalada: ${installedVersion}`);
-      }
-    }
-
-    function handleUpdateError(err) {
-      console.error(err);
-      latestUpdateInfo = null;
-      renderUpdatePanel();
-      const text = err && err.message === "no-release"
-        ? "No encontré releases publicadas en GitHub. Publica una release con un APK para que aparezca aquí."
-        : "No se pudo buscar actualizaciones. Revisa internet o intenta más tarde.";
-      setUpdateStatus(text, "error");
-    }
-
-    window.handleNativeUpdateResult = function(result) {
-      try {
-        const payload = typeof result === "string" ? JSON.parse(result) : result;
-        if (!payload || payload.ok === false) {
-          throw new Error(payload && payload.error ? payload.error : "native-error");
-        }
-        applyUpdateRelease(payload);
-      } catch (err) {
-        handleUpdateError(err);
-      } finally {
-        updateCheckBusy = false;
-        renderUpdatePanel();
-      }
-    };
-
-    async function fetchUpdateReleaseFromWeb() {
-      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
-
-      try {
-        const response = await fetch(UPDATE_REPO_API + "?t=" + Date.now(), {
-          headers: { "Accept": "application/vnd.github+json" },
-          cache: "no-store",
-          signal: controller ? controller.signal : undefined
-        });
-
-        if (response.status === 404) throw new Error("no-release");
-        if (!response.ok) throw new Error("http-" + response.status);
-
-        return await response.json();
-      } finally {
-        if (timer) clearTimeout(timer);
-      }
-    }
-
-    async function checkForUpdates() {
-      if (updateCheckBusy) return;
-      updateCheckBusy = true;
-      latestUpdateInfo = null;
-      renderUpdatePanel();
-      setUpdateStatus("Buscando última versión en GitHub...");
-
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.checkForUpdate === "function") {
-          window.AndroidBridge.checkForUpdate();
-          return;
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-
-      try {
-        const release = await fetchUpdateReleaseFromWeb();
-        applyUpdateRelease(release);
-      } catch (err) {
-        handleUpdateError(err);
-      } finally {
-        updateCheckBusy = false;
-        renderUpdatePanel();
-      }
-    }
-
-    function downloadFoundUpdate() {
-      if (!latestUpdateInfo || !latestUpdateInfo.url) {
-        toast("Primero busca actualizaciones");
-        return;
-      }
-
-      const url = latestUpdateInfo.url;
-      try {
-        if (window.AndroidBridge && typeof window.AndroidBridge.openUrl === "function") {
-          window.AndroidBridge.openUrl(url);
-          return;
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-
-      window.open(url, "_blank");
-    }
-
-
-
-
-
-    function areMascotAnimationsEnabled() {
-      return getSettings().mascotAnimations !== false;
-    }
-
-    function clearMascotTimers() {
-      clearTimeout(mascotTimer);
-      clearInterval(mascotFrameTimer);
-      mascotTimer = null;
-      mascotFrameTimer = null;
-    }
-
-    function toggleMascotAnimations() {
-      const settings = getSettings();
-      settings.mascotAnimations = settings.mascotAnimations === false;
-      persist();
-      renderSettingsPanel();
-      updateMascotVisibility();
-      toast(settings.mascotAnimations === false ? "Animaciones desactivadas" : "Animaciones activadas");
-    }
-
-    function setMascotFrame(frameIndex) {
-      const sprite = document.getElementById("mascotSprite");
-      if (!sprite) return;
-      const frame = mascotFrames[frameIndex] || mascotFrames[0];
-      const x = (frame.col * 100) / 4;
-      const y = (frame.row * 100) / 1;
-      sprite.style.backgroundPosition = x + "% " + y + "%";
-    }
-
-    function hideMascotStage() {
-      const stage = document.getElementById("mascotStage");
-      if (!stage) return;
-      stage.classList.remove("show", "side-right", "side-left");
-      stage.classList.add("is-hidden");
-      mascotSceneKey = "";
-    }
-
-    function playMascotSequenceNow() {
-      if (!areMascotAnimationsEnabled()) return;
-      const area = document.getElementById("mascotArea");
-      const stage = document.getElementById("mascotStage");
-      const actor = document.getElementById("mascotActor");
-      if (!area || !stage || !actor) return;
-
-      clearMascotTimers();
-      area.style.display = "block";
-      mascotSceneKey = "play";
-      mascotSequenceIndex = 0;
-
-      stage.className = "mascot-stage show " + (Math.random() < 0.5 ? "side-left" : "side-right");
-      actor.style.setProperty("--mascot-scale", (0.96 + Math.random() * 0.10).toFixed(2));
-      setMascotFrame(mascotPlaySequence[0]);
-
-      mascotFrameTimer = setInterval(() => {
-        mascotSequenceIndex += 1;
-        if (mascotSequenceIndex >= mascotPlaySequence.length) {
-          clearInterval(mascotFrameTimer);
-          mascotFrameTimer = null;
-          mascotTimer = setTimeout(() => {
-            hideMascotStage();
-            scheduleMascotScene();
-          }, 700);
-          return;
-        }
-        setMascotFrame(mascotPlaySequence[mascotSequenceIndex]);
-      }, 130);
-    }
-
-    function scheduleMascotScene() {
-      clearMascotTimers();
-      if (!areMascotAnimationsEnabled()) return;
-      const delay = 9000 + Math.floor(Math.random() * 14000);
-      mascotTimer = setTimeout(() => {
-        playMascotSequenceNow();
-      }, delay);
-    }
-
-    function updateMascotVisibility() {
-      const area = document.getElementById("mascotArea");
-      if (!area) return;
-
-      if (!areMascotAnimationsEnabled()) {
-        area.style.display = "none";
-        clearMascotTimers();
-        hideMascotStage();
-        return;
-      }
-
-      area.style.display = "block";
-      if (!mascotSceneKey) {
-        clearMascotTimers();
-        mascotTimer = setTimeout(() => playMascotSequenceNow(), 2200);
-      }
-    }
-
-    function initMascotArea() {
-      mascotSceneKey = "";
-      hideMascotStage();
-      updateMascotVisibility();
-    }
 
     function openClientEdit(id) {
       const client = data.clients.find(c => c.id === id);
@@ -3020,4 +2676,3 @@ const STORAGE_KEY = "cajaMinimalDataV2";
     renderAppTitle();
     renderHomeStats();
     renderProducts();
-    initMascotArea();
