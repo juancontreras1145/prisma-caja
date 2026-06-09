@@ -513,12 +513,27 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getVersionName() {
-            return BuildConfig.VERSION_NAME;
+            try {
+                return activity.getPackageManager()
+                        .getPackageInfo(activity.getPackageName(), 0)
+                        .versionName;
+            } catch (Exception e) {
+                return "2.8";
+            }
         }
 
         @JavascriptInterface
         public int getVersionCode() {
-            return BuildConfig.VERSION_CODE;
+            try {
+                android.content.pm.PackageInfo info = activity.getPackageManager()
+                        .getPackageInfo(activity.getPackageName(), 0);
+                if (android.os.Build.VERSION.SDK_INT >= 28) {
+                    return (int) info.getLongVersionCode();
+                }
+                return info.versionCode;
+            } catch (Exception e) {
+                return 19;
+            }
         }
 
         @JavascriptInterface
