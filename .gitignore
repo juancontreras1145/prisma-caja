@@ -1,0 +1,19 @@
+# Android/Gradle
+.gradle/
+build/
+app/build/
+local.properties
+
+# Signing keys and private secrets - do not commit
+*.jks
+*.keystore
+*.p12
+*.pem
+*NO-SUBIR*
+prisma-firma-*
+app/prisma-release.jks
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/

@@ -39,12 +39,10 @@ jobs:
           PRISMA_KEYSTORE_BASE64: ${{ secrets.PRISMA_KEYSTORE_BASE64 }}
           PRISMA_KEYSTORE_PASSWORD: ${{ secrets.PRISMA_KEYSTORE_PASSWORD }}
           PRISMA_KEY_ALIAS: ${{ secrets.PRISMA_KEY_ALIAS }}
-          PRISMA_KEY_PASSWORD: ${{ secrets.PRISMA_KEY_PASSWORD }}
         run: |
           test -n "$PRISMA_KEYSTORE_BASE64" || (echo "Falta el secret PRISMA_KEYSTORE_BASE64" && exit 1)
           test -n "$PRISMA_KEYSTORE_PASSWORD" || (echo "Falta el secret PRISMA_KEYSTORE_PASSWORD" && exit 1)
           test -n "$PRISMA_KEY_ALIAS" || (echo "Falta el secret PRISMA_KEY_ALIAS" && exit 1)
-          test -n "$PRISMA_KEY_PASSWORD" || (echo "Falta el secret PRISMA_KEY_PASSWORD" && exit 1)
 
       - name: Crear y validar archivo de firma
         env:
@@ -63,7 +61,6 @@ jobs:
         env:
           PRISMA_KEYSTORE_PASSWORD: ${{ secrets.PRISMA_KEYSTORE_PASSWORD }}
           PRISMA_KEY_ALIAS: ${{ secrets.PRISMA_KEY_ALIAS }}
-          PRISMA_KEY_PASSWORD: ${{ secrets.PRISMA_KEY_PASSWORD }}
         run: |
           mkdir -p release
           UNSIGNED_APK="$(find app/build/outputs/apk/release -name '*release*.apk' | head -n 1)"
@@ -75,7 +72,7 @@ jobs:
             --ks app/prisma-release.jks \
             --ks-pass pass:"$PRISMA_KEYSTORE_PASSWORD" \
             --ks-key-alias "$PRISMA_KEY_ALIAS" \
-            --key-pass pass:"$PRISMA_KEY_PASSWORD" \
+            --key-pass pass:"$PRISMA_KEYSTORE_PASSWORD" \
             --out release/PrismaCaja-${GITHUB_REF_NAME}.apk \
             release/PrismaCaja-${GITHUB_REF_NAME}-aligned.apk
           "$APKSIGNER" verify --verbose release/PrismaCaja-${GITHUB_REF_NAME}.apk
