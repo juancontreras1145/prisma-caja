@@ -3082,6 +3082,193 @@
       outline-color: #ffffff !important;
     }
 
+
+    /* v4.7: correccion de contraste para temas claros y barra superior */
+    body::after {
+      height: calc(74px + env(safe-area-inset-top)) !important;
+      background: linear-gradient(180deg, var(--safe-top) 0%, var(--safe-top) 58%, rgba(0,0,0,0) 100%) !important;
+      opacity: .98 !important;
+    }
+
+    body[data-theme="light"],
+    body.theme-light,
+    body[data-theme="mint"],
+    body.theme-mint {
+      --text: #0f1b2a;
+      --muted: #42566b;
+      --muted-strong: #26384d;
+      --placeholder: #6b7c8f;
+      --action-text: #0f1b2a;
+      --primary-action-text: #0f1b2a;
+    }
+
+    body[data-theme="mint"],
+    body.theme-mint {
+      --safe-top: #eafcf7;
+      --surface-strong: linear-gradient(145deg, #f9fffd, #d8f7ee);
+      --theme-option-bg: linear-gradient(145deg, #fbfffd, #d6f5ec);
+      --input-bg: #fbfffd;
+      --stat-bg: linear-gradient(145deg, rgba(255,255,255,.98), rgba(215,249,238,.94));
+      --border: rgba(15,118,110,.30);
+      --primary-action-bg: linear-gradient(145deg, #ffffff, #e2fff5);
+      --primary-action-border: rgba(15,118,110,.24);
+      --card-shadow: 0 14px 32px rgba(15,118,110,.16), inset 0 1px 0 rgba(255,255,255,.95);
+      --small-shadow: 0 12px 26px rgba(15,118,110,.13), inset 0 1px 0 rgba(255,255,255,.90);
+    }
+
+    body[data-theme="light"],
+    body.theme-light {
+      --safe-top: #eff7ff;
+      --surface-strong: linear-gradient(145deg, #ffffff, #e4f1ff);
+      --theme-option-bg: linear-gradient(145deg, #ffffff, #e7f3ff);
+      --input-bg: #ffffff;
+      --stat-bg: linear-gradient(145deg, rgba(255,255,255,.98), rgba(229,241,255,.94));
+      --border: rgba(37,99,235,.24);
+      --primary-action-bg: linear-gradient(145deg, #ffffff, #eaf3ff);
+      --primary-action-border: rgba(37,99,235,.24);
+      --card-shadow: 0 14px 32px rgba(47,91,141,.16), inset 0 1px 0 rgba(255,255,255,.95);
+      --small-shadow: 0 12px 26px rgba(47,91,141,.13), inset 0 1px 0 rgba(255,255,255,.90);
+    }
+
+    body[data-theme="mint"] #visualThemeOptions .theme-option,
+    body.theme-mint #visualThemeOptions .theme-option,
+    body[data-theme="light"] #visualThemeOptions .theme-option,
+    body.theme-light #visualThemeOptions .theme-option,
+    body[data-theme="mint"] .update-card,
+    body.theme-mint .update-card,
+    body[data-theme="light"] .update-card,
+    body.theme-light .update-card,
+    body[data-theme="mint"] .name-row,
+    body.theme-mint .name-row,
+    body[data-theme="light"] .name-row,
+    body.theme-light .name-row,
+    body[data-theme="mint"] .card,
+    body.theme-mint .card,
+    body[data-theme="light"] .card,
+    body.theme-light .card,
+    body[data-theme="mint"] .selection-box,
+    body.theme-mint .selection-box,
+    body[data-theme="light"] .selection-box,
+    body.theme-light .selection-box,
+    body[data-theme="mint"] .compact-row,
+    body.theme-mint .compact-row,
+    body[data-theme="light"] .compact-row,
+    body.theme-light .compact-row,
+    body[data-theme="mint"] .payment-sale-row,
+    body.theme-mint .payment-sale-row,
+    body[data-theme="light"] .payment-sale-row,
+    body.theme-light .payment-sale-row {
+      background: var(--surface-strong) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      box-shadow: var(--small-shadow) !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="mint"] #visualThemeOptions .theme-option::before,
+    body.theme-mint #visualThemeOptions .theme-option::before,
+    body[data-theme="light"] #visualThemeOptions .theme-option::before,
+    body.theme-light #visualThemeOptions .theme-option::before {
+      opacity: .18 !important;
+      background: linear-gradient(90deg, rgba(255,255,255,.30), rgba(15,118,110,.08)) !important;
+    }
+
+    body[data-theme="mint"] #visualThemeOptions .theme-option strong,
+    body.theme-mint #visualThemeOptions .theme-option strong,
+    body[data-theme="light"] #visualThemeOptions .theme-option strong,
+    body.theme-light #visualThemeOptions .theme-option strong,
+    body[data-theme="mint"] .update-card strong,
+    body.theme-mint .update-card strong,
+    body[data-theme="light"] .update-card strong,
+    body.theme-light .update-card strong,
+    body[data-theme="mint"] .card strong,
+    body.theme-mint .card strong,
+    body[data-theme="light"] .card strong,
+    body.theme-light .card strong,
+    body[data-theme="mint"] .name-row strong,
+    body.theme-mint .name-row strong,
+    body[data-theme="light"] .name-row strong,
+    body.theme-light .name-row strong {
+      color: var(--text) !important;
+      opacity: 1 !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="mint"] #visualThemeOptions .theme-option small,
+    body.theme-mint #visualThemeOptions .theme-option small,
+    body[data-theme="light"] #visualThemeOptions .theme-option small,
+    body.theme-light #visualThemeOptions .theme-option small,
+    body[data-theme="mint"] .update-message,
+    body.theme-mint .update-message,
+    body[data-theme="light"] .update-message,
+    body.theme-light .update-message,
+    body[data-theme="mint"] .muted,
+    body.theme-mint .muted,
+    body[data-theme="light"] .muted,
+    body.theme-light .muted,
+    body[data-theme="mint"] .edit-help,
+    body.theme-mint .edit-help,
+    body[data-theme="light"] .edit-help,
+    body.theme-light .edit-help {
+      color: var(--muted) !important;
+      opacity: 1 !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="mint"] input,
+    body.theme-mint input,
+    body[data-theme="light"] input,
+    body.theme-light input,
+    body[data-theme="mint"] textarea,
+    body.theme-mint textarea,
+    body[data-theme="light"] textarea,
+    body.theme-light textarea {
+      background: var(--input-bg) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="mint"] .danger-action,
+    body.theme-mint .danger-action,
+    body[data-theme="light"] .danger-action,
+    body.theme-light .danger-action,
+    body[data-theme="mint"] .clear-selection,
+    body.theme-mint .clear-selection,
+    body[data-theme="light"] .clear-selection,
+    body.theme-light .clear-selection,
+    body[data-theme="mint"] .delete,
+    body.theme-mint .delete,
+    body[data-theme="light"] .delete,
+    body.theme-light .delete,
+    body[data-theme="mint"] .icon-btn.danger,
+    body.theme-mint .icon-btn.danger,
+    body[data-theme="light"] .icon-btn.danger,
+    body.theme-light .icon-btn.danger {
+      background: linear-gradient(145deg, #ff416c, #e11d48) !important;
+      color: #ffffff !important;
+      border-color: rgba(225,29,72,.42) !important;
+      text-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
+      opacity: 1 !important;
+    }
+
+    body[data-theme="mint"] .secondary-action,
+    body.theme-mint .secondary-action,
+    body[data-theme="light"] .secondary-action,
+    body.theme-light .secondary-action,
+    body[data-theme="mint"] .big-action,
+    body.theme-mint .big-action,
+    body[data-theme="light"] .big-action,
+    body.theme-light .big-action,
+    body[data-theme="mint"] .back,
+    body.theme-mint .back,
+    body[data-theme="light"] .back,
+    body.theme-light .back {
+      color: var(--text) !important;
+      background: var(--primary-action-bg) !important;
+      text-shadow: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -3527,7 +3714,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.6";
+    const APP_VERSION = "4.7";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
