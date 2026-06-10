@@ -3442,6 +3442,41 @@
       opacity: 1 !important;
     }
 
+
+
+    /* v4.9: sin tema Menta y sin difuminado superior */
+    body::after {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+
+    body[data-theme="mint"],
+    body.theme-mint {
+      --safe-top: #082635 !important;
+      --app-bg: linear-gradient(180deg, #092a34 0%, #020913 54%, #020913 100%) !important;
+      --text: #f5fbff !important;
+      --muted: #a7b8c9 !important;
+      --surface-strong: linear-gradient(145deg, rgba(9,31,55,.98), rgba(3,52,52,.94)) !important;
+      --theme-option-bg: linear-gradient(145deg, rgba(9,31,55,.98), rgba(3,52,52,.94)) !important;
+    }
+
+    #visualThemeOptions .theme-option[data-theme="mint"] {
+      display: none !important;
+    }
+
+    #settingsPanel .update-card,
+    #settingsPanel .selection-box,
+    #settingsPanel input,
+    #settingsPanel textarea,
+    #settingsPanel .secondary-action,
+    #settingsPanel .big-action,
+    #settingsPanel .back {
+      backdrop-filter: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -3653,10 +3688,6 @@
           </button>
           <button type="button" class="theme-option" data-theme="sunset" onclick="selectVisualTheme('sunset')">
             <span><strong>Atardecer coral</strong><small>Naranja, rosa y morado cálido</small></span>
-            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
-          </button>
-          <button type="button" class="theme-option" data-theme="mint" onclick="selectVisualTheme('mint')">
-            <span><strong>Menta premium</strong><small>Verde menta, blanco y azul suave</small></span>
             <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
           </button>
         </div>
@@ -3999,7 +4030,7 @@
     }
 
     function sanitizeVisualTheme(theme) {
-      const allowed = ["neon", "carbon", "light", "retro", "aurora", "ocean", "sunset", "mint"];
+      const allowed = ["neon", "carbon", "light", "retro", "aurora", "ocean", "sunset"];
       return allowed.includes(String(theme || "")) ? String(theme) : "neon";
     }
 
@@ -4033,8 +4064,7 @@
         "theme-retro",
         "theme-aurora",
         "theme-ocean",
-        "theme-sunset",
-        "theme-mint"
+        "theme-sunset"
       );
       document.body.dataset.theme = selected;
       if (selected !== "neon") {
