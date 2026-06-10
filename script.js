@@ -109,10 +109,16 @@ const APP_VERSION = "2.9";
       };
     }
 
+    function sanitizeVisualTheme(theme) {
+      const allowed = ["neon", "carbon", "light", "retro", "aurora"];
+      return allowed.includes(String(theme || "")) ? String(theme) : "neon";
+    }
+
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      return { appTitle, profitPin };
+      const visualTheme = sanitizeVisualTheme(settings.visualTheme || settings.theme || "neon");
+      return { appTitle, profitPin, visualTheme };
     }
 
     function getSettings() {
@@ -127,6 +133,35 @@ const APP_VERSION = "2.9";
       const titleEl = document.getElementById("appTitle");
       if (titleEl) titleEl.textContent = title;
       document.title = title;
+    }
+
+    function applyVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme || getSettings().visualTheme);
+      document.body.classList.remove(
+        "theme-carbon",
+        "theme-light",
+        "theme-retro",
+        "theme-aurora"
+      );
+      if (selected !== "neon") {
+        document.body.classList.add("theme-" + selected);
+      }
+      renderVisualThemeOptions();
+    }
+
+    function renderVisualThemeOptions() {
+      const selected = sanitizeVisualTheme(getSettings().visualTheme);
+      document.querySelectorAll(".theme-option").forEach(button => {
+        button.classList.toggle("active", button.dataset.theme === selected);
+      });
+    }
+
+    function selectVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme);
+      getSettings().visualTheme = selected;
+      persist();
+      applyVisualTheme(selected);
+      toast("Diseño actualizado");
     }
 
     function normalizePin(value) {
@@ -1484,6 +1519,8 @@ const APP_VERSION = "2.9";
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+      applyVisualTheme(settings.visualTheme);
+      renderVisualThemeOptions();
       renderUpdatePanel();
     }
 
@@ -3097,6 +3134,7 @@ const APP_VERSION = "2.9";
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
+    applyVisualTheme();
     renderAppTitle();
     renderHomeStats();
     renderProducts();

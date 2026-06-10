@@ -1135,6 +1135,32 @@
           <button class="secondary-action" onclick="saveProfitPinFromSettings()">Guardar clave</button>
         </div>
 
+        <div class="label">Diseño de la app</div>
+        <p class="edit-help">Elige el estilo visual. El cambio se guarda automáticamente.</p>
+        <div class="theme-grid" id="visualThemeOptions">
+          <button type="button" class="theme-option" data-theme="neon" onclick="selectVisualTheme('neon')">
+            <span><strong>Neón cristal</strong><small>Azul, verde y violeta brillante</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="carbon" onclick="selectVisualTheme('carbon')">
+            <span><strong>Carbono lujo</strong><small>Negro premium con dorado</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="light" onclick="selectVisualTheme('light')">
+            <span><strong>Claro moderno</strong><small>Fondo limpio y luminoso</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="retro" onclick="selectVisualTheme('retro')">
+            <span><strong>Kiosco retro</strong><small>Colores cálidos y estilo local</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="aurora" onclick="selectVisualTheme('aurora')">
+            <span><strong>Aurora premium</strong><small>Violeta, celeste y verde suave</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+        </div>
+
+
         <div class="label">Actualizaciones</div>
         <p class="edit-help">Busca la última versión publicada en GitHub Releases.</p>
         <div class="update-card">
@@ -1504,10 +1530,16 @@
       };
     }
 
+    function sanitizeVisualTheme(theme) {
+      const allowed = ["neon", "carbon", "light", "retro", "aurora"];
+      return allowed.includes(String(theme || "")) ? String(theme) : "neon";
+    }
+
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      return { appTitle, profitPin };
+      const visualTheme = sanitizeVisualTheme(settings.visualTheme || settings.theme || "neon");
+      return { appTitle, profitPin, visualTheme };
     }
 
     function getSettings() {
@@ -1522,6 +1554,35 @@
       const titleEl = document.getElementById("appTitle");
       if (titleEl) titleEl.textContent = title;
       document.title = title;
+    }
+
+    function applyVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme || getSettings().visualTheme);
+      document.body.classList.remove(
+        "theme-carbon",
+        "theme-light",
+        "theme-retro",
+        "theme-aurora"
+      );
+      if (selected !== "neon") {
+        document.body.classList.add("theme-" + selected);
+      }
+      renderVisualThemeOptions();
+    }
+
+    function renderVisualThemeOptions() {
+      const selected = sanitizeVisualTheme(getSettings().visualTheme);
+      document.querySelectorAll(".theme-option").forEach(button => {
+        button.classList.toggle("active", button.dataset.theme === selected);
+      });
+    }
+
+    function selectVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme);
+      getSettings().visualTheme = selected;
+      persist();
+      applyVisualTheme(selected);
+      toast("Diseño actualizado");
     }
 
     function normalizePin(value) {
@@ -2879,6 +2940,8 @@
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+      applyVisualTheme(settings.visualTheme);
+      renderVisualThemeOptions();
       renderUpdatePanel();
     }
 
@@ -4492,6 +4555,7 @@
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
+    applyVisualTheme();
     renderAppTitle();
     renderHomeStats();
     renderProducts();
