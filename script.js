@@ -143,6 +143,7 @@ const APP_VERSION = "2.9";
         "theme-retro",
         "theme-aurora"
       );
+      document.body.dataset.theme = selected;
       if (selected !== "neon") {
         document.body.classList.add("theme-" + selected);
       }
