@@ -12,6 +12,7 @@ rm -f .github/workflows/build-apk.yml
 find . -maxdepth 1 -type f -name 'README*.md' \
   ! -name 'README_FIRMA_GITHUB.md' \
   ! -name 'README_LIMPIEZA_V43.md' \
+  ! -name 'README_DISENOS_IGUAL_HTML_V44.md' \
   -delete
 
 # Nunca borrar la fuente real de la app.

@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#0e1015" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Prisma" />
+  <meta name="apple-mobile-web-app-title" content="El Kiosquito" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <title>Prisma</title>
+  <title>El Kiosquito</title>
   <style>
     :root {
       --bg: #0e1015;
@@ -1287,13 +1287,526 @@
     #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(2) { background: #22d3ee; }
     #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(3) { background: #34d399; }
 
+
+    /* v4.4: hacer que la app real use los mismos estilos de los 5 HTML de prueba */
+    body,
+    body[data-theme="neon"],
+    body:not(.theme-carbon):not(.theme-light):not(.theme-retro):not(.theme-aurora) {
+      --body: #020913;
+      --app-bg: linear-gradient(180deg, #092a34 0%, #020913 54%, #020913 100%);
+      --glow-a: rgba(11, 239, 255, .30);
+      --glow-b: rgba(255, 171, 61, .27);
+      --glow-c: rgba(0, 255, 148, .16);
+      --texture: linear-gradient(120deg, rgba(255,255,255,.045) 0 1px, transparent 1px 16px);
+      --texture-opacity: .22;
+      --text: #f5fbff;
+      --muted: #a4b5c7;
+      --title: linear-gradient(90deg, #0fffc4 0%, #23d6ff 42%, #9b70ff 70%, #ffbd4a 100%);
+      --title-shadow: 0 0 34px rgba(0, 238, 255, .15);
+      --stat-bg: linear-gradient(145deg, rgba(9, 31, 55, .84), rgba(11, 48, 61, .55));
+      --border: rgba(90, 202, 255, .24);
+      --card-shadow: 0 20px 50px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.07);
+      --button-shadow: 0 18px 42px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.20);
+      --button-text: #f7fbff;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.22);
+      --tile-gloss: radial-gradient(circle at 28% 16%, rgba(255,255,255,.30), transparent 34%);
+      --venta: linear-gradient(145deg, #2eff95, #00b864 70%);
+      --abono: linear-gradient(145deg, #31c4ff, #005cff 76%);
+      --historial: linear-gradient(145deg, #a47cff, #562eff 75%);
+      --editar: linear-gradient(145deg, #ffd166, #ff6b00 80%);
+      --note-bg: rgba(7, 23, 36, .58);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(15, 52, 75, .88);
+      --line: var(--border);
+      --green: #16e889;
+      --blue: #19a7ff;
+      --purple: #8b5cf6;
+      --orange: #ff9f1c;
+      --red: #ff4d6d;
+      background: var(--body) !important;
+    }
+
+    body.theme-carbon {
+      --body: #020202;
+      --app-bg: linear-gradient(180deg, #0b0d10 0%, #020202 100%);
+      --glow-a: rgba(255, 198, 88, .18);
+      --glow-b: rgba(255, 99, 71, .10);
+      --glow-c: rgba(255, 215, 130, .08);
+      --texture: linear-gradient(135deg, rgba(255,255,255,.035) 25%, transparent 25%) 0 0/18px 18px, linear-gradient(225deg, rgba(255,255,255,.025) 25%, transparent 25%) 0 0/18px 18px;
+      --texture-opacity: .20;
+      --text: #fff8ea;
+      --muted: #b7aea0;
+      --title: linear-gradient(90deg, #ffe29b 0%, #ffb23f 45%, #ff6b35 100%);
+      --title-shadow: 0 0 26px rgba(255, 177, 64, .15);
+      --stat-bg: linear-gradient(145deg, rgba(28, 28, 31, .94), rgba(12, 13, 15, .92));
+      --border: rgba(255, 204, 120, .22);
+      --card-shadow: 0 20px 45px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.06);
+      --button-shadow: 0 18px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
+      --button-text: #fffdf8;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.35);
+      --tile-gloss: linear-gradient(180deg, rgba(255,255,255,.22), transparent 46%);
+      --venta: linear-gradient(145deg, #22c55e, #0f7a3a);
+      --abono: linear-gradient(145deg, #d6a84f, #8f5b18);
+      --historial: linear-gradient(145deg, #44403c, #171717);
+      --editar: linear-gradient(145deg, #ff8a3d, #9a3412);
+      --note-bg: rgba(20, 19, 18, .84);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(38, 38, 38, .94);
+      --line: var(--border);
+      --green: #22c55e;
+      --blue: #d6a84f;
+      --purple: #44403c;
+      --orange: #ff8a3d;
+      --red: #dc2626;
+      background: var(--body) !important;
+    }
+
+    body.theme-light {
+      --body: #eaf2ff;
+      --app-bg: linear-gradient(180deg, #eff7ff 0%, #dfeeff 100%);
+      --glow-a: rgba(41, 121, 255, .18);
+      --glow-b: rgba(255, 183, 77, .22);
+      --glow-c: rgba(25, 201, 159, .18);
+      --texture: radial-gradient(circle at 1px 1px, rgba(12,28,54,.08) 1px, transparent 0) 0 0/18px 18px;
+      --texture-opacity: .36;
+      --text: #132033;
+      --muted: #637088;
+      --title: linear-gradient(90deg, #0066ff 0%, #00b894 48%, #ff9f1c 100%);
+      --title-shadow: none;
+      --stat-bg: rgba(255,255,255,.72);
+      --border: rgba(60, 103, 150, .16);
+      --card-shadow: 0 18px 38px rgba(47, 91, 141, .18), inset 0 1px 0 rgba(255,255,255,.80);
+      --button-shadow: 0 18px 36px rgba(39, 90, 155, .24);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 2px 10px rgba(0,0,0,.15);
+      --tile-gloss: radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 40%);
+      --venta: linear-gradient(145deg, #00d084, #00a36c);
+      --abono: linear-gradient(145deg, #38bdf8, #2563eb);
+      --historial: linear-gradient(145deg, #8b5cf6, #4f46e5);
+      --editar: linear-gradient(145deg, #fbbf24, #f97316);
+      --note-bg: rgba(255,255,255,.62);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(255,255,255,.94);
+      --line: var(--border);
+      --green: #00a36c;
+      --blue: #2563eb;
+      --purple: #4f46e5;
+      --orange: #f97316;
+      --red: #e11d48;
+      background: var(--body) !important;
+    }
+
+    body.theme-retro {
+      --body: #1f1308;
+      --app-bg: linear-gradient(180deg, #2b160a 0%, #101016 52%, #08090d 100%);
+      --glow-a: rgba(255, 203, 91, .22);
+      --glow-b: rgba(239, 68, 68, .18);
+      --glow-c: rgba(20, 184, 166, .14);
+      --texture: repeating-linear-gradient(0deg, rgba(255,255,255,.04), rgba(255,255,255,.04) 1px, transparent 1px, transparent 4px);
+      --texture-opacity: .20;
+      --text: #fff6e5;
+      --muted: #cfbfa4;
+      --title: linear-gradient(90deg, #fef08a 0%, #fb923c 38%, #f43f5e 72%, #22d3ee 100%);
+      --title-shadow: 4px 4px 0 rgba(0,0,0,.28);
+      --stat-bg: linear-gradient(145deg, rgba(55, 31, 19, .82), rgba(21, 24, 34, .88));
+      --border: rgba(251, 191, 36, .22);
+      --card-shadow: 0 16px 0 rgba(0,0,0,.20), 0 24px 44px rgba(0,0,0,.28);
+      --button-shadow: 0 12px 0 rgba(0,0,0,.22), 0 24px 34px rgba(0,0,0,.25);
+      --button-text: #fff9ed;
+      --button-text-shadow: 2px 3px 0 rgba(0,0,0,.20);
+      --tile-gloss: linear-gradient(135deg, rgba(255,255,255,.25), transparent 38%);
+      --venta: linear-gradient(145deg, #84cc16, #16a34a);
+      --abono: linear-gradient(145deg, #06b6d4, #2563eb);
+      --historial: linear-gradient(145deg, #ec4899, #7c3aed);
+      --editar: linear-gradient(145deg, #facc15, #ea580c);
+      --note-bg: rgba(47, 31, 20, .64);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(79, 42, 24, .90);
+      --line: var(--border);
+      --green: #84cc16;
+      --blue: #06b6d4;
+      --purple: #ec4899;
+      --orange: #facc15;
+      --red: #ef4444;
+      background: var(--body) !important;
+    }
+
+    body.theme-aurora {
+      --body: #060514;
+      --app-bg: linear-gradient(180deg, #10143a 0%, #081125 38%, #020610 100%);
+      --glow-a: rgba(99, 102, 241, .30);
+      --glow-b: rgba(236, 72, 153, .22);
+      --glow-c: rgba(16, 185, 129, .18);
+      --texture: radial-gradient(circle at 50% 0%, rgba(255,255,255,.10), transparent 55%);
+      --texture-opacity: .55;
+      --text: #f7f5ff;
+      --muted: #b2b7d8;
+      --title: linear-gradient(92deg, #a78bfa 0%, #22d3ee 35%, #34d399 62%, #fbbf24 100%);
+      --title-shadow: 0 0 45px rgba(167, 139, 250, .20);
+      --stat-bg: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+      --border: rgba(202, 211, 255, .18);
+      --card-shadow: 0 20px 52px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+      --button-shadow: 0 22px 56px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.24);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 3px 18px rgba(0,0,0,.28);
+      --tile-gloss: radial-gradient(circle at 20% 18%, rgba(255,255,255,.36), transparent 32%), linear-gradient(180deg, rgba(255,255,255,.12), transparent 70%);
+      --venta: linear-gradient(145deg, #34d399, #059669 72%);
+      --abono: linear-gradient(145deg, #60a5fa, #4f46e5 78%);
+      --historial: linear-gradient(145deg, #c084fc, #7c3aed 72%);
+      --editar: linear-gradient(145deg, #fb7185, #f97316 80%);
+      --note-bg: rgba(11, 17, 38, .58);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(33, 41, 83, .88);
+      --line: var(--border);
+      --green: #34d399;
+      --blue: #60a5fa;
+      --purple: #a78bfa;
+      --orange: #fb7185;
+      --red: #f43f5e;
+      background: var(--body) !important;
+    }
+
+    .app {
+      width: min(430px, 100%) !important;
+      min-height: 100dvh !important;
+      padding: calc(54px + env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom)) !important;
+      position: relative !important;
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
+      background:
+        radial-gradient(circle at 10% 4%, var(--glow-a), transparent 34%),
+        radial-gradient(circle at 94% 8%, var(--glow-b), transparent 30%),
+        radial-gradient(circle at 50% 86%, var(--glow-c), transparent 38%),
+        var(--app-bg) !important;
+      color: var(--text) !important;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--texture);
+      pointer-events: none;
+      opacity: var(--texture-opacity);
+      z-index: 0;
+    }
+
+    .app > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: block !important;
+      margin-bottom: 24px !important;
+    }
+
+    h1.rainbow-title {
+      margin: 0 !important;
+      font-size: clamp(48px, 13vw, 72px) !important;
+      line-height: .9 !important;
+      letter-spacing: -4px !important;
+      font-weight: 950 !important;
+      background: var(--title) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      color: transparent !important;
+      text-shadow: var(--title-shadow) !important;
+    }
+
+    #home .summary {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+      margin: 0 0 16px !important;
+    }
+
+    #home .stat {
+      min-height: 78px !important;
+      border-radius: 18px !important;
+      padding: 14px 14px !important;
+      background: var(--stat-bg) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: var(--card-shadow) !important;
+      backdrop-filter: blur(16px) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      color: var(--text) !important;
+    }
+
+    #home .stat small {
+      color: var(--muted) !important;
+      font-size: 15px !important;
+      line-height: 1.1 !important;
+      margin-bottom: 8px !important;
+      font-weight: 500 !important;
+    }
+
+    #home .stat strong {
+      font-size: 25px !important;
+      line-height: 1 !important;
+      font-weight: 900 !important;
+      letter-spacing: -.6px !important;
+      color: var(--text) !important;
+    }
+
+    #home .grid-main {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 14px !important;
+      margin-top: 18px !important;
+    }
+
+    #home .tile {
+      height: 146px !important;
+      min-height: 146px !important;
+      border: none !important;
+      border-radius: 28px !important;
+      color: var(--button-text) !important;
+      font-size: 27px !important;
+      font-weight: 950 !important;
+      letter-spacing: -.8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: var(--button-shadow) !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+
+    #home .tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--tile-gloss);
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    #home .tile::after { display: none !important; }
+
+    #home .tile span {
+      position: relative !important;
+      z-index: 2 !important;
+      text-shadow: var(--button-text-shadow) !important;
+    }
+
+    #home .venta { background: var(--venta) !important; }
+    #home .abono { background: var(--abono) !important; }
+    #home .historial { background: var(--historial) !important; }
+    #home .editar { background: var(--editar) !important; }
+
+    .theme-retro #home .tile,
+    .theme-retro #home .stat,
+    .theme-retro .preview-card {
+      border-radius: 22px !important;
+    }
+
+    .theme-aurora #home .tile {
+      border-radius: 34px !important;
+    }
+
+    .topbar,
+    .edit-menu,
+    .edit-panel,
+    .products,
+    .pay-grid,
+    .history-tabs,
+    .list,
+    .form,
+    .profit-grid,
+    .update-card,
+    .theme-grid {
+      position: relative;
+      z-index: 1;
+    }
+
+    .edit-tile,
+    .pending-card,
+    .pending-section,
+    .profit-card,
+    .profit-section,
+    .update-card,
+    .selection-box,
+    .hint,
+    .compact-row,
+    .name-row,
+    .card,
+    .payment-sale-row,
+    .theme-option {
+      background: var(--stat-bg) !important;
+      border-color: var(--border) !important;
+      color: var(--text) !important;
+      box-shadow: var(--card-shadow) !important;
+      backdrop-filter: blur(16px) !important;
+    }
+
+    .secondary-action,
+    .back,
+    .mini-btn,
+    .history-tab,
+    .history-group-btn,
+    .pin-key,
+    .icon-btn {
+      background: var(--note-bg) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      box-shadow: 0 12px 28px rgba(0,0,0,.18) !important;
+    }
+
+    .big-action {
+      background: var(--note-bg) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: var(--card-shadow) !important;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--stat-bg) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder { color: var(--muted) !important; opacity: .76; }
+
+    .edit-tile.clients { background: linear-gradient(145deg, rgba(9,31,55,.84), var(--stat-bg)) !important; }
+    .edit-tile.products { background: linear-gradient(145deg, rgba(0,184,100,.20), var(--stat-bg)) !important; }
+    .edit-tile.settings { background: linear-gradient(145deg, rgba(35,214,255,.16), var(--stat-bg)) !important; }
+    .edit-tile.backup { background: linear-gradient(145deg, rgba(155,112,255,.18), var(--stat-bg)) !important; }
+    .edit-tile.danger { background: linear-gradient(145deg, rgba(255,77,109,.18), var(--stat-bg)) !important; }
+
+    #visualThemeOptions.theme-grid {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin: 12px 0 18px !important;
+    }
+
+    #visualThemeOptions .theme-option {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      width: 100% !important;
+      min-height: 78px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 22px !important;
+      padding: 14px 14px !important;
+      background: var(--stat-bg) !important;
+      color: var(--text) !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      gap: 12px !important;
+      align-items: center !important;
+      text-align: left !important;
+      cursor: pointer !important;
+      overflow: hidden !important;
+      position: relative !important;
+      box-shadow: var(--card-shadow) !important;
+    }
+
+    #visualThemeOptions .theme-option::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--tile-gloss);
+      opacity: .35;
+      pointer-events: none;
+    }
+
+    #visualThemeOptions .theme-option strong,
+    #visualThemeOptions .theme-option small {
+      display: block !important;
+      position: relative;
+      z-index: 2;
+    }
+
+    #visualThemeOptions .theme-option strong {
+      font-size: 17px !important;
+      line-height: 1.1 !important;
+      font-weight: 950 !important;
+      margin-bottom: 5px !important;
+      color: var(--text) !important;
+    }
+
+    #visualThemeOptions .theme-option small {
+      color: var(--muted) !important;
+      font-size: 12px !important;
+      line-height: 1.25 !important;
+      font-weight: 800 !important;
+    }
+
+    #visualThemeOptions .theme-option.active {
+      outline: 2px solid var(--green) !important;
+      outline-offset: 2px !important;
+      border-color: var(--green) !important;
+    }
+
+    #visualThemeOptions .theme-option.active::after {
+      content: "✓";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--green);
+      color: #061015;
+      font-size: 14px;
+      font-weight: 950;
+      z-index: 4;
+    }
+
+    #visualThemeOptions .theme-palette {
+      position: relative;
+      z-index: 2;
+      display: flex !important;
+      gap: 5px !important;
+      padding-right: 26px;
+    }
+
+    #visualThemeOptions .theme-dot {
+      width: 16px !important;
+      height: 16px !important;
+      border-radius: 999px !important;
+      display: inline-block !important;
+      border: 1px solid rgba(255,255,255,.45) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,.24) !important;
+    }
+
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(1) { background: #0fffc4 !important; }
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(2) { background: #23d6ff !important; }
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(3) { background: #9b70ff !important; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(1) { background: #ffe29b !important; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(2) { background: #ffb23f !important; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(3) { background: #111111 !important; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(1) { background: #eff7ff !important; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(2) { background: #0066ff !important; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(3) { background: #00b894 !important; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(1) { background: #fef08a !important; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(2) { background: #fb923c !important; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(3) { background: #f43f5e !important; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(1) { background: #a78bfa !important; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(2) { background: #22d3ee !important; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(3) { background: #34d399 !important; }
+
 </style>
 </head>
 <body>
   <main class="app">
     <header>
       <div>
-        <h1 id="appTitle" class="rainbow-title">Prisma</h1>
+        <h1 id="appTitle" class="rainbow-title">El Kiosquito</h1>
       </div>
     </header>
 
@@ -1458,7 +1971,7 @@
         <div class="label">Título principal</div>
         <p class="edit-help">Cambia el nombre grande que aparece al inicio.</p>
         <div class="form">
-          <input id="settingsAppTitle" placeholder="Prisma" autocomplete="off" />
+          <input id="settingsAppTitle" placeholder="El Kiosquito" autocomplete="off" />
           <button class="secondary-action" onclick="saveAppTitleSetting()">Guardar título</button>
         </div>
 
@@ -1720,7 +2233,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.3";
+    const APP_VERSION = "4.4";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -1733,7 +2246,7 @@
       movements: [],
       nextReceiptNumber: 1,
       settings: {
-        appTitle: "Prisma",
+        appTitle: "El Kiosquito",
         profitPin: ""
       }
     };
@@ -1837,7 +2350,8 @@
     }
 
     function normalizeSettings(settings = {}) {
-      const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
+      let appTitle = String(settings.appTitle || "El Kiosquito").trim();
+      if (!appTitle || appTitle === "Prisma") appTitle = "El Kiosquito";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
       const visualTheme = sanitizeVisualTheme(settings.visualTheme || settings.theme || "neon");
       return { appTitle, profitPin, visualTheme };
@@ -1851,7 +2365,7 @@
 
     function renderAppTitle() {
       const settings = getSettings();
-      const title = settings.appTitle || "Prisma";
+      const title = settings.appTitle || "El Kiosquito";
       const titleEl = document.getElementById("appTitle");
       if (titleEl) titleEl.textContent = title;
       document.title = title;
@@ -3190,7 +3704,7 @@
       const settings = getSettings();
       const titleInput = document.getElementById("settingsAppTitle");
       const pinInput = document.getElementById("settingsProfitPin");
-      if (titleInput) titleInput.value = settings.appTitle || "Prisma";
+      if (titleInput) titleInput.value = settings.appTitle || "El Kiosquito";
       if (pinInput) pinInput.value = "";
       applyVisualTheme(settings.visualTheme);
       renderVisualThemeOptions();
