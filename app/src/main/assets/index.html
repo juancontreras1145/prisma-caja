@@ -3477,6 +3477,140 @@
       backdrop-filter: none !important;
     }
 
+    /* v5.0: bordes premium reforzados en Ganancias y listas */
+    #profitModal .sheet {
+      border: 2px solid rgba(167, 139, 250, .42) !important;
+      outline: 1px solid rgba(255,255,255,.10) !important;
+      outline-offset: -8px !important;
+      box-shadow:
+        0 0 0 1px rgba(91,211,255,.12),
+        0 26px 90px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 0 34px rgba(139,92,246,.08) !important;
+    }
+
+    #profitModal .profit-filter select,
+    #profitModal .profit-filter button,
+    #profitModal .profit-tab {
+      border: 2px solid rgba(145, 170, 255, .30) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        0 10px 24px rgba(0,0,0,.18) !important;
+    }
+
+    #profitModal .profit-tab.active {
+      border-color: rgba(167, 139, 250, .78) !important;
+      box-shadow:
+        0 0 0 2px rgba(167,139,250,.16),
+        0 12px 28px rgba(99,102,241,.22),
+        inset 0 1px 0 rgba(255,255,255,.18) !important;
+    }
+
+    #profitModal .profit-card-compact,
+    #profitModal .profit-section {
+      border: 2px solid rgba(145, 170, 255, .28) !important;
+      border-radius: 26px !important;
+      padding: 18px !important;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.080), rgba(255,255,255,.038)),
+        rgba(17, 24, 52, .78) !important;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.045),
+        0 20px 48px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.10) !important;
+    }
+
+    #profitModal .profit-hero-card {
+      border: 2px solid rgba(91, 211, 255, .28) !important;
+      border-radius: 24px !important;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.055),
+        0 16px 34px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.12) !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+
+    #profitModal .profit-hero-card::before {
+      content: "" !important;
+      position: absolute !important;
+      inset: 8px !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 18px !important;
+      pointer-events: none !important;
+    }
+
+    #profitModal .profit-list-compact {
+      gap: 14px !important;
+    }
+
+    #profitModal .profit-list-item {
+      padding: 0 !important;
+      border: 2px solid rgba(154, 174, 255, .26) !important;
+      border-radius: 18px !important;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,.035)),
+        rgba(17, 24, 52, .64) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        0 10px 24px rgba(0,0,0,.18) !important;
+      overflow: hidden !important;
+    }
+
+    #profitModal .profit-list-item .profit-row {
+      border-bottom: 1px solid rgba(255,255,255,.09) !important;
+      padding: 13px 14px !important;
+      grid-template-columns: minmax(0, 1fr) auto !important;
+    }
+
+    #profitModal .profit-list-item:last-child {
+      border-bottom: 2px solid rgba(154, 174, 255, .26) !important;
+      padding-bottom: 0 !important;
+    }
+
+    #profitModal .profit-list-item strong {
+      font-size: 15px !important;
+      color: #ffffff !important;
+    }
+
+    #profitModal .profit-list-item small {
+      color: #bac6d8 !important;
+      line-height: 1.35 !important;
+    }
+
+    #profitModal .profit-list-item b,
+    #profitModal .profit-money {
+      padding-left: 12px !important;
+      color: #ffffff !important;
+      text-shadow: 0 0 18px rgba(91,211,255,.15) !important;
+    }
+
+    #profitModal .profit-list-item .bar,
+    #profitModal .profit-list-item .profit-bar {
+      height: 7px !important;
+      margin: 0 14px 13px !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 999px !important;
+      background: rgba(255,255,255,.10) !important;
+      overflow: hidden !important;
+    }
+
+    #profitModal .profit-list-item .bar span,
+    #profitModal .profit-list-item .profit-bar span {
+      display: block !important;
+      height: 100% !important;
+      border-radius: inherit !important;
+      background: linear-gradient(90deg, #22d3ee, #8b5cf6, #f472b6) !important;
+      box-shadow: 0 0 16px rgba(139,92,246,.32) !important;
+    }
+
+    #profitModal .profit-card-compact h3 {
+      padding-bottom: 12px !important;
+      margin-bottom: 14px !important;
+      border-bottom: 1px solid rgba(255,255,255,.11) !important;
+    }
+
+
 </style>
 </head>
 <body>
@@ -3918,7 +4052,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.8";
+    const APP_VERSION = "5.0";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
