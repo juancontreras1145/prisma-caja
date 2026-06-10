@@ -3269,6 +3269,179 @@
       text-shadow: none !important;
     }
 
+
+    /* v4.8: selector y paneles de ajustes con contraste fijo y legible */
+    #settingsPanel .label,
+    #settingsPanel .edit-help,
+    #settingsPanel .update-card,
+    #visualThemeOptions,
+    #visualThemeOptions * {
+      -webkit-text-fill-color: initial !important;
+      mix-blend-mode: normal !important;
+      filter: none !important;
+    }
+
+    #visualThemeOptions.theme-grid {
+      gap: 12px !important;
+      margin-top: 14px !important;
+    }
+
+    #visualThemeOptions .theme-option,
+    body[data-theme="light"] #visualThemeOptions .theme-option,
+    body.theme-light #visualThemeOptions .theme-option,
+    body[data-theme="mint"] #visualThemeOptions .theme-option,
+    body.theme-mint #visualThemeOptions .theme-option {
+      min-height: 86px !important;
+      padding: 16px 18px !important;
+      background: linear-gradient(145deg, rgba(9, 31, 55, .98), rgba(3, 52, 52, .94)) !important;
+      color: #f8fafc !important;
+      border: 1px solid rgba(56, 189, 248, .34) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 16px 34px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.10) !important;
+      text-shadow: none !important;
+      opacity: 1 !important;
+      overflow: hidden !important;
+      isolation: isolate !important;
+    }
+
+    #visualThemeOptions .theme-option::before,
+    body[data-theme="light"] #visualThemeOptions .theme-option::before,
+    body.theme-light #visualThemeOptions .theme-option::before,
+    body[data-theme="mint"] #visualThemeOptions .theme-option::before,
+    body.theme-mint #visualThemeOptions .theme-option::before {
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      z-index: 0 !important;
+      opacity: .35 !important;
+      background: radial-gradient(circle at 18% 0%, rgba(255,255,255,.20), transparent 34%), linear-gradient(90deg, rgba(255,255,255,.05), rgba(0,0,0,0)) !important;
+      pointer-events: none !important;
+    }
+
+    #visualThemeOptions .theme-option > span:first-child,
+    #visualThemeOptions .theme-option .theme-palette {
+      position: relative !important;
+      z-index: 3 !important;
+    }
+
+    #visualThemeOptions .theme-option strong,
+    body[data-theme="light"] #visualThemeOptions .theme-option strong,
+    body.theme-light #visualThemeOptions .theme-option strong,
+    body[data-theme="mint"] #visualThemeOptions .theme-option strong,
+    body.theme-mint #visualThemeOptions .theme-option strong {
+      display: block !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      text-shadow: 0 2px 10px rgba(0,0,0,.20) !important;
+      font-size: 18px !important;
+      line-height: 1.12 !important;
+      font-weight: 950 !important;
+      margin: 0 0 6px !important;
+    }
+
+    #visualThemeOptions .theme-option small,
+    body[data-theme="light"] #visualThemeOptions .theme-option small,
+    body.theme-light #visualThemeOptions .theme-option small,
+    body[data-theme="mint"] #visualThemeOptions .theme-option small,
+    body.theme-mint #visualThemeOptions .theme-option small {
+      display: block !important;
+      color: #b8c8d8 !important;
+      -webkit-text-fill-color: #b8c8d8 !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      text-shadow: none !important;
+      font-size: 13px !important;
+      line-height: 1.25 !important;
+      font-weight: 800 !important;
+    }
+
+    #visualThemeOptions .theme-option.active,
+    body[data-theme="light"] #visualThemeOptions .theme-option.active,
+    body.theme-light #visualThemeOptions .theme-option.active,
+    body[data-theme="mint"] #visualThemeOptions .theme-option.active,
+    body.theme-mint #visualThemeOptions .theme-option.active {
+      border-color: #20f08a !important;
+      outline: 3px solid rgba(32,240,138,.92) !important;
+      outline-offset: 2px !important;
+      box-shadow: 0 0 0 5px rgba(32,240,138,.16), 0 20px 48px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.12) !important;
+    }
+
+    #visualThemeOptions .theme-dot {
+      border: 1px solid rgba(255,255,255,.56) !important;
+      box-shadow: 0 5px 14px rgba(0,0,0,.28) !important;
+    }
+
+    #settingsPanel .update-card,
+    body[data-theme="light"] #settingsPanel .update-card,
+    body.theme-light #settingsPanel .update-card,
+    body[data-theme="mint"] #settingsPanel .update-card,
+    body.theme-mint #settingsPanel .update-card {
+      background: linear-gradient(145deg, rgba(9,31,55,.98), rgba(3,52,52,.94)) !important;
+      color: #f8fafc !important;
+      border-color: rgba(56,189,248,.34) !important;
+      box-shadow: 0 16px 34px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.10) !important;
+      text-shadow: none !important;
+    }
+
+    #settingsPanel .update-card span,
+    #settingsPanel .update-card p,
+    #settingsPanel .update-card .update-message {
+      color: #b8c8d8 !important;
+      -webkit-text-fill-color: #b8c8d8 !important;
+      opacity: 1 !important;
+    }
+
+    #settingsPanel .update-card strong,
+    #settingsPanel .update-card b {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      opacity: 1 !important;
+    }
+
+    #settingsPanel .update-card .secondary-action,
+    #settingsPanel .update-card .big-action,
+    #settingsPanel .update-card button {
+      background: linear-gradient(145deg, #ffffff, #dff8ff) !important;
+      color: #0f1b2a !important;
+      -webkit-text-fill-color: #0f1b2a !important;
+      border-color: rgba(255,255,255,.45) !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="light"] #settingsPanel .danger-action,
+    body.theme-light #settingsPanel .danger-action,
+    body[data-theme="mint"] #settingsPanel .danger-action,
+    body.theme-mint #settingsPanel .danger-action,
+    #settingsPanel .danger-action {
+      background: linear-gradient(145deg, #ff416c, #e11d48) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      border-color: rgba(225,29,72,.45) !important;
+      text-shadow: 0 2px 8px rgba(0,0,0,.22) !important;
+      opacity: 1 !important;
+    }
+
+    body[data-theme="light"] #settingsPanel .label,
+    body.theme-light #settingsPanel .label,
+    body[data-theme="mint"] #settingsPanel .label,
+    body.theme-mint #settingsPanel .label {
+      color: #1f3348 !important;
+      -webkit-text-fill-color: #1f3348 !important;
+      opacity: 1 !important;
+      text-shadow: none !important;
+    }
+
+    body[data-theme="light"] #settingsPanel .edit-help,
+    body.theme-light #settingsPanel .edit-help,
+    body[data-theme="mint"] #settingsPanel .edit-help,
+    body.theme-mint #settingsPanel .edit-help {
+      color: #42566b !important;
+      -webkit-text-fill-color: #42566b !important;
+      opacity: 1 !important;
+    }
+
 </style>
 </head>
 <body>
@@ -3714,7 +3887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.7";
+    const APP_VERSION = "4.8";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
