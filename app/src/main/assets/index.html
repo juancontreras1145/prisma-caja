@@ -1800,6 +1800,307 @@
     #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(2) { background: #22d3ee !important; }
     #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(3) { background: #34d399 !important; }
 
+
+
+    /* v4.5: ajuste fino visual, nuevas paletas y mejor contraste */
+    body,
+    body[data-theme="neon"],
+    body:not(.theme-carbon):not(.theme-light):not(.theme-retro):not(.theme-aurora):not(.theme-ocean):not(.theme-sunset):not(.theme-mint) {
+      --surface-strong: linear-gradient(145deg, rgba(11, 35, 57, .94), rgba(7, 19, 34, .92));
+      --surface-soft: linear-gradient(145deg, rgba(21, 67, 90, .70), rgba(8, 24, 39, .72));
+      --danger-bg: linear-gradient(145deg, #ff4d6d, #be123c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(255, 115, 145, .55);
+    }
+
+    body.theme-carbon {
+      --surface-strong: linear-gradient(145deg, rgba(42, 36, 28, .96), rgba(11, 12, 14, .94));
+      --surface-soft: linear-gradient(145deg, rgba(58, 45, 28, .74), rgba(15, 15, 17, .82));
+      --danger-bg: linear-gradient(145deg, #ef4444, #991b1b);
+      --danger-text: #fffaf0;
+      --danger-border: rgba(255, 138, 138, .48);
+    }
+
+    body.theme-light {
+      --surface-strong: linear-gradient(145deg, rgba(255,255,255,.94), rgba(231,242,255,.88));
+      --surface-soft: linear-gradient(145deg, rgba(255,255,255,.78), rgba(224,243,255,.70));
+      --danger-bg: linear-gradient(145deg, #ff416c, #e11d48);
+      --danger-text: #ffffff;
+      --danger-border: rgba(225, 29, 72, .34);
+    }
+
+    body.theme-retro {
+      --surface-strong: linear-gradient(145deg, rgba(54, 36, 23, .96), rgba(16, 14, 16, .94));
+      --surface-soft: linear-gradient(145deg, rgba(70, 43, 22, .72), rgba(26, 18, 16, .76));
+      --danger-bg: linear-gradient(145deg, #fb7185, #be123c);
+      --danger-text: #fff7ed;
+      --danger-border: rgba(251, 113, 133, .46);
+    }
+
+    body.theme-aurora {
+      --surface-strong: linear-gradient(145deg, rgba(35, 41, 84, .96), rgba(10, 13, 34, .94));
+      --surface-soft: linear-gradient(145deg, rgba(70, 64, 130, .58), rgba(17, 24, 58, .72));
+      --danger-bg: linear-gradient(145deg, #fb7185, #e11d48);
+      --danger-text: #ffffff;
+      --danger-border: rgba(251, 113, 133, .45);
+    }
+
+    body.theme-ocean {
+      --body: #02131f;
+      --app-bg: linear-gradient(180deg, #06344a 0%, #02131f 52%, #010914 100%);
+      --glow-a: rgba(34, 211, 238, .30);
+      --glow-b: rgba(20, 184, 166, .22);
+      --glow-c: rgba(37, 99, 235, .18);
+      --texture: radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0) 0 0/18px 18px;
+      --texture-opacity: .28;
+      --text: #f1fbff;
+      --muted: #a9c8d4;
+      --title: linear-gradient(90deg, #22d3ee 0%, #14b8a6 42%, #60a5fa 75%, #a7f3d0 100%);
+      --title-shadow: 0 0 34px rgba(34, 211, 238, .18);
+      --stat-bg: linear-gradient(145deg, rgba(6, 46, 70, .86), rgba(4, 22, 38, .72));
+      --border: rgba(94, 234, 212, .24);
+      --card-shadow: 0 20px 48px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08);
+      --button-shadow: 0 20px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.20);
+      --button-text: #f8fdff;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.24);
+      --tile-gloss: radial-gradient(circle at 25% 18%, rgba(255,255,255,.32), transparent 36%);
+      --venta: linear-gradient(145deg, #2dd4bf, #059669 72%);
+      --abono: linear-gradient(145deg, #38bdf8, #2563eb 76%);
+      --historial: linear-gradient(145deg, #818cf8, #4338ca 76%);
+      --editar: linear-gradient(145deg, #67e8f9, #0f766e 80%);
+      --note-bg: rgba(5, 28, 45, .70);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(9, 46, 68, .88);
+      --line: var(--border);
+      --green: #2dd4bf;
+      --blue: #38bdf8;
+      --purple: #818cf8;
+      --orange: #67e8f9;
+      --red: #fb7185;
+      --surface-strong: linear-gradient(145deg, rgba(6, 52, 75, .96), rgba(3, 18, 32, .94));
+      --surface-soft: linear-gradient(145deg, rgba(13, 80, 101, .62), rgba(5, 31, 49, .74));
+      --danger-bg: linear-gradient(145deg, #fb7185, #be123c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(251, 113, 133, .48);
+      background: var(--body) !important;
+    }
+
+    body.theme-sunset {
+      --body: #160914;
+      --app-bg: linear-gradient(180deg, #3a1228 0%, #170a1c 48%, #070711 100%);
+      --glow-a: rgba(251, 113, 133, .26);
+      --glow-b: rgba(251, 146, 60, .28);
+      --glow-c: rgba(168, 85, 247, .16);
+      --texture: linear-gradient(120deg, rgba(255,255,255,.04) 0 1px, transparent 1px 18px);
+      --texture-opacity: .22;
+      --text: #fff7fb;
+      --muted: #e2b8c6;
+      --title: linear-gradient(90deg, #fef3c7 0%, #fb923c 34%, #fb7185 66%, #c084fc 100%);
+      --title-shadow: 0 0 34px rgba(251, 113, 133, .20);
+      --stat-bg: linear-gradient(145deg, rgba(63, 21, 46, .84), rgba(20, 14, 32, .74));
+      --border: rgba(251, 146, 60, .26);
+      --card-shadow: 0 20px 50px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08);
+      --button-shadow: 0 20px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.20);
+      --button-text: #fffaf7;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.25);
+      --tile-gloss: radial-gradient(circle at 26% 18%, rgba(255,255,255,.32), transparent 36%);
+      --venta: linear-gradient(145deg, #fb923c, #ea580c 74%);
+      --abono: linear-gradient(145deg, #fb7185, #e11d48 76%);
+      --historial: linear-gradient(145deg, #c084fc, #7e22ce 76%);
+      --editar: linear-gradient(145deg, #facc15, #f97316 82%);
+      --note-bg: rgba(38, 16, 35, .72);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(62, 24, 51, .90);
+      --line: var(--border);
+      --green: #fb923c;
+      --blue: #fb7185;
+      --purple: #c084fc;
+      --orange: #facc15;
+      --red: #ef4444;
+      --surface-strong: linear-gradient(145deg, rgba(67, 25, 52, .96), rgba(22, 12, 31, .94));
+      --surface-soft: linear-gradient(145deg, rgba(85, 32, 60, .66), rgba(28, 15, 38, .76));
+      --danger-bg: linear-gradient(145deg, #ff416c, #b91c1c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(255, 120, 120, .48);
+      background: var(--body) !important;
+    }
+
+    body.theme-mint {
+      --body: #eefcf7;
+      --app-bg: linear-gradient(180deg, #f8fffc 0%, #dffbf3 100%);
+      --glow-a: rgba(16, 185, 129, .18);
+      --glow-b: rgba(56, 189, 248, .20);
+      --glow-c: rgba(134, 239, 172, .18);
+      --texture: radial-gradient(circle at 1px 1px, rgba(15, 118, 110, .08) 1px, transparent 0) 0 0/18px 18px;
+      --texture-opacity: .34;
+      --text: #10251f;
+      --muted: #526d66;
+      --title: linear-gradient(90deg, #059669 0%, #14b8a6 38%, #2563eb 76%, #84cc16 100%);
+      --title-shadow: none;
+      --stat-bg: rgba(255,255,255,.78);
+      --border: rgba(15, 118, 110, .18);
+      --card-shadow: 0 18px 38px rgba(15, 118, 110, .14), inset 0 1px 0 rgba(255,255,255,.84);
+      --button-shadow: 0 18px 36px rgba(15, 118, 110, .18);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 2px 10px rgba(0,0,0,.18);
+      --tile-gloss: radial-gradient(circle at 30% 20%, rgba(255,255,255,.42), transparent 42%);
+      --venta: linear-gradient(145deg, #34d399, #059669 75%);
+      --abono: linear-gradient(145deg, #67e8f9, #2563eb 78%);
+      --historial: linear-gradient(145deg, #a7f3d0, #14b8a6 78%);
+      --editar: linear-gradient(145deg, #bef264, #65a30d 80%);
+      --note-bg: rgba(255,255,255,.68);
+      --bg: var(--body);
+      --card: var(--stat-bg);
+      --card2: rgba(255,255,255,.94);
+      --line: var(--border);
+      --green: #059669;
+      --blue: #2563eb;
+      --purple: #14b8a6;
+      --orange: #65a30d;
+      --red: #e11d48;
+      --surface-strong: linear-gradient(145deg, rgba(255,255,255,.94), rgba(223, 251, 243, .90));
+      --surface-soft: linear-gradient(145deg, rgba(255,255,255,.76), rgba(209, 250, 229, .72));
+      --danger-bg: linear-gradient(145deg, #ff416c, #e11d48);
+      --danger-text: #ffffff;
+      --danger-border: rgba(225, 29, 72, .34);
+      background: var(--body) !important;
+    }
+
+    .app {
+      padding-top: calc(64px + env(safe-area-inset-top)) !important;
+    }
+
+    h1.rainbow-title {
+      font-size: clamp(44px, 11.5vw, 64px) !important;
+      letter-spacing: -2.8px !important;
+      line-height: .94 !important;
+      white-space: nowrap !important;
+      max-width: calc(100vw - 34px) !important;
+      overflow: visible !important;
+      padding-right: 6px !important;
+      margin-bottom: 2px !important;
+    }
+
+    .screen:not(#home) {
+      padding-top: 8px !important;
+    }
+
+    .topbar {
+      margin-top: 8px !important;
+      margin-bottom: 24px !important;
+      align-items: center !important;
+    }
+
+    .topbar .title,
+    h2,
+    .label {
+      color: var(--text) !important;
+    }
+
+    .edit-menu {
+      gap: 16px !important;
+    }
+
+    .edit-tile,
+    .name-row,
+    .card,
+    .payment-sale-row,
+    .selection-box,
+    .hint,
+    .compact-row,
+    .update-card,
+    .pending-card,
+    .pending-section,
+    .profit-card,
+    .profit-section {
+      background: var(--surface-strong) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+
+    .edit-tile small,
+    .name-row small,
+    .card small,
+    .muted,
+    .selection-items,
+    .edit-help,
+    .payment-sale-row small {
+      color: var(--muted) !important;
+      opacity: .96 !important;
+    }
+
+    .edit-tile strong,
+    .name-row strong,
+    .card strong,
+    .selection-box strong {
+      color: var(--text) !important;
+    }
+
+    .edit-tile.clients { background: linear-gradient(145deg, rgba(56, 189, 248, .20), var(--surface-strong)) !important; }
+    .edit-tile.products { background: linear-gradient(145deg, rgba(34, 197, 94, .20), var(--surface-strong)) !important; }
+    .edit-tile.settings { background: linear-gradient(145deg, rgba(99, 102, 241, .18), var(--surface-strong)) !important; }
+    .edit-tile.backup { background: linear-gradient(145deg, rgba(168, 85, 247, .18), var(--surface-strong)) !important; }
+    .edit-tile.danger { background: linear-gradient(145deg, rgba(239, 68, 68, .24), var(--surface-strong)) !important; }
+
+    .clear-selection,
+    .danger-action,
+    .delete,
+    .icon-btn.danger,
+    #history button.danger {
+      background: var(--danger-bg) !important;
+      color: var(--danger-text) !important;
+      border: 1px solid var(--danger-border) !important;
+      box-shadow: 0 14px 30px rgba(190, 18, 60, .22) !important;
+      opacity: 1 !important;
+    }
+
+    .clear-selection:disabled,
+    .danger-action:disabled {
+      opacity: .50 !important;
+      filter: saturate(.75) !important;
+    }
+
+    .badge.debt,
+    .fiado {
+      background: var(--danger-bg) !important;
+      color: var(--danger-text) !important;
+      border-color: var(--danger-border) !important;
+    }
+
+    .modal {
+      align-items: flex-start !important;
+      padding-top: calc(58px + env(safe-area-inset-top)) !important;
+      padding-bottom: calc(26px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .sheet {
+      max-height: calc(100dvh - 92px - env(safe-area-inset-bottom)) !important;
+      background: var(--surface-strong) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+
+    .pay-option {
+      min-height: 120px !important;
+    }
+
+    .product {
+      min-height: 116px !important;
+    }
+
+    #visualThemeOptions .theme-option[data-theme="ocean"] .theme-dot:nth-child(1) { background: #22d3ee !important; }
+    #visualThemeOptions .theme-option[data-theme="ocean"] .theme-dot:nth-child(2) { background: #14b8a6 !important; }
+    #visualThemeOptions .theme-option[data-theme="ocean"] .theme-dot:nth-child(3) { background: #2563eb !important; }
+    #visualThemeOptions .theme-option[data-theme="sunset"] .theme-dot:nth-child(1) { background: #fb923c !important; }
+    #visualThemeOptions .theme-option[data-theme="sunset"] .theme-dot:nth-child(2) { background: #fb7185 !important; }
+    #visualThemeOptions .theme-option[data-theme="sunset"] .theme-dot:nth-child(3) { background: #a855f7 !important; }
+    #visualThemeOptions .theme-option[data-theme="mint"] .theme-dot:nth-child(1) { background: #f8fffc !important; }
+    #visualThemeOptions .theme-option[data-theme="mint"] .theme-dot:nth-child(2) { background: #34d399 !important; }
+    #visualThemeOptions .theme-option[data-theme="mint"] .theme-dot:nth-child(3) { background: #2563eb !important; }
+
+
 </style>
 </head>
 <body>
@@ -2003,6 +2304,18 @@
           </button>
           <button type="button" class="theme-option" data-theme="aurora" onclick="selectVisualTheme('aurora')">
             <span><strong>Aurora premium</strong><small>Violeta, celeste y verde suave</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="ocean" onclick="selectVisualTheme('ocean')">
+            <span><strong>Océano profundo</strong><small>Azul petróleo, cyan y verde mar</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="sunset" onclick="selectVisualTheme('sunset')">
+            <span><strong>Atardecer coral</strong><small>Naranja, rosa y morado cálido</small></span>
+            <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
+          </button>
+          <button type="button" class="theme-option" data-theme="mint" onclick="selectVisualTheme('mint')">
+            <span><strong>Menta premium</strong><small>Verde menta, blanco y azul suave</small></span>
             <span class="theme-palette"><span class="theme-dot"></span><span class="theme-dot"></span><span class="theme-dot"></span></span>
           </button>
         </div>
@@ -2233,7 +2546,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.4";
+    const APP_VERSION = "4.5";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -2345,7 +2658,7 @@
     }
 
     function sanitizeVisualTheme(theme) {
-      const allowed = ["neon", "carbon", "light", "retro", "aurora"];
+      const allowed = ["neon", "carbon", "light", "retro", "aurora", "ocean", "sunset", "mint"];
       return allowed.includes(String(theme || "")) ? String(theme) : "neon";
     }
 
@@ -2377,7 +2690,10 @@
         "theme-carbon",
         "theme-light",
         "theme-retro",
-        "theme-aurora"
+        "theme-aurora",
+        "theme-ocean",
+        "theme-sunset",
+        "theme-mint"
       );
       document.body.dataset.theme = selected;
       if (selected !== "neon") {
