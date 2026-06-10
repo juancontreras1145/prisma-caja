@@ -979,9 +979,12 @@ const APP_VERSION = "2.9";
       const itemsTarget = document.getElementById("paymentSelectedItems");
       const totalTarget = document.getElementById("paymentSelectedTotal");
 
+      const amountInput = document.getElementById("paymentAmount");
+
       if (!items.length) {
         itemsTarget.textContent = "Selecciona una o más boletas.";
         totalTarget.textContent = formatMoney(0);
+        if (amountInput) amountInput.value = "";
         return;
       }
 
@@ -992,6 +995,7 @@ const APP_VERSION = "2.9";
 
       const total = items.reduce((sum, sale) => sum + getSaleRemaining(sale), 0);
       totalTarget.textContent = formatMoney(total);
+      if (amountInput) amountInput.value = total || "";
     }
 
     function setPaymentMethod(method) {
