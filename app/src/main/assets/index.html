@@ -2101,6 +2101,987 @@
     #visualThemeOptions .theme-option[data-theme="mint"] .theme-dot:nth-child(3) { background: #2563eb !important; }
 
 
+
+
+    /* v4.6: cambios reales de identidad visual por tema */
+    html, body {
+      min-height: 100%;
+      background: var(--app-bg) !important;
+      color: var(--text) !important;
+    }
+
+    body {
+      position: relative;
+      background: var(--app-bg) !important;
+      transition: background .18s ease, color .18s ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 10% 4%, var(--glow-a), transparent 34%),
+        radial-gradient(circle at 94% 8%, var(--glow-b), transparent 30%),
+        radial-gradient(circle at 50% 86%, var(--glow-c), transparent 38%),
+        var(--app-bg);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: calc(62px + env(safe-area-inset-top));
+      z-index: 55;
+      pointer-events: none;
+      background: linear-gradient(180deg, var(--safe-top), rgba(0,0,0,0));
+    }
+
+    .app {
+      position: relative !important;
+      z-index: 1 !important;
+      max-width: 430px !important;
+      width: 100% !important;
+      min-height: 100dvh !important;
+      padding: calc(84px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)) !important;
+      background:
+        radial-gradient(circle at 12% 2%, var(--glow-a), transparent 34%),
+        radial-gradient(circle at 96% 0%, var(--glow-b), transparent 32%),
+        radial-gradient(circle at 50% 92%, var(--glow-c), transparent 42%),
+        var(--app-bg) !important;
+      overflow: hidden !important;
+    }
+
+    .app::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      max-width: 430px;
+      margin: 0 auto;
+      background: var(--texture);
+      opacity: var(--texture-opacity);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    header {
+      margin-bottom: 24px !important;
+    }
+
+    h1.rainbow-title {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      font-size: clamp(42px, 10.2vw, 58px) !important;
+      line-height: .94 !important;
+      letter-spacing: -1.2px !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      padding-right: 0 !important;
+      margin: 0 !important;
+      background: var(--title) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      color: transparent !important;
+      text-shadow: var(--title-shadow) !important;
+      transform-origin: left center !important;
+    }
+
+    @media (max-width: 380px) {
+      h1.rainbow-title {
+        font-size: 40px !important;
+        letter-spacing: -1px !important;
+      }
+    }
+
+    #home .summary {
+      gap: 12px !important;
+      margin-top: 0 !important;
+    }
+
+    #home .stat {
+      min-height: var(--stat-height) !important;
+      border-radius: var(--stat-radius) !important;
+      padding: var(--stat-pad) !important;
+      background: var(--stat-bg) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--card-shadow) !important;
+      backdrop-filter: blur(var(--blur)) !important;
+    }
+
+    #home .stat small {
+      color: var(--muted) !important;
+      font-size: 15px !important;
+      margin-bottom: 8px !important;
+      line-height: 1.1 !important;
+      font-weight: 650 !important;
+    }
+
+    #home .stat strong {
+      color: var(--text) !important;
+      font-size: 27px !important;
+      line-height: 1 !important;
+      letter-spacing: -.7px !important;
+      font-weight: 950 !important;
+    }
+
+    #home .grid-main {
+      gap: var(--tile-gap) !important;
+      margin-top: 22px !important;
+    }
+
+    #home .tile {
+      min-height: var(--tile-height) !important;
+      border-radius: var(--tile-radius) !important;
+      color: var(--button-text) !important;
+      font-size: var(--tile-font) !important;
+      font-weight: 950 !important;
+      letter-spacing: -.8px !important;
+      box-shadow: var(--button-shadow) !important;
+      border: var(--tile-border) !important;
+      text-shadow: var(--button-text-shadow) !important;
+    }
+
+    #home .tile::after,
+    .product::after,
+    .pay-option::after {
+      background: var(--tile-gloss) !important;
+      opacity: var(--gloss-opacity) !important;
+    }
+
+    #home .tile.venta { background: var(--venta) !important; }
+    #home .tile.abono { background: var(--abono) !important; }
+    #home .tile.historial { background: var(--historial) !important; }
+    #home .tile.editar { background: var(--editar) !important; }
+
+    .screen:not(#home) {
+      padding-top: 10px !important;
+    }
+
+    .topbar {
+      margin-top: 8px !important;
+      margin-bottom: 28px !important;
+      align-items: center !important;
+    }
+
+    .back {
+      min-width: 64px !important;
+      min-height: 64px !important;
+      border-radius: var(--back-radius) !important;
+      background: var(--back-bg) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--mini-shadow) !important;
+      font-size: 22px !important;
+    }
+
+    .topbar .title,
+    .panel-head h2,
+    h2,
+    .label {
+      color: var(--text) !important;
+    }
+
+    .topbar .title {
+      font-size: 29px !important;
+      letter-spacing: -.8px !important;
+    }
+
+    .label {
+      color: var(--muted-strong) !important;
+      font-size: 13px !important;
+      letter-spacing: .12em !important;
+    }
+
+    .edit-help,
+    .muted,
+    .selection-items,
+    .name-row small,
+    .card small,
+    .edit-tile small,
+    .payment-sale-row small,
+    .update-message {
+      color: var(--muted) !important;
+      opacity: .98 !important;
+    }
+
+    .edit-menu {
+      gap: var(--edit-gap) !important;
+    }
+
+    .edit-tile {
+      min-height: var(--edit-tile-height) !important;
+      border-radius: var(--edit-radius) !important;
+      background: var(--surface-strong) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--card-shadow) !important;
+    }
+
+    .edit-tile strong,
+    .name-row strong,
+    .card strong,
+    .selection-box strong,
+    .compact-row strong,
+    .payment-sale-row strong {
+      color: var(--text) !important;
+    }
+
+    .edit-tile.clients { background: var(--client-card) !important; }
+    .edit-tile.products { background: var(--product-card) !important; }
+    .edit-tile.settings { background: var(--settings-card) !important; }
+    .edit-tile.backup { background: var(--backup-card) !important; }
+    .edit-tile.danger { background: var(--danger-card) !important; }
+
+    .name-row,
+    .card,
+    .compact-row,
+    .product-compact-row,
+    .product-edit-row,
+    .payment-sale-row,
+    .selection-box,
+    .hint,
+    .install-card,
+    .update-card,
+    .pending-card,
+    .pending-section,
+    .profit-card,
+    .profit-section,
+    .profit-hero-card,
+    .profit-list-item,
+    .history-group-btn {
+      background: var(--surface-strong) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--small-shadow) !important;
+      backdrop-filter: blur(var(--blur)) !important;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--input-bg) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--input-shadow) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--placeholder) !important;
+    }
+
+    .secondary-action,
+    .mini-btn,
+    .history-tab,
+    .profit-tab,
+    .secret-btn,
+    .icon-btn:not(.danger) {
+      background: var(--action-bg) !important;
+      color: var(--action-text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      box-shadow: var(--mini-shadow) !important;
+    }
+
+    .history-tab.active,
+    .profit-tab.active {
+      background: var(--tab-active) !important;
+      color: var(--button-text) !important;
+    }
+
+    .big-action,
+    .wa-action,
+    .share-btn {
+      background: var(--primary-action-bg) !important;
+      color: var(--primary-action-text) !important;
+      border: var(--border-width) solid var(--primary-action-border) !important;
+      box-shadow: var(--small-shadow) !important;
+    }
+
+    .clear-selection,
+    .danger-action,
+    .delete,
+    .icon-btn.danger,
+    #history button.danger,
+    .safe-delete-btn {
+      background: var(--danger-bg) !important;
+      color: var(--danger-text) !important;
+      border: var(--border-width) solid var(--danger-border) !important;
+      box-shadow: var(--danger-shadow) !important;
+      opacity: 1 !important;
+    }
+
+    .clear-selection:disabled,
+    .danger-action:disabled {
+      opacity: .58 !important;
+      filter: grayscale(.12) saturate(.82) !important;
+    }
+
+    .badge.debt,
+    .fiado {
+      background: var(--danger-bg) !important;
+      color: var(--danger-text) !important;
+      border-color: var(--danger-border) !important;
+    }
+
+    .badge.paid,
+    .pagado {
+      background: var(--paid-bg) !important;
+      color: var(--paid-text) !important;
+    }
+
+    .product,
+    .pay-option {
+      border-radius: var(--product-radius) !important;
+      min-height: var(--product-height) !important;
+      box-shadow: var(--button-shadow) !important;
+      border: var(--tile-border) !important;
+      color: #fff !important;
+      text-shadow: var(--button-text-shadow) !important;
+    }
+
+    .product.selected,
+    .pay-option.selected {
+      outline: 4px solid var(--selected-outline) !important;
+      outline-offset: 3px !important;
+      box-shadow: var(--selected-shadow) !important;
+    }
+
+    .sheet {
+      background: var(--sheet-bg) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      border-radius: var(--sheet-radius) !important;
+      box-shadow: var(--sheet-shadow) !important;
+      max-height: calc(100dvh - 102px - env(safe-area-inset-bottom)) !important;
+    }
+
+    .modal {
+      align-items: flex-start !important;
+      padding-top: calc(72px + env(safe-area-inset-top)) !important;
+      padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+      background: rgba(0,0,0,.58) !important;
+    }
+
+    #visualThemeOptions .theme-option {
+      background: var(--theme-option-bg) !important;
+      color: var(--text) !important;
+      border: var(--border-width) solid var(--border) !important;
+      border-radius: var(--edit-radius) !important;
+      box-shadow: var(--small-shadow) !important;
+    }
+
+    #visualThemeOptions .theme-option.active {
+      border-color: var(--selected-outline) !important;
+      box-shadow: var(--selected-shadow) !important;
+    }
+
+    body[data-theme="neon"] {
+      --app-bg: linear-gradient(180deg, #092a34 0%, #020913 54%, #020913 100%);
+      --safe-top: #082635;
+      --glow-a: rgba(11, 239, 255, .30);
+      --glow-b: rgba(255, 171, 61, .27);
+      --glow-c: rgba(0, 255, 148, .16);
+      --texture: linear-gradient(120deg, rgba(255,255,255,.045) 0 1px, transparent 1px 16px);
+      --texture-opacity: .22;
+      --text: #f5fbff;
+      --muted: #a7b8c9;
+      --muted-strong: #b7c7d7;
+      --placeholder: #79889a;
+      --title: linear-gradient(90deg, #0fffc4 0%, #23d6ff 42%, #9b70ff 70%, #ffbd4a 100%);
+      --title-shadow: 0 0 34px rgba(0, 238, 255, .15);
+      --stat-bg: linear-gradient(145deg, rgba(9, 31, 55, .84), rgba(11, 48, 61, .55));
+      --surface-strong: linear-gradient(145deg, rgba(9, 31, 55, .90), rgba(7, 37, 48, .72));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,255,255,.08);
+      --border: rgba(90, 202, 255, .24);
+      --border-width: 1px;
+      --card-shadow: 0 20px 50px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.07);
+      --small-shadow: 0 16px 34px rgba(0,0,0,.23), inset 0 1px 0 rgba(255,255,255,.08);
+      --button-shadow: 0 18px 42px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.20);
+      --mini-shadow: 0 12px 28px rgba(0,0,0,.22);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      --danger-shadow: 0 14px 30px rgba(190,18,60,.24);
+      --sheet-shadow: 0 24px 80px rgba(0,0,0,.45);
+      --button-text: #f7fbff;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.22);
+      --tile-gloss: radial-gradient(circle at 28% 16%, rgba(255,255,255,.30), transparent 34%);
+      --gloss-opacity: .75;
+      --venta: linear-gradient(145deg, #2eff95, #00b864 70%);
+      --abono: linear-gradient(145deg, #31c4ff, #005cff 76%);
+      --historial: linear-gradient(145deg, #a47cff, #562eff 75%);
+      --editar: linear-gradient(145deg, #ffd166, #ff6b00 80%);
+      --client-card: linear-gradient(145deg, rgba(56,189,248,.23), rgba(9,31,55,.90));
+      --product-card: linear-gradient(145deg, rgba(34,197,94,.23), rgba(7,37,48,.90));
+      --settings-card: linear-gradient(145deg, rgba(20,184,166,.25), rgba(8,36,48,.90));
+      --backup-card: linear-gradient(145deg, rgba(139,92,246,.25), rgba(13,24,49,.90));
+      --danger-card: linear-gradient(145deg, rgba(244,63,94,.25), rgba(39,19,40,.90));
+      --action-bg: rgba(14,38,65,.86);
+      --action-text: #f7fbff;
+      --tab-active: linear-gradient(145deg, #0ea5e9, #2563eb);
+      --primary-action-bg: rgba(255,255,255,.94);
+      --primary-action-text: #101827;
+      --primary-action-border: rgba(255,255,255,.34);
+      --danger-bg: linear-gradient(145deg, #ff416c, #be123c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(255,100,130,.52);
+      --paid-bg: linear-gradient(145deg, #22c55e, #047857);
+      --paid-text: #fff;
+      --selected-outline: #ffffff;
+      --selected-shadow: 0 0 0 3px rgba(255,255,255,.26), 0 18px 42px rgba(0,0,0,.30);
+      --sheet-bg: linear-gradient(145deg, rgba(255,255,255,.97), rgba(235,242,248,.95));
+      --stat-radius: 18px;
+      --stat-height: 80px;
+      --stat-pad: 14px;
+      --tile-radius: 28px;
+      --tile-height: 146px;
+      --tile-font: 27px;
+      --tile-gap: 14px;
+      --tile-border: 0 solid transparent;
+      --edit-radius: 28px;
+      --edit-tile-height: 132px;
+      --edit-gap: 14px;
+      --product-radius: 26px;
+      --product-height: 116px;
+      --back-radius: 18px;
+      --sheet-radius: 30px;
+      --blur: 16px;
+    }
+
+    body[data-theme="carbon"] {
+      --app-bg: linear-gradient(180deg, #0b0d10 0%, #020202 100%);
+      --safe-top: #050506;
+      --glow-a: rgba(255,198,88,.18);
+      --glow-b: rgba(255,99,71,.10);
+      --glow-c: rgba(255,215,130,.08);
+      --texture: linear-gradient(135deg, rgba(255,255,255,.035) 25%, transparent 25%) 0 0/18px 18px, linear-gradient(225deg, rgba(255,255,255,.025) 25%, transparent 25%) 0 0/18px 18px;
+      --texture-opacity: .20;
+      --text: #fff8ea;
+      --muted: #c7bda8;
+      --muted-strong: #dccfb5;
+      --placeholder: #8d8375;
+      --title: linear-gradient(90deg, #ffe29b 0%, #ffb23f 45%, #ff6b35 100%);
+      --title-shadow: 0 0 26px rgba(255,177,64,.15);
+      --stat-bg: linear-gradient(145deg, rgba(28,28,31,.96), rgba(9,9,10,.94));
+      --surface-strong: linear-gradient(145deg, rgba(31,31,34,.96), rgba(10,10,11,.94));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,226,155,.08);
+      --border: rgba(255,204,120,.26);
+      --border-width: 1px;
+      --card-shadow: 0 18px 0 rgba(0,0,0,.20), 0 30px 48px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.06);
+      --small-shadow: 0 14px 0 rgba(0,0,0,.16), 0 24px 42px rgba(0,0,0,.38);
+      --button-shadow: 0 14px 0 rgba(0,0,0,.22), 0 28px 46px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.18);
+      --mini-shadow: 0 10px 0 rgba(0,0,0,.18), 0 18px 34px rgba(0,0,0,.34);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      --danger-shadow: 0 14px 30px rgba(200,30,30,.30);
+      --sheet-shadow: 0 24px 90px rgba(0,0,0,.58);
+      --button-text: #fffdf8;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.35);
+      --tile-gloss: linear-gradient(180deg, rgba(255,255,255,.22), transparent 46%);
+      --gloss-opacity: .78;
+      --venta: linear-gradient(145deg, #22c55e, #0f7a3a);
+      --abono: linear-gradient(145deg, #d6a84f, #8f5b18);
+      --historial: linear-gradient(145deg, #44403c, #171717);
+      --editar: linear-gradient(145deg, #ff8a3d, #9a3412);
+      --client-card: linear-gradient(145deg, rgba(255,226,155,.18), rgba(22,22,25,.94));
+      --product-card: linear-gradient(145deg, rgba(34,197,94,.16), rgba(18,21,18,.94));
+      --settings-card: linear-gradient(145deg, rgba(255,178,63,.17), rgba(22,22,22,.94));
+      --backup-card: linear-gradient(145deg, rgba(113,113,122,.22), rgba(12,12,14,.94));
+      --danger-card: linear-gradient(145deg, rgba(239,68,68,.22), rgba(28,14,14,.94));
+      --action-bg: linear-gradient(145deg, rgba(34,34,36,.98), rgba(10,10,11,.95));
+      --action-text: #fff8ea;
+      --tab-active: linear-gradient(145deg, #d6a84f, #8f5b18);
+      --primary-action-bg: linear-gradient(145deg, #ffe29b, #f59e0b);
+      --primary-action-text: #17120a;
+      --primary-action-border: rgba(255,226,155,.50);
+      --danger-bg: linear-gradient(145deg, #ef4444, #991b1b);
+      --danger-text: #fff7ed;
+      --danger-border: rgba(255,150,120,.48);
+      --paid-bg: linear-gradient(145deg, #22c55e, #166534);
+      --paid-text: #fff7ed;
+      --selected-outline: #ffe29b;
+      --selected-shadow: 0 0 0 3px rgba(255,226,155,.28), 0 20px 46px rgba(0,0,0,.46);
+      --sheet-bg: linear-gradient(145deg, #18181b, #080809);
+      --stat-radius: 20px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 22px;
+      --tile-height: 148px;
+      --tile-font: 27px;
+      --tile-gap: 16px;
+      --tile-border: 1px solid rgba(255,226,155,.22);
+      --edit-radius: 24px;
+      --edit-tile-height: 134px;
+      --edit-gap: 16px;
+      --product-radius: 22px;
+      --product-height: 118px;
+      --back-radius: 18px;
+      --sheet-radius: 26px;
+      --blur: 8px;
+    }
+
+    body[data-theme="light"] {
+      --app-bg: linear-gradient(180deg, #eff7ff 0%, #dfeeff 100%);
+      --safe-top: #eff7ff;
+      --glow-a: rgba(41,121,255,.18);
+      --glow-b: rgba(255,183,77,.22);
+      --glow-c: rgba(25,201,159,.18);
+      --texture: radial-gradient(circle at 1px 1px, rgba(12,28,54,.08) 1px, transparent 0) 0 0/18px 18px;
+      --texture-opacity: .36;
+      --text: #132033;
+      --muted: #637088;
+      --muted-strong: #546177;
+      --placeholder: #94a3b8;
+      --title: linear-gradient(90deg, #0066ff 0%, #00b894 48%, #ff9f1c 100%);
+      --title-shadow: none;
+      --stat-bg: rgba(255,255,255,.76);
+      --surface-strong: linear-gradient(145deg, rgba(255,255,255,.92), rgba(232,245,255,.78));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,255,255,.78);
+      --border: rgba(60,103,150,.18);
+      --border-width: 1px;
+      --card-shadow: 0 18px 38px rgba(47,91,141,.18), inset 0 1px 0 rgba(255,255,255,.80);
+      --small-shadow: 0 14px 30px rgba(47,91,141,.13), inset 0 1px 0 rgba(255,255,255,.72);
+      --button-shadow: 0 18px 36px rgba(39,90,155,.24);
+      --mini-shadow: 0 12px 24px rgba(47,91,141,.14);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.70);
+      --danger-shadow: 0 14px 28px rgba(225,29,72,.20);
+      --sheet-shadow: 0 24px 70px rgba(47,91,141,.24);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 2px 10px rgba(0,0,0,.15);
+      --tile-gloss: radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 40%);
+      --gloss-opacity: .76;
+      --venta: linear-gradient(145deg, #00d084, #00a36c);
+      --abono: linear-gradient(145deg, #38bdf8, #2563eb);
+      --historial: linear-gradient(145deg, #8b5cf6, #4f46e5);
+      --editar: linear-gradient(145deg, #fbbf24, #f97316);
+      --client-card: linear-gradient(145deg, rgba(147,197,253,.54), rgba(255,255,255,.88));
+      --product-card: linear-gradient(145deg, rgba(167,243,208,.62), rgba(255,255,255,.88));
+      --settings-card: linear-gradient(145deg, rgba(207,250,254,.62), rgba(255,255,255,.88));
+      --backup-card: linear-gradient(145deg, rgba(221,214,254,.62), rgba(255,255,255,.88));
+      --danger-card: linear-gradient(145deg, rgba(254,202,202,.62), rgba(255,255,255,.90));
+      --action-bg: rgba(255,255,255,.82);
+      --action-text: #132033;
+      --tab-active: linear-gradient(145deg, #38bdf8, #2563eb);
+      --primary-action-bg: rgba(255,255,255,.94);
+      --primary-action-text: #132033;
+      --primary-action-border: rgba(60,103,150,.20);
+      --danger-bg: linear-gradient(145deg, #fb7185, #e11d48);
+      --danger-text: #ffffff;
+      --danger-border: rgba(225,29,72,.34);
+      --paid-bg: linear-gradient(145deg, #22c55e, #16a34a);
+      --paid-text: #ffffff;
+      --selected-outline: #ffffff;
+      --selected-shadow: 0 0 0 4px rgba(37,99,235,.22), 0 20px 40px rgba(39,90,155,.24);
+      --sheet-bg: linear-gradient(145deg, #ffffff, #eef7ff);
+      --stat-radius: 20px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 30px;
+      --tile-height: 148px;
+      --tile-font: 28px;
+      --tile-gap: 14px;
+      --tile-border: 0 solid transparent;
+      --edit-radius: 26px;
+      --edit-tile-height: 134px;
+      --edit-gap: 16px;
+      --product-radius: 26px;
+      --product-height: 118px;
+      --back-radius: 18px;
+      --sheet-radius: 28px;
+      --blur: 14px;
+    }
+
+    body[data-theme="retro"] {
+      --app-bg: linear-gradient(180deg, #2b160a 0%, #101016 52%, #08090d 100%);
+      --safe-top: #24120a;
+      --glow-a: rgba(255,203,91,.22);
+      --glow-b: rgba(239,68,68,.18);
+      --glow-c: rgba(20,184,166,.14);
+      --texture: repeating-linear-gradient(0deg, rgba(255,255,255,.04), rgba(255,255,255,.04) 1px, transparent 1px, transparent 4px);
+      --texture-opacity: .20;
+      --text: #fff6e5;
+      --muted: #d6c7ad;
+      --muted-strong: #e8d7ba;
+      --placeholder: #9f8c73;
+      --title: linear-gradient(90deg, #fef08a 0%, #fb923c 38%, #f43f5e 72%, #22d3ee 100%);
+      --title-shadow: 4px 4px 0 rgba(0,0,0,.28);
+      --stat-bg: linear-gradient(145deg, rgba(55,31,19,.82), rgba(21,24,34,.88));
+      --surface-strong: linear-gradient(145deg, rgba(55,31,19,.88), rgba(19,22,31,.94));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,246,229,.09);
+      --border: rgba(251,191,36,.24);
+      --border-width: 1px;
+      --card-shadow: 0 13px 0 rgba(0,0,0,.20), 0 24px 44px rgba(0,0,0,.28);
+      --small-shadow: 0 10px 0 rgba(0,0,0,.18), 0 18px 32px rgba(0,0,0,.26);
+      --button-shadow: 0 12px 0 rgba(0,0,0,.22), 0 24px 34px rgba(0,0,0,.25);
+      --mini-shadow: 0 8px 0 rgba(0,0,0,.20), 0 16px 28px rgba(0,0,0,.24);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      --danger-shadow: 0 12px 0 rgba(0,0,0,.18), 0 20px 30px rgba(120,20,35,.26);
+      --sheet-shadow: 0 18px 0 rgba(0,0,0,.22), 0 26px 70px rgba(0,0,0,.42);
+      --button-text: #fff9ed;
+      --button-text-shadow: 2px 3px 0 rgba(0,0,0,.20);
+      --tile-gloss: linear-gradient(135deg, rgba(255,255,255,.25), transparent 38%);
+      --gloss-opacity: .76;
+      --venta: linear-gradient(145deg, #84cc16, #16a34a);
+      --abono: linear-gradient(145deg, #06b6d4, #2563eb);
+      --historial: linear-gradient(145deg, #ec4899, #7c3aed);
+      --editar: linear-gradient(145deg, #facc15, #ea580c);
+      --client-card: linear-gradient(145deg, rgba(251,191,36,.20), rgba(21,24,34,.92));
+      --product-card: linear-gradient(145deg, rgba(132,204,22,.18), rgba(18,31,26,.92));
+      --settings-card: linear-gradient(145deg, rgba(6,182,212,.18), rgba(18,28,36,.92));
+      --backup-card: linear-gradient(145deg, rgba(236,72,153,.18), rgba(28,19,37,.92));
+      --danger-card: linear-gradient(145deg, rgba(244,63,94,.24), rgba(39,19,25,.92));
+      --action-bg: rgba(47,31,20,.78);
+      --action-text: #fff6e5;
+      --tab-active: linear-gradient(145deg, #facc15, #ea580c);
+      --primary-action-bg: linear-gradient(145deg, #fef3c7, #facc15);
+      --primary-action-text: #231409;
+      --primary-action-border: rgba(251,191,36,.45);
+      --danger-bg: linear-gradient(145deg, #fb7185, #be123c);
+      --danger-text: #fff6e5;
+      --danger-border: rgba(251,113,133,.42);
+      --paid-bg: linear-gradient(145deg, #84cc16, #15803d);
+      --paid-text: #fff6e5;
+      --selected-outline: #fef3c7;
+      --selected-shadow: 0 0 0 3px rgba(254,243,199,.24), 0 20px 38px rgba(0,0,0,.32);
+      --sheet-bg: linear-gradient(145deg, #fff7ed, #fff1d7);
+      --stat-radius: 18px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 20px;
+      --tile-height: 144px;
+      --tile-font: 27px;
+      --tile-gap: 16px;
+      --tile-border: 1px solid rgba(254,243,199,.18);
+      --edit-radius: 22px;
+      --edit-tile-height: 130px;
+      --edit-gap: 16px;
+      --product-radius: 22px;
+      --product-height: 116px;
+      --back-radius: 16px;
+      --sheet-radius: 24px;
+      --blur: 6px;
+    }
+
+    body[data-theme="aurora"] {
+      --app-bg: linear-gradient(180deg, #10143a 0%, #081125 38%, #020610 100%);
+      --safe-top: #10143a;
+      --glow-a: rgba(99,102,241,.30);
+      --glow-b: rgba(236,72,153,.22);
+      --glow-c: rgba(16,185,129,.18);
+      --texture: radial-gradient(circle at 50% 0%, rgba(255,255,255,.10), transparent 55%);
+      --texture-opacity: .55;
+      --text: #f7f5ff;
+      --muted: #bbc0de;
+      --muted-strong: #cfd5f5;
+      --placeholder: #8289ac;
+      --title: linear-gradient(92deg, #a78bfa 0%, #22d3ee 35%, #34d399 62%, #fbbf24 100%);
+      --title-shadow: 0 0 45px rgba(167,139,250,.20);
+      --stat-bg: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+      --surface-strong: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,255,255,.095);
+      --border: rgba(202,211,255,.19);
+      --border-width: 1px;
+      --card-shadow: 0 20px 52px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+      --small-shadow: 0 16px 36px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.10);
+      --button-shadow: 0 22px 56px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.24);
+      --mini-shadow: 0 12px 30px rgba(0,0,0,.24);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      --danger-shadow: 0 14px 34px rgba(190,18,60,.26);
+      --sheet-shadow: 0 24px 80px rgba(0,0,0,.46);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 3px 18px rgba(0,0,0,.28);
+      --tile-gloss: radial-gradient(circle at 20% 18%, rgba(255,255,255,.36), transparent 32%), linear-gradient(180deg, rgba(255,255,255,.12), transparent 70%);
+      --gloss-opacity: .78;
+      --venta: linear-gradient(145deg, #34d399, #059669 72%);
+      --abono: linear-gradient(145deg, #60a5fa, #4f46e5 78%);
+      --historial: linear-gradient(145deg, #c084fc, #7c3aed 72%);
+      --editar: linear-gradient(145deg, #fb7185, #f97316 80%);
+      --client-card: linear-gradient(145deg, rgba(96,165,250,.22), rgba(255,255,255,.045));
+      --product-card: linear-gradient(145deg, rgba(52,211,153,.22), rgba(255,255,255,.045));
+      --settings-card: linear-gradient(145deg, rgba(167,139,250,.23), rgba(255,255,255,.045));
+      --backup-card: linear-gradient(145deg, rgba(192,132,252,.23), rgba(255,255,255,.045));
+      --danger-card: linear-gradient(145deg, rgba(251,113,133,.24), rgba(255,255,255,.045));
+      --action-bg: rgba(35,45,88,.72);
+      --action-text: #f7f5ff;
+      --tab-active: linear-gradient(145deg, #a78bfa, #4f46e5);
+      --primary-action-bg: rgba(255,255,255,.95);
+      --primary-action-text: #101827;
+      --primary-action-border: rgba(255,255,255,.34);
+      --danger-bg: linear-gradient(145deg, #fb7185, #be123c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(251,113,133,.48);
+      --paid-bg: linear-gradient(145deg, #34d399, #059669);
+      --paid-text: #ffffff;
+      --selected-outline: #c4b5fd;
+      --selected-shadow: 0 0 0 4px rgba(196,181,253,.26), 0 20px 50px rgba(0,0,0,.36);
+      --sheet-bg: linear-gradient(145deg, #191d3f, #080d21);
+      --stat-radius: 22px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 36px;
+      --tile-height: 146px;
+      --tile-font: 27px;
+      --tile-gap: 14px;
+      --tile-border: 1px solid rgba(255,255,255,.08);
+      --edit-radius: 34px;
+      --edit-tile-height: 134px;
+      --edit-gap: 14px;
+      --product-radius: 32px;
+      --product-height: 118px;
+      --back-radius: 22px;
+      --sheet-radius: 34px;
+      --blur: 20px;
+    }
+
+    body[data-theme="ocean"] {
+      --app-bg: linear-gradient(180deg, #04263a 0%, #03101f 52%, #010710 100%);
+      --safe-top: #05283c;
+      --glow-a: rgba(34,211,238,.28);
+      --glow-b: rgba(20,184,166,.20);
+      --glow-c: rgba(37,99,235,.18);
+      --texture: linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/22px 22px;
+      --texture-opacity: .19;
+      --text: #effcff;
+      --muted: #a9c7d4;
+      --muted-strong: #c1e1ec;
+      --placeholder: #7d96a5;
+      --title: linear-gradient(90deg, #22d3ee 0%, #14b8a6 44%, #38bdf8 72%, #2563eb 100%);
+      --title-shadow: 0 0 36px rgba(34,211,238,.18);
+      --stat-bg: linear-gradient(145deg, rgba(6,52,75,.84), rgba(3,18,32,.70));
+      --surface-strong: linear-gradient(145deg, rgba(6,52,75,.96), rgba(3,18,32,.94));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(34,211,238,.08);
+      --border: rgba(34,211,238,.24);
+      --border-width: 1px;
+      --card-shadow: 0 20px 50px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08);
+      --small-shadow: 0 16px 36px rgba(0,0,0,.26);
+      --button-shadow: 0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.18);
+      --mini-shadow: 0 12px 28px rgba(0,0,0,.24);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      --danger-shadow: 0 14px 32px rgba(190,18,60,.26);
+      --sheet-shadow: 0 24px 84px rgba(0,0,0,.48);
+      --button-text: #effcff;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.26);
+      --tile-gloss: radial-gradient(circle at 22% 16%, rgba(255,255,255,.30), transparent 35%);
+      --gloss-opacity: .75;
+      --venta: linear-gradient(145deg, #22c55e, #047857 72%);
+      --abono: linear-gradient(145deg, #22d3ee, #2563eb 76%);
+      --historial: linear-gradient(145deg, #14b8a6, #0f766e 75%);
+      --editar: linear-gradient(145deg, #38bdf8, #1d4ed8 80%);
+      --client-card: linear-gradient(145deg, rgba(34,211,238,.22), rgba(3,18,32,.94));
+      --product-card: linear-gradient(145deg, rgba(20,184,166,.22), rgba(3,18,32,.94));
+      --settings-card: linear-gradient(145deg, rgba(37,99,235,.22), rgba(3,18,32,.94));
+      --backup-card: linear-gradient(145deg, rgba(8,145,178,.22), rgba(3,18,32,.94));
+      --danger-card: linear-gradient(145deg, rgba(251,113,133,.24), rgba(3,18,32,.94));
+      --action-bg: rgba(6,52,75,.82);
+      --action-text: #effcff;
+      --tab-active: linear-gradient(145deg, #22d3ee, #2563eb);
+      --primary-action-bg: linear-gradient(145deg, #22d3ee, #2563eb);
+      --primary-action-text: #ffffff;
+      --primary-action-border: rgba(34,211,238,.36);
+      --danger-bg: linear-gradient(145deg, #fb7185, #be123c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(251,113,133,.48);
+      --paid-bg: linear-gradient(145deg, #22c55e, #047857);
+      --paid-text: #ffffff;
+      --selected-outline: #67e8f9;
+      --selected-shadow: 0 0 0 4px rgba(103,232,249,.24), 0 20px 46px rgba(0,0,0,.34);
+      --sheet-bg: linear-gradient(145deg, #06344b, #031220);
+      --stat-radius: 16px 28px 16px 28px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 18px 34px 18px 34px;
+      --tile-height: 146px;
+      --tile-font: 27px;
+      --tile-gap: 14px;
+      --tile-border: 1px solid rgba(34,211,238,.18);
+      --edit-radius: 18px 32px 18px 32px;
+      --edit-tile-height: 132px;
+      --edit-gap: 14px;
+      --product-radius: 18px 32px 18px 32px;
+      --product-height: 116px;
+      --back-radius: 18px 28px 18px 28px;
+      --sheet-radius: 26px 36px 26px 36px;
+      --blur: 14px;
+    }
+
+    body[data-theme="sunset"] {
+      --app-bg: linear-gradient(180deg, #3a1228 0%, #170a1c 48%, #070711 100%);
+      --safe-top: #331025;
+      --glow-a: rgba(251,113,133,.26);
+      --glow-b: rgba(251,146,60,.28);
+      --glow-c: rgba(168,85,247,.16);
+      --texture: linear-gradient(120deg, rgba(255,255,255,.04) 0 1px, transparent 1px 18px);
+      --texture-opacity: .22;
+      --text: #fff7fb;
+      --muted: #e2b8c6;
+      --muted-strong: #f2ced9;
+      --placeholder: #a47c89;
+      --title: linear-gradient(90deg, #fef3c7 0%, #fb923c 34%, #fb7185 66%, #c084fc 100%);
+      --title-shadow: 0 0 34px rgba(251,113,133,.20);
+      --stat-bg: linear-gradient(145deg, rgba(63,21,46,.84), rgba(20,14,32,.74));
+      --surface-strong: linear-gradient(145deg, rgba(67,25,52,.96), rgba(22,12,31,.94));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,255,255,.09);
+      --border: rgba(251,146,60,.26);
+      --border-width: 1px;
+      --card-shadow: 0 20px 50px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08);
+      --small-shadow: 0 16px 36px rgba(0,0,0,.28);
+      --button-shadow: 0 20px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.20);
+      --mini-shadow: 0 12px 28px rgba(0,0,0,.24);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      --danger-shadow: 0 14px 32px rgba(190,18,60,.30);
+      --sheet-shadow: 0 24px 84px rgba(0,0,0,.48);
+      --button-text: #fffaf7;
+      --button-text-shadow: 0 3px 12px rgba(0,0,0,.25);
+      --tile-gloss: radial-gradient(circle at 26% 18%, rgba(255,255,255,.32), transparent 36%);
+      --gloss-opacity: .76;
+      --venta: linear-gradient(145deg, #fb923c, #ea580c 74%);
+      --abono: linear-gradient(145deg, #fb7185, #e11d48 76%);
+      --historial: linear-gradient(145deg, #c084fc, #7e22ce 76%);
+      --editar: linear-gradient(145deg, #facc15, #f97316 82%);
+      --client-card: linear-gradient(145deg, rgba(251,113,133,.20), rgba(22,12,31,.94));
+      --product-card: linear-gradient(145deg, rgba(251,146,60,.20), rgba(22,12,31,.94));
+      --settings-card: linear-gradient(145deg, rgba(192,132,252,.20), rgba(22,12,31,.94));
+      --backup-card: linear-gradient(145deg, rgba(250,204,21,.18), rgba(22,12,31,.94));
+      --danger-card: linear-gradient(145deg, rgba(225,29,72,.28), rgba(22,12,31,.94));
+      --action-bg: rgba(67,25,52,.78);
+      --action-text: #fff7fb;
+      --tab-active: linear-gradient(145deg, #fb7185, #e11d48);
+      --primary-action-bg: linear-gradient(145deg, #fef3c7, #fb923c);
+      --primary-action-text: #2b1207;
+      --primary-action-border: rgba(251,146,60,.44);
+      --danger-bg: linear-gradient(145deg, #ff416c, #b91c1c);
+      --danger-text: #ffffff;
+      --danger-border: rgba(255,120,120,.48);
+      --paid-bg: linear-gradient(145deg, #fb923c, #ea580c);
+      --paid-text: #ffffff;
+      --selected-outline: #fda4af;
+      --selected-shadow: 0 0 0 4px rgba(253,164,175,.24), 0 20px 46px rgba(0,0,0,.34);
+      --sheet-bg: linear-gradient(145deg, #4a1735, #180b20);
+      --stat-radius: 28px 16px 28px 16px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 36px 18px 36px 18px;
+      --tile-height: 146px;
+      --tile-font: 27px;
+      --tile-gap: 14px;
+      --tile-border: 1px solid rgba(251,146,60,.18);
+      --edit-radius: 32px 18px 32px 18px;
+      --edit-tile-height: 132px;
+      --edit-gap: 14px;
+      --product-radius: 32px 18px 32px 18px;
+      --product-height: 116px;
+      --back-radius: 28px 18px 28px 18px;
+      --sheet-radius: 34px 22px 34px 22px;
+      --blur: 14px;
+    }
+
+    body[data-theme="mint"] {
+      --app-bg: linear-gradient(180deg, #f8fffc 0%, #dffbf3 100%);
+      --safe-top: #f8fffc;
+      --glow-a: rgba(16,185,129,.18);
+      --glow-b: rgba(56,189,248,.20);
+      --glow-c: rgba(134,239,172,.18);
+      --texture: radial-gradient(circle at 1px 1px, rgba(15,118,110,.08) 1px, transparent 0) 0 0/18px 18px;
+      --texture-opacity: .34;
+      --text: #10251f;
+      --muted: #526d66;
+      --muted-strong: #435f58;
+      --placeholder: #87a39a;
+      --title: linear-gradient(90deg, #059669 0%, #14b8a6 38%, #2563eb 76%, #84cc16 100%);
+      --title-shadow: none;
+      --stat-bg: rgba(255,255,255,.78);
+      --surface-strong: linear-gradient(145deg, rgba(255,255,255,.94), rgba(223,251,243,.90));
+      --theme-option-bg: var(--surface-strong);
+      --input-bg: rgba(255,255,255,.82);
+      --border: rgba(15,118,110,.18);
+      --border-width: 1px;
+      --card-shadow: 0 18px 38px rgba(15,118,110,.14), inset 0 1px 0 rgba(255,255,255,.84);
+      --small-shadow: 0 14px 30px rgba(15,118,110,.12), inset 0 1px 0 rgba(255,255,255,.76);
+      --button-shadow: 0 18px 36px rgba(15,118,110,.18);
+      --mini-shadow: 0 12px 24px rgba(15,118,110,.12);
+      --input-shadow: inset 0 1px 0 rgba(255,255,255,.74);
+      --danger-shadow: 0 14px 28px rgba(225,29,72,.18);
+      --sheet-shadow: 0 24px 70px rgba(15,118,110,.22);
+      --button-text: #ffffff;
+      --button-text-shadow: 0 2px 10px rgba(0,0,0,.18);
+      --tile-gloss: radial-gradient(circle at 30% 20%, rgba(255,255,255,.42), transparent 42%);
+      --gloss-opacity: .76;
+      --venta: linear-gradient(145deg, #34d399, #059669 75%);
+      --abono: linear-gradient(145deg, #67e8f9, #2563eb 78%);
+      --historial: linear-gradient(145deg, #a7f3d0, #14b8a6 78%);
+      --editar: linear-gradient(145deg, #bef264, #65a30d 80%);
+      --client-card: linear-gradient(145deg, rgba(209,250,229,.70), rgba(255,255,255,.92));
+      --product-card: linear-gradient(145deg, rgba(167,243,208,.70), rgba(255,255,255,.92));
+      --settings-card: linear-gradient(145deg, rgba(204,251,241,.70), rgba(255,255,255,.92));
+      --backup-card: linear-gradient(145deg, rgba(191,219,254,.70), rgba(255,255,255,.92));
+      --danger-card: linear-gradient(145deg, rgba(254,205,211,.68), rgba(255,255,255,.92));
+      --action-bg: rgba(255,255,255,.86);
+      --action-text: #10251f;
+      --tab-active: linear-gradient(145deg, #34d399, #059669);
+      --primary-action-bg: rgba(255,255,255,.95);
+      --primary-action-text: #10251f;
+      --primary-action-border: rgba(15,118,110,.20);
+      --danger-bg: linear-gradient(145deg, #ff416c, #e11d48);
+      --danger-text: #ffffff;
+      --danger-border: rgba(225,29,72,.34);
+      --paid-bg: linear-gradient(145deg, #34d399, #059669);
+      --paid-text: #ffffff;
+      --selected-outline: #34d399;
+      --selected-shadow: 0 0 0 4px rgba(52,211,153,.25), 0 20px 40px rgba(15,118,110,.18);
+      --sheet-bg: linear-gradient(145deg, #ffffff, #e8fff7);
+      --stat-radius: 22px;
+      --stat-height: 82px;
+      --stat-pad: 15px;
+      --tile-radius: 30px;
+      --tile-height: 148px;
+      --tile-font: 27px;
+      --tile-gap: 14px;
+      --tile-border: 0 solid transparent;
+      --edit-radius: 26px;
+      --edit-tile-height: 134px;
+      --edit-gap: 16px;
+      --product-radius: 26px;
+      --product-height: 118px;
+      --back-radius: 18px;
+      --sheet-radius: 28px;
+      --blur: 14px;
+    }
+
+    body[data-theme="carbon"] #home .tile,
+    body[data-theme="retro"] #home .tile {
+      transform: translateY(-2px);
+    }
+
+    body[data-theme="carbon"] h1.rainbow-title,
+    body[data-theme="retro"] h1.rainbow-title {
+      letter-spacing: -1px !important;
+    }
+
+    body[data-theme="light"] .sheet,
+    body[data-theme="mint"] .sheet {
+      color: var(--text) !important;
+    }
+
+    body[data-theme="light"] .modal,
+    body[data-theme="mint"] .modal {
+      background: rgba(15,23,42,.46) !important;
+    }
+
+    body[data-theme="light"] .product.selected,
+    body[data-theme="light"] .pay-option.selected,
+    body[data-theme="mint"] .product.selected,
+    body[data-theme="mint"] .pay-option.selected {
+      outline-color: #ffffff !important;
+    }
+
 </style>
 </head>
 <body>
@@ -2546,7 +3527,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "4.5";
+    const APP_VERSION = "4.6";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
