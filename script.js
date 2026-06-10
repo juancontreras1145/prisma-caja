@@ -1,4 +1,4 @@
-const APP_VERSION = "2.9";
+const APP_VERSION = "3.8";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -12,7 +12,8 @@ const APP_VERSION = "2.9";
       nextReceiptNumber: 1,
       settings: {
         appTitle: "Prisma",
-        profitPin: ""
+        profitPin: "",
+        visualTheme: "neon"
       }
     };
 
@@ -109,10 +110,24 @@ const APP_VERSION = "2.9";
       };
     }
 
+    const VISUAL_THEMES = {
+      neon: "Neón cristal",
+      carbon: "Carbono lujo",
+      light: "Claro moderno",
+      retro: "Kiosco retro",
+      aurora: "Aurora premium"
+    };
+
+    function sanitizeVisualTheme(value) {
+      const key = String(value || "neon").trim();
+      return Object.prototype.hasOwnProperty.call(VISUAL_THEMES, key) ? key : "neon";
+    }
+
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      return { appTitle, profitPin };
+      const visualTheme = sanitizeVisualTheme(settings.visualTheme || settings.theme || "neon");
+      return { appTitle, profitPin, visualTheme };
     }
 
     function getSettings() {
@@ -127,6 +142,45 @@ const APP_VERSION = "2.9";
       const titleEl = document.getElementById("appTitle");
       if (titleEl) titleEl.textContent = title;
       document.title = title;
+    }
+
+    function applyVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme || getSettings().visualTheme);
+      document.body.classList.remove(
+        "theme-neon",
+        "theme-carbon",
+        "theme-light",
+        "theme-retro",
+        "theme-aurora"
+      );
+      document.body.classList.add("theme-" + selected);
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      const colors = {
+        neon: "#07111f",
+        carbon: "#020202",
+        light: "#eaf2ff",
+        retro: "#1f1308",
+        aurora: "#060514"
+      };
+      if (metaTheme) metaTheme.setAttribute("content", colors[selected] || colors.neon);
+    }
+
+    function renderThemeSelector() {
+      const selected = sanitizeVisualTheme(getSettings().visualTheme);
+      document.querySelectorAll(".theme-option").forEach(button => {
+        const isActive = button.dataset.theme === selected;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+    }
+
+    function selectVisualTheme(theme) {
+      const selected = sanitizeVisualTheme(theme);
+      getSettings().visualTheme = selected;
+      persist();
+      applyVisualTheme(selected);
+      renderThemeSelector();
+      toast("Diseño aplicado: " + VISUAL_THEMES[selected]);
     }
 
     function normalizePin(value) {
@@ -1473,6 +1527,8 @@ const APP_VERSION = "2.9";
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
+      applyVisualTheme(settings.visualTheme);
+      renderThemeSelector();
       renderUpdatePanel();
     }
 
@@ -3087,5 +3143,6 @@ const APP_VERSION = "2.9";
     }
 
     renderAppTitle();
+    applyVisualTheme();
     renderHomeStats();
     renderProducts();
