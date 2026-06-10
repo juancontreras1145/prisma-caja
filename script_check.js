@@ -679,8 +679,37 @@ const APP_VERSION = "2.9";
 
     function renderAbonoList() {
       const target = document.getElementById("abonoList");
-      const list = sortedClients(document.getElementById("abonoSearch").value);
-      renderClientRows(target, list, "abono", openPaymentModal);
+      const list = sortedClients(document.getElementById("abonoSearch").value)
+        .map(client => ({ client, pendingTotal: getClientPendingTotal(client.id) }))
+        .filter(entry => entry.pendingTotal > 0);
+
+      if (!list.length) {
+        target.innerHTML = '<div class="empty">No hay clientes con deuda pendiente.</div>';
+        return;
+      }
+
+      renderDebtorClientRows(target, list, openPaymentModal);
+    }
+
+    function renderDebtorClientRows(target, list, callback) {
+      target.innerHTML = "";
+      let lastLetter = "";
+      list.forEach(entry => {
+        const client = entry.client;
+        const letter = client.name.trim().charAt(0).toUpperCase();
+        if (letter !== lastLetter) {
+          lastLetter = letter;
+          const title = document.createElement("div");
+          title.className = "letter";
+          title.textContent = letter;
+          target.appendChild(title);
+        }
+        const row = document.createElement("div");
+        row.className = "name-row";
+        row.onclick = () => callback(client);
+        row.innerHTML = `<div><strong>${escapeHtml(client.name)}</strong><small>${client.phone ? escapeHtml(formatWhatsappPhonePretty(client.phone)) : "sin WhatsApp"}</small></div><small>Debe ${formatMoney(entry.pendingTotal)}</small>`;
+        target.appendChild(row);
+      });
     }
 
     function renderClientRows(target, list, label, callback) {
@@ -886,6 +915,10 @@ const APP_VERSION = "2.9";
       return getSales()
         .filter(sale => sale.clientId === clientId && getSaleRemaining(sale) > 0)
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    }
+
+    function getClientPendingTotal(clientId) {
+      return getOpenSalesForClient(clientId).reduce((sum, sale) => sum + getSaleRemaining(sale), 0);
     }
 
     function openPaymentModal(client) {
