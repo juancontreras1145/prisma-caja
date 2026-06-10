@@ -517,8 +517,8 @@
     }
     .history-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
       margin: 12px 0 6px;
     }
     .history-tab {
@@ -526,8 +526,9 @@
       border-radius: 18px;
       background: var(--card);
       color: var(--muted);
-      padding: 13px 10px;
+      padding: 13px 6px;
       font-weight: 950;
+      font-size: 14px;
       cursor: pointer;
     }
     .history-tab.active {
@@ -1012,6 +1013,7 @@
       <div class="history-tabs">
         <button id="historyTabBoletas" class="history-tab active" onclick="setHistoryTab('boletas')">Boletas</button>
         <button id="historyTabAbonos" class="history-tab" onclick="setHistoryTab('abonos')">Abonos</button>
+        <button id="historyTabPendientes" class="history-tab" onclick="setHistoryTab('pendientes')">Pendientes</button>
       </div>
 
       <div class="label" id="historySectionLabel">Boletas</div>
@@ -2434,17 +2436,25 @@
 
 
     function setHistoryTab(tab) {
-      historyTab = tab === "abonos" ? "abonos" : "boletas";
+      historyTab = ["boletas", "abonos", "pendientes"].includes(tab) ? tab : "boletas";
       renderHistory();
     }
 
     function updateHistoryTabs() {
       const boletasBtn = document.getElementById("historyTabBoletas");
       const abonosBtn = document.getElementById("historyTabAbonos");
+      const pendientesBtn = document.getElementById("historyTabPendientes");
       const label = document.getElementById("historySectionLabel");
       if (boletasBtn) boletasBtn.classList.toggle("active", historyTab === "boletas");
       if (abonosBtn) abonosBtn.classList.toggle("active", historyTab === "abonos");
-      if (label) label.textContent = historyTab === "abonos" ? "Abonos" : "Boletas y pendientes";
+      if (pendientesBtn) pendientesBtn.classList.toggle("active", historyTab === "pendientes");
+      if (label) {
+        label.textContent = historyTab === "abonos"
+          ? "Abonos"
+          : historyTab === "pendientes"
+            ? "Pendientes acumulados"
+            : "Boletas";
+      }
     }
 
     function renderHistory() {
@@ -2452,11 +2462,16 @@
       if (!target) return;
       updateHistoryTabs();
 
+      if (historyTab === "pendientes") {
+        target.innerHTML = renderPendingAccumulatedSection() || '<div class="empty">No hay clientes con boletas pendientes.</div>';
+        setTimeout(hideHistoryDeleteButtons, 0);
+        return;
+      }
+
       const movements = data.movements.filter(m => historyTab === "abonos" ? m.type === "abono" : m.type === "venta");
-      const pendingHtml = historyTab === "boletas" ? renderPendingAccumulatedSection() : "";
 
       if (!movements.length) {
-        target.innerHTML = pendingHtml || '<div class="empty">Todavía no hay movimientos.</div>';
+        target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
         setTimeout(hideHistoryDeleteButtons, 0);
         return;
       }
@@ -2489,7 +2504,7 @@
         .map(group => renderHistoryGroup(group, byGroup[group.key]))
         .join("");
 
-      target.innerHTML = pendingHtml + groupsHtml;
+      target.innerHTML = groupsHtml;
 
       if (!target.innerHTML) {
         target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
@@ -2616,8 +2631,8 @@
         <div class="pending-section">
           <div class="pending-head">
             <div>
-              <strong>Pendientes acumulados</strong>
-              <small>Comparte una sola boleta con todas las ventas pendientes por cliente.</small>
+              <strong>Boletas acumuladas pendientes</strong>
+              <small>Comparte una sola boleta por cliente con todas sus ventas pendientes.</small>
             </div>
             <strong>${groups.length}</strong>
           </div>

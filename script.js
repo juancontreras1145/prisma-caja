@@ -1,5 +1,4 @@
-
-    const APP_VERSION = "2.9";
+const APP_VERSION = "2.9";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -1061,17 +1060,25 @@
 
 
     function setHistoryTab(tab) {
-      historyTab = tab === "abonos" ? "abonos" : "boletas";
+      historyTab = ["boletas", "abonos", "pendientes"].includes(tab) ? tab : "boletas";
       renderHistory();
     }
 
     function updateHistoryTabs() {
       const boletasBtn = document.getElementById("historyTabBoletas");
       const abonosBtn = document.getElementById("historyTabAbonos");
+      const pendientesBtn = document.getElementById("historyTabPendientes");
       const label = document.getElementById("historySectionLabel");
       if (boletasBtn) boletasBtn.classList.toggle("active", historyTab === "boletas");
       if (abonosBtn) abonosBtn.classList.toggle("active", historyTab === "abonos");
-      if (label) label.textContent = historyTab === "abonos" ? "Abonos" : "Boletas y pendientes";
+      if (pendientesBtn) pendientesBtn.classList.toggle("active", historyTab === "pendientes");
+      if (label) {
+        label.textContent = historyTab === "abonos"
+          ? "Abonos"
+          : historyTab === "pendientes"
+            ? "Pendientes acumulados"
+            : "Boletas";
+      }
     }
 
     function renderHistory() {
@@ -1079,11 +1086,16 @@
       if (!target) return;
       updateHistoryTabs();
 
+      if (historyTab === "pendientes") {
+        target.innerHTML = renderPendingAccumulatedSection() || '<div class="empty">No hay clientes con boletas pendientes.</div>';
+        setTimeout(hideHistoryDeleteButtons, 0);
+        return;
+      }
+
       const movements = data.movements.filter(m => historyTab === "abonos" ? m.type === "abono" : m.type === "venta");
-      const pendingHtml = historyTab === "boletas" ? renderPendingAccumulatedSection() : "";
 
       if (!movements.length) {
-        target.innerHTML = pendingHtml || '<div class="empty">Todavía no hay movimientos.</div>';
+        target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
         setTimeout(hideHistoryDeleteButtons, 0);
         return;
       }
@@ -1116,7 +1128,7 @@
         .map(group => renderHistoryGroup(group, byGroup[group.key]))
         .join("");
 
-      target.innerHTML = pendingHtml + groupsHtml;
+      target.innerHTML = groupsHtml;
 
       if (!target.innerHTML) {
         target.innerHTML = '<div class="empty">Todavía no hay movimientos.</div>';
@@ -1243,8 +1255,8 @@
         <div class="pending-section">
           <div class="pending-head">
             <div>
-              <strong>Pendientes acumulados</strong>
-              <small>Comparte una sola boleta con todas las ventas pendientes por cliente.</small>
+              <strong>Boletas acumuladas pendientes</strong>
+              <small>Comparte una sola boleta por cliente con todas sus ventas pendientes.</small>
             </div>
             <strong>${groups.length}</strong>
           </div>
@@ -3027,4 +3039,3 @@
     renderAppTitle();
     renderHomeStats();
     renderProducts();
-  
