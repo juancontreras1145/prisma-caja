@@ -179,7 +179,7 @@ const APP_VERSION = "2.9";
             createdAt: p.createdAt || createdAt
           })) : [],
           createdAt,
-          day: m.day || createdAt.slice(0, 10)
+          day: m.day || localDayKey(createdAt)
         };
       }
 
@@ -198,7 +198,7 @@ const APP_VERSION = "2.9";
           boletaNumber: a.boletaNumber ? Number(a.boletaNumber) : null
         })) : [],
         createdAt,
-        day: m.day || createdAt.slice(0, 10)
+        day: m.day || localDayKey(createdAt)
       };
     }
 
@@ -402,13 +402,26 @@ const APP_VERSION = "2.9";
       return String(Number(n || 0)).padStart(4, "0");
     }
 
+    function localDayKey(value = new Date()) {
+      const d = value instanceof Date ? value : new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function movementDayKey(m) {
+      return localDayKey((m && (m.createdAt || m.day)) || new Date()) || String((m && m.day) || "");
+    }
+
     function todayKey() {
-      return new Date().toISOString().slice(0, 10);
+      return localDayKey();
     }
 
     function renderHomeStats() {
       const today = todayKey();
-      const todays = data.movements.filter(m => m.day === today);
+      const todays = data.movements.filter(m => movementDayKey(m) === today);
       const sales = todays.filter(m => m.type === "venta");
       const debt = sales.reduce((sum, s) => sum + getSaleRemaining(s), 0);
       const payments = todays.filter(m => m.type === "abono").reduce((sum, m) => sum + Number(m.amount || 0), 0);
@@ -804,7 +817,7 @@ const APP_VERSION = "2.9";
           createdAt: now.toISOString()
         }] : [],
         createdAt: now.toISOString(),
-        day: now.toISOString().slice(0, 10)
+        day: localDayKey(now)
       };
 
       discountStockForSale(items);
@@ -1028,7 +1041,7 @@ const APP_VERSION = "2.9";
         saleIds: applied.map(a => a.saleId),
         applied,
         createdAt: now,
-        day: now.slice(0, 10)
+        day: localDayKey(now)
       });
 
       persist();
@@ -2023,7 +2036,7 @@ const APP_VERSION = "2.9";
     }
 
     function nombreArchivoRespaldo() {
-      return "prisma-respaldo-" + new Date().toISOString().slice(0, 10) + ".json";
+      return "prisma-respaldo-" + localDayKey() + ".json";
     }
 
     function guardarRespaldoJSON() {
