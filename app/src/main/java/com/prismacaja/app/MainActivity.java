@@ -224,6 +224,97 @@ public class MainActivity extends Activity {
         }
     }
 
+
+    private JSONObject buildReleasePayload(String tagName, String name, String htmlUrl, String apkName, String apkUrl) throws Exception {
+        JSONObject payload = new JSONObject();
+        payload.put("ok", true);
+        payload.put("tagName", tagName == null ? "" : tagName);
+        payload.put("name", name == null ? "" : name);
+        payload.put("htmlUrl", htmlUrl == null ? "" : htmlUrl);
+        payload.put("apkName", apkName == null ? "" : apkName);
+        payload.put("apkUrl", apkUrl == null || apkUrl.isEmpty() ? htmlUrl : apkUrl);
+        return payload;
+    }
+
+    private JSONObject parseGithubReleaseJson(String json) throws Exception {
+        JSONObject release = new JSONObject(json);
+        JSONArray assets = release.optJSONArray("assets");
+
+        String apkUrl = "";
+        String apkName = "";
+        if (assets != null) {
+            for (int i = 0; i < assets.length(); i++) {
+                JSONObject asset = assets.optJSONObject(i);
+                if (asset == null) continue;
+                String name = asset.optString("name", "");
+                if (name.toLowerCase().endsWith(".apk")) {
+                    apkName = name;
+                    apkUrl = asset.optString("browser_download_url", "");
+                    break;
+                }
+            }
+        }
+
+        String htmlUrl = release.optString("html_url", "");
+        return buildReleasePayload(
+                release.optString("tag_name", ""),
+                release.optString("name", ""),
+                htmlUrl,
+                apkName,
+                apkUrl.isEmpty() ? htmlUrl : apkUrl
+        );
+    }
+
+    private JSONObject resolveLatestReleaseByRedirect() throws Exception {
+        String latestUrl = "https://github.com/juancontreras1145/prisma-caja/releases/latest";
+        String current = latestUrl;
+
+        for (int i = 0; i < 5; i++) {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(current);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setInstanceFollowRedirects(false);
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "PrismaCaja-Android");
+                connection.setConnectTimeout(12000);
+                connection.setReadTimeout(12000);
+
+                int code = connection.getResponseCode();
+                String location = connection.getHeaderField("Location");
+
+                if (code >= 300 && code < 400 && location != null && !location.trim().isEmpty()) {
+                    URL next = new URL(url, location);
+                    current = next.toString();
+                    continue;
+                }
+
+                String marker = "/releases/tag/";
+                int idx = current.indexOf(marker);
+                if (idx >= 0) {
+                    String tagName = current.substring(idx + marker.length());
+                    int q = tagName.indexOf('?');
+                    if (q >= 0) tagName = tagName.substring(0, q);
+                    int hash = tagName.indexOf('#');
+                    if (hash >= 0) tagName = tagName.substring(0, hash);
+
+                    if (!tagName.trim().isEmpty()) {
+                        String htmlUrl = "https://github.com/juancontreras1145/prisma-caja/releases/tag/" + tagName;
+                        String apkName = "PrismaCaja-" + tagName + ".apk";
+                        String apkUrl = "https://github.com/juancontreras1145/prisma-caja/releases/download/" + tagName + "/" + apkName;
+                        return buildReleasePayload(tagName, tagName, htmlUrl, apkName, apkUrl);
+                    }
+                }
+
+                throw new Exception("No se pudo leer la ultima version desde GitHub");
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }
+
+        throw new Exception("Demasiadas redirecciones de GitHub");
+    }
+
     private void sendUpdateResult(JSONObject payload) {
         runOnUiThread(() -> {
             if (webView == null) return;
@@ -236,33 +327,19 @@ public class MainActivity extends Activity {
         new Thread(() -> {
             JSONObject payload = new JSONObject();
             try {
-                String json = readUrl("https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest");
-                JSONObject release = new JSONObject(json);
-                JSONArray assets = release.optJSONArray("assets");
-
-                String apkUrl = "";
-                String apkName = "";
-                if (assets != null) {
-                    for (int i = 0; i < assets.length(); i++) {
-                        JSONObject asset = assets.optJSONObject(i);
-                        if (asset == null) continue;
-                        String name = asset.optString("name", "");
-                        if (name.toLowerCase().endsWith(".apk")) {
-                            apkName = name;
-                            apkUrl = asset.optString("browser_download_url", "");
-                            break;
-                        }
+                try {
+                    String json = readUrl("https://api.github.com/repos/juancontreras1145/prisma-caja/releases/latest");
+                    payload = parseGithubReleaseJson(json);
+                } catch (Exception apiError) {
+                    // Fallback para cuando GitHub API responde 403 por limite/rate limit.
+                    try {
+                        payload = resolveLatestReleaseByRedirect();
+                        payload.put("note", "Consulta realizada por enlace publico porque GitHub API fallo: " + apiError.getMessage());
+                    } catch (Exception fallbackError) {
+                        payload.put("ok", false);
+                        payload.put("error", "GitHub API: " + apiError.getMessage() + " / Fallback: " + fallbackError.getMessage());
                     }
                 }
-
-                String htmlUrl = release.optString("html_url", "");
-
-                payload.put("ok", true);
-                payload.put("tagName", release.optString("tag_name", ""));
-                payload.put("name", release.optString("name", ""));
-                payload.put("htmlUrl", htmlUrl);
-                payload.put("apkName", apkName);
-                payload.put("apkUrl", apkUrl.isEmpty() ? htmlUrl : apkUrl);
             } catch (Exception e) {
                 try {
                     payload.put("ok", false);
@@ -518,7 +595,7 @@ public class MainActivity extends Activity {
                         .getPackageInfo(activity.getPackageName(), 0)
                         .versionName;
             } catch (Exception e) {
-                return "2.8";
+                return "4.3";
             }
         }
 
@@ -532,7 +609,7 @@ public class MainActivity extends Activity {
                 }
                 return info.versionCode;
             } catch (Exception e) {
-                return 19;
+                return 34;
             }
         }
 

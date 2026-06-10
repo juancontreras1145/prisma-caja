@@ -953,6 +953,340 @@
       margin: auto !important;
     }
 
+
+    /* v4.2: selector premium y temas globales reales */
+    body {
+      transition: background .22s ease, color .22s ease;
+      --green-soft: rgba(22,232,137,.25);
+      --blue-soft: rgba(25,167,255,.24);
+      --purple-soft: rgba(139,92,246,.25);
+      --orange-soft: rgba(255,159,28,.25);
+      --red-soft: rgba(255,77,109,.22);
+    }
+
+    body[data-theme="neon"],
+    body:not(.theme-carbon):not(.theme-light):not(.theme-retro):not(.theme-aurora) {
+      --bg: #06101d;
+      --card: rgba(12, 32, 55, .78);
+      --card2: rgba(15, 52, 75, .88);
+      --text: #f7fbff;
+      --muted: #a9b8ca;
+      --line: rgba(93, 202, 255, .22);
+      --green: #16e889;
+      --blue: #19a7ff;
+      --purple: #8b5cf6;
+      --orange: #ff9f1c;
+      --red: #ff4d6d;
+      --danger: #ff6b8a;
+      --green-soft: rgba(22,232,137,.25);
+      --blue-soft: rgba(25,167,255,.24);
+      --purple-soft: rgba(139,92,246,.25);
+      --orange-soft: rgba(255,159,28,.25);
+      --red-soft: rgba(255,77,109,.22);
+      background:
+        radial-gradient(circle at 12% 4%, rgba(0,229,255,.28), transparent 34%),
+        radial-gradient(circle at 92% 6%, rgba(255,159,28,.22), transparent 32%),
+        radial-gradient(circle at 50% 96%, rgba(22,232,137,.14), transparent 40%),
+        linear-gradient(180deg, #092333 0%, #05101c 50%, #030912 100%);
+    }
+
+    body.theme-carbon {
+      --bg: #050505;
+      --card: rgba(24, 24, 27, .90);
+      --card2: rgba(38, 38, 38, .94);
+      --text: #fff7e8;
+      --muted: #b9ad9a;
+      --line: rgba(255, 203, 112, .22);
+      --green: #16a34a;
+      --blue: #d69e2e;
+      --purple: #3f3f46;
+      --orange: #f97316;
+      --red: #dc2626;
+      --danger: #ff7d7d;
+      --green-soft: rgba(22,163,74,.25);
+      --blue-soft: rgba(214,158,46,.28);
+      --purple-soft: rgba(63,63,70,.34);
+      --orange-soft: rgba(249,115,22,.24);
+      --red-soft: rgba(220,38,38,.22);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(255,196,87,.20), transparent 34%),
+        radial-gradient(circle at 92% 10%, rgba(255,104,55,.10), transparent 32%),
+        linear-gradient(180deg, #111111 0%, #050505 100%);
+    }
+
+    body.theme-light {
+      --bg: #eaf2ff;
+      --card: rgba(255,255,255,.78);
+      --card2: rgba(255,255,255,.94);
+      --text: #122033;
+      --muted: #64748b;
+      --line: rgba(54, 92, 145, .20);
+      --green: #10b981;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --orange: #f97316;
+      --red: #e11d48;
+      --danger: #e11d48;
+      --green-soft: rgba(16,185,129,.22);
+      --blue-soft: rgba(37,99,235,.18);
+      --purple-soft: rgba(124,58,237,.18);
+      --orange-soft: rgba(249,115,22,.18);
+      --red-soft: rgba(225,29,72,.14);
+      background:
+        radial-gradient(circle at 10% 3%, rgba(37,99,235,.18), transparent 34%),
+        radial-gradient(circle at 92% 4%, rgba(249,115,22,.18), transparent 30%),
+        radial-gradient(circle at 50% 88%, rgba(16,185,129,.18), transparent 42%),
+        linear-gradient(180deg, #f5fbff 0%, #e7f0ff 100%);
+    }
+
+    body.theme-retro {
+      --bg: #160e08;
+      --card: rgba(51, 31, 20, .82);
+      --card2: rgba(79, 42, 24, .90);
+      --text: #fff6e5;
+      --muted: #d1bfa1;
+      --line: rgba(250, 204, 21, .23);
+      --green: #84cc16;
+      --blue: #06b6d4;
+      --purple: #ec4899;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --danger: #ff8a8a;
+      --green-soft: rgba(132,204,22,.22);
+      --blue-soft: rgba(6,182,212,.22);
+      --purple-soft: rgba(236,72,153,.20);
+      --orange-soft: rgba(245,158,11,.22);
+      --red-soft: rgba(239,68,68,.20);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(250,204,21,.20), transparent 34%),
+        radial-gradient(circle at 92% 8%, rgba(244,63,94,.16), transparent 32%),
+        linear-gradient(180deg, #2b160a 0%, #12121a 52%, #08090d 100%);
+    }
+
+    body.theme-aurora {
+      --bg: #060817;
+      --card: rgba(20, 24, 55, .76);
+      --card2: rgba(33, 41, 83, .88);
+      --text: #f7f5ff;
+      --muted: #b7bce0;
+      --line: rgba(202, 211, 255, .20);
+      --green: #34d399;
+      --blue: #60a5fa;
+      --purple: #a78bfa;
+      --orange: #fb7185;
+      --red: #f43f5e;
+      --danger: #fb7185;
+      --green-soft: rgba(52,211,153,.22);
+      --blue-soft: rgba(96,165,250,.22);
+      --purple-soft: rgba(167,139,250,.24);
+      --orange-soft: rgba(251,113,133,.22);
+      --red-soft: rgba(244,63,94,.20);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(99,102,241,.28), transparent 36%),
+        radial-gradient(circle at 92% 8%, rgba(236,72,153,.20), transparent 34%),
+        radial-gradient(circle at 45% 92%, rgba(16,185,129,.16), transparent 42%),
+        linear-gradient(180deg, #10143a 0%, #081125 44%, #020610 100%);
+    }
+
+    body.theme-light .sheet,
+    body.theme-light .notice {
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .theme-carbon .rainbow-title { background: linear-gradient(90deg, #fff3bf, #f59e0b, #fb923c); -webkit-background-clip: text; background-clip: text; }
+    .theme-light .rainbow-title { background: linear-gradient(90deg, #2563eb, #06b6d4, #10b981, #f97316); -webkit-background-clip: text; background-clip: text; text-shadow: none; }
+    .theme-retro .rainbow-title { background: linear-gradient(90deg, #fde68a, #fb923c, #f43f5e, #22d3ee); -webkit-background-clip: text; background-clip: text; }
+    .theme-aurora .rainbow-title { background: linear-gradient(90deg, #a78bfa, #22d3ee, #34d399, #fbbf24); -webkit-background-clip: text; background-clip: text; }
+
+    .theme-carbon .venta { background: linear-gradient(135deg, #22c55e, #166534); }
+    .theme-carbon .abono { background: linear-gradient(135deg, #facc15, #a16207); }
+    .theme-carbon .historial { background: linear-gradient(135deg, #52525b, #18181b); }
+    .theme-carbon .editar { background: linear-gradient(135deg, #fb923c, #9a3412); }
+
+    .theme-light .venta { background: linear-gradient(135deg, #22c55e, #059669); }
+    .theme-light .abono { background: linear-gradient(135deg, #38bdf8, #2563eb); }
+    .theme-light .historial { background: linear-gradient(135deg, #a78bfa, #4f46e5); }
+    .theme-light .editar { background: linear-gradient(135deg, #fbbf24, #f97316); }
+
+    .theme-retro .venta { background: linear-gradient(135deg, #a3e635, #16a34a); }
+    .theme-retro .abono { background: linear-gradient(135deg, #22d3ee, #2563eb); }
+    .theme-retro .historial { background: linear-gradient(135deg, #f472b6, #7c3aed); }
+    .theme-retro .editar { background: linear-gradient(135deg, #fde047, #ea580c); }
+
+    .theme-aurora .venta { background: linear-gradient(135deg, #34d399, #059669); }
+    .theme-aurora .abono { background: linear-gradient(135deg, #60a5fa, #4f46e5); }
+    .theme-aurora .historial { background: linear-gradient(135deg, #c084fc, #7c3aed); }
+    .theme-aurora .editar { background: linear-gradient(135deg, #fb7185, #f97316); }
+
+    .edit-tile,
+    .pending-card,
+    .pending-section,
+    .profit-card,
+    .profit-section,
+    .update-card,
+    .selection-box,
+    .hint,
+    .install-card,
+    .compact-row,
+    .name-row,
+    .card,
+    .stat,
+    .payment-sale-row {
+      background: var(--card) !important;
+      border-color: var(--line) !important;
+      box-shadow: 0 16px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter: blur(12px);
+    }
+
+    .edit-tile.clients { background: linear-gradient(135deg, var(--blue-soft), var(--card)) !important; }
+    .edit-tile.products { background: linear-gradient(135deg, var(--green-soft), var(--card)) !important; }
+    .edit-tile.settings { background: linear-gradient(135deg, var(--blue-soft), var(--card)) !important; }
+    .edit-tile.backup { background: linear-gradient(135deg, var(--purple-soft), var(--card)) !important; }
+    .edit-tile.danger { background: linear-gradient(135deg, var(--red-soft), var(--card)) !important; }
+
+    .secondary-action,
+    .back,
+    .mini-btn,
+    .history-tab,
+    .history-group-btn,
+    .pin-key,
+    .icon-btn {
+      background: var(--card) !important;
+      color: var(--text) !important;
+      border-color: var(--line) !important;
+    }
+
+    .history-tab.active,
+    .pin-key.enter {
+      background: linear-gradient(135deg, var(--blue-soft), var(--card2)) !important;
+      color: var(--text) !important;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--card2) !important;
+      color: var(--text) !important;
+      border-color: var(--line) !important;
+    }
+
+    input::placeholder { color: var(--muted) !important; opacity: .72; }
+
+    #visualThemeOptions.theme-grid {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin: 12px 0 18px !important;
+    }
+
+    #visualThemeOptions .theme-option {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      width: 100% !important;
+      min-height: 72px !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 20px !important;
+      padding: 14px 14px !important;
+      background: linear-gradient(135deg, var(--card2), var(--card)) !important;
+      color: var(--text) !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      gap: 12px !important;
+      align-items: center !important;
+      text-align: left !important;
+      box-shadow: 0 14px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08) !important;
+      cursor: pointer !important;
+      overflow: hidden !important;
+      position: relative !important;
+    }
+
+    #visualThemeOptions .theme-option::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 12% 0%, rgba(255,255,255,.18), transparent 34%);
+      pointer-events: none;
+    }
+
+    #visualThemeOptions .theme-option strong,
+    #visualThemeOptions .theme-option small {
+      display: block !important;
+      position: relative;
+      z-index: 2;
+    }
+
+    #visualThemeOptions .theme-option strong {
+      font-size: 17px !important;
+      line-height: 1.1 !important;
+      font-weight: 950 !important;
+      margin-bottom: 5px !important;
+      color: var(--text) !important;
+    }
+
+    #visualThemeOptions .theme-option small {
+      color: var(--muted) !important;
+      font-size: 12px !important;
+      line-height: 1.25 !important;
+      font-weight: 800 !important;
+    }
+
+    #visualThemeOptions .theme-option.active {
+      outline: 2px solid var(--green) !important;
+      outline-offset: 2px !important;
+      border-color: var(--green) !important;
+    }
+
+    #visualThemeOptions .theme-option.active::after {
+      content: "✓";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--green);
+      color: #061015;
+      font-size: 14px;
+      font-weight: 950;
+      z-index: 4;
+    }
+
+    #visualThemeOptions .theme-palette {
+      position: relative;
+      z-index: 2;
+      display: flex !important;
+      gap: 5px !important;
+      padding-right: 26px;
+    }
+
+    #visualThemeOptions .theme-dot {
+      width: 16px !important;
+      height: 16px !important;
+      border-radius: 999px !important;
+      display: inline-block !important;
+      border: 1px solid rgba(255,255,255,.45) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,.24) !important;
+    }
+
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(1) { background: #00e5ff; }
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(2) { background: #16e889; }
+    #visualThemeOptions .theme-option[data-theme="neon"] .theme-dot:nth-child(3) { background: #8b5cf6; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(1) { background: #111111; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(2) { background: #facc15; }
+    #visualThemeOptions .theme-option[data-theme="carbon"] .theme-dot:nth-child(3) { background: #fb923c; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(1) { background: #f8fafc; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(2) { background: #2563eb; }
+    #visualThemeOptions .theme-option[data-theme="light"] .theme-dot:nth-child(3) { background: #10b981; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(1) { background: #fde047; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(2) { background: #f97316; }
+    #visualThemeOptions .theme-option[data-theme="retro"] .theme-dot:nth-child(3) { background: #ec4899; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(1) { background: #a78bfa; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(2) { background: #22d3ee; }
+    #visualThemeOptions .theme-option[data-theme="aurora"] .theme-dot:nth-child(3) { background: #34d399; }
+
 </style>
 </head>
 <body>
@@ -1365,39 +1699,6 @@
     </div>
   </div>
 
-
-  <div id="installModal" class="modal">
-    <div class="sheet">
-      <h2>Usar como App</h2>
-      <p class="muted">
-        El botón App ya no activa pantalla completa. Sirve para instalar o abrir instrucciones.
-      </p>
-
-      <div class="selection-box">
-        <strong>Desde archivo local</strong>
-        <div class="selection-items">
-          <div>Tu navegador está abriendo el HTML como archivo. En ese modo no siempre deja instalar como PWA real.</div>
-          <div>Para usarlo más limpio: toca ⛶ para pantalla completa.</div>
-        </div>
-      </div>
-
-      <div class="selection-box">
-        <strong>Para instalar como app real</strong>
-        <div class="selection-items">
-          <div>1. Sube el HTML a una página HTTPS.</div>
-          <div>2. Abre la página en Chrome.</div>
-          <div>3. Menú ⋮ → Agregar a pantalla principal.</div>
-          <div>4. Desde el icono se abre más parecido a app.</div>
-        </div>
-      </div>
-
-      <button class="big-action" onclick="tryNativeInstall()">Intentar instalar</button>
-      <button class="secondary-action" onclick="toggleFullscreen()">Pantalla completa</button>
-      <button class="secondary-action" onclick="closeModal('installModal')">Cerrar</button>
-    </div>
-  </div>
-
-
   <div id="clientEditModal" class="modal">
     <div class="sheet">
       <h2>Editar cliente</h2>
@@ -1419,7 +1720,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "2.9";
+    const APP_VERSION = "4.3";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -1678,11 +1979,6 @@
       return digits;
     }
 
-    function formatWhatsappPhone(phone) {
-      const digits = sanitizePhone(phone);
-      return digits ? "+" + digits : "";
-    }
-
     function formatWhatsappPhonePretty(phone) {
       const digits = sanitizePhone(phone);
       if (digits.length === 11 && digits.startsWith("569")) {
@@ -1723,34 +2019,6 @@
       }
 
       prompt("Copia el número:", pretty);
-    }
-
-    function editClient(id) {
-      const client = data.clients.find(c => c.id === id);
-      if (!client) return;
-
-      const currentPhone = client.phone ? formatWhatsappPhonePretty(client.phone) : "";
-      const name = prompt("Nombre del cliente", client.name);
-      if (name === null) return;
-
-      const phone = prompt("WhatsApp. Puedes poner 8 dígitos o formato +56 9 9945 6548", currentPhone);
-      if (phone === null) return;
-
-      const cleanName = name.trim();
-      if (!cleanName) {
-        alert("El nombre no puede quedar vacío.");
-        return;
-      }
-
-      client.name = cleanName;
-      client.phone = sanitizePhone(phone);
-
-      persist();
-      renderEditClients();
-      renderNamesPage && renderNamesPage();
-      renderAbonoList && renderAbonoList();
-
-      alert("Cliente actualizado.");
     }
 
     function openClientWhatsappTest(id) {
@@ -1857,10 +2125,6 @@
       return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
     }
 
-    function formatDateOnly(value) {
-      return new Date(value).toLocaleDateString("es-CL");
-    }
-
     function formatReceiptNumber(n) {
       return String(Number(n || 0)).padStart(4, "0");
     }
@@ -1940,10 +2204,6 @@
 
     function productHasStockControl(product) {
       return productStock(product) !== null;
-    }
-
-    function stockInputId(productId) {
-      return "stock-" + String(productId || "").replace(/[^a-zA-Z0-9_-]/g, "_");
     }
 
     function stockLabel(product) {
@@ -2886,15 +3146,6 @@
       toast("Movimiento eliminado");
     }
 
-    function clearHistory() {
-      if (!confirm("¿Borrar todo el historial?")) return;
-      data.movements = [];
-      data.nextReceiptNumber = 1;
-      persist();
-      renderHistory();
-      toast("Historial borrado");
-    }
-
     function plainMovementProducts(m) {
       if (Array.isArray(m.items) && m.items.length) {
         return m.items.map(item => `${item.name} x${item.qty}`).join(", ");
@@ -3438,25 +3689,6 @@
       toast("Producto actualizado");
     }
 
-    function quickEditProduct(id) {
-      startEditProduct(id);
-    }
-
-    function saveProductsFromForm() {
-      data.products = data.products.map(product => ({
-        ...product,
-        name: document.getElementById("prod-name-" + product.id).value.trim() || product.name,
-        price: Math.max(0, Number(document.getElementById("prod-price-" + product.id).value || 0)),
-        cost: Math.max(0, Number(document.getElementById("prod-cost-" + product.id).value || 0)),
-        color: document.getElementById("prod-color-" + product.id).value || product.color || "#2f80ed",
-        stock: parseOptionalStock(document.getElementById("prod-stock-" + product.id)?.value ?? product.stock) ?? null
-      }));
-      persist();
-      renderEditProducts();
-      renderProducts();
-      toast("Productos guardados");
-    }
-
     function resetAll() {
       if (!confirm("¿Borrar clientes, productos e historial?")) return;
       data = normalizeLoadedData(structuredDefault());
@@ -3722,11 +3954,6 @@
       return { start, end, range };
     }
 
-    function inRange(dateValue, start, end) {
-      const d = new Date(dateValue);
-      return d >= start && d < end;
-    }
-
     function getItemUnitCost(item) {
       const explicit = Number(item.cost || 0);
       if (explicit > 0) return explicit;
@@ -3740,35 +3967,6 @@
 
     function getSaleProfit(sale) {
       return Number(sale.total || 0) - getSaleCost(sale);
-    }
-
-    function collectPaymentEvents() {
-      const events = [];
-      data.movements.forEach(m => {
-        if (m.type !== "venta") return;
-        if (Array.isArray(m.payments) && m.payments.length) {
-          m.payments.forEach(p => {
-            events.push({
-              clientName: m.clientName,
-              method: p.method || m.method || "Efectivo",
-              amount: Number(p.amount || 0),
-              createdAt: p.createdAt || m.createdAt,
-              saleId: m.id,
-              boletaNumber: m.boletaNumber
-            });
-          });
-        } else if (Number(m.amountPaid || 0) > 0) {
-          events.push({
-            clientName: m.clientName,
-            method: m.method || m.lastPaymentMethod || "Efectivo",
-            amount: Number(m.amountPaid || 0),
-            createdAt: m.createdAt,
-            saleId: m.id,
-            boletaNumber: m.boletaNumber
-          });
-        }
-      });
-      return events;
     }
 
     function renderProfitDashboard() {
@@ -4019,33 +4217,6 @@
       document.querySelectorAll(".profit-tab").forEach((tab, i) => {
         tab.classList.toggle("active", i === index);
       });
-    }
-
-
-    function rangeLabel(range) {
-      if (range === "today") return "Hoy";
-      if (range === "week") return "Últimos 7 días";
-      if (range === "month") return "Este mes";
-      return "Todo";
-    }
-
-    function profitCard(title, value, note, tone) {
-      return `<div class="profit-card ${tone || ""}"><small>${escapeHtml(title)}</small><strong>${escapeHtml(value)}</strong><span class="kpi-pill">${escapeHtml(note)}</span></div>`;
-    }
-
-    function productProfitRow(product, maxProfit) {
-      const margin = product.revenue > 0 ? (product.profit / product.revenue) * 100 : 0;
-      const width = Math.max(4, Math.min(100, (Math.max(0, product.profit) / maxProfit) * 100));
-      return `<div class="profit-row"><div><strong>${escapeHtml(product.name)}</strong><small>${product.qty} un. · Venta ${formatMoney(product.revenue)} · Costo ${formatMoney(product.cost)} · Margen ${margin.toFixed(1)}%</small><div class="profit-bar"><span style="width:${width}%"></span></div></div><div class="profit-money">${formatMoney(product.profit)}</div></div>`;
-    }
-
-
-
-
-
-
-    function safeDeleteReceiptFromList(id) {
-      alert("Para borrar una boleta, abre la boleta y toca Eliminar boleta debajo de Cerrar.");
     }
 
     function safeDeleteCurrentReceipt() {
