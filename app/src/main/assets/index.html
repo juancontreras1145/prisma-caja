@@ -425,6 +425,25 @@
     .edit-tile.danger { background: linear-gradient(135deg, rgba(255,77,109,.22), rgba(15,28,48,.82)); }
     .edit-panel { margin-top: 14px; display: none; }
     .edit-panel.active { display: block; }
+    #editar.edit-subpage .edit-menu { display: none; }
+    #editar.edit-subpage .topbar { display: none; }
+    #editar.edit-subpage .edit-panel.active {
+      display: block;
+      margin-top: 0;
+      animation: editSubpageIn .18s ease-out;
+    }
+    #editar.edit-subpage .panel-head {
+      margin-top: 0;
+      align-items: center;
+    }
+    #editar.edit-subpage .panel-head h2 {
+      font-size: 30px;
+      line-height: 1;
+    }
+    @keyframes editSubpageIn {
+      from { opacity: 0; transform: translateX(18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
     .compact-list { display: grid; gap: 9px; margin-top: 10px; }
     .compact-row {
       border: 1px solid var(--line);
@@ -934,237 +953,7 @@
       margin: auto !important;
     }
 
-
-
-    /* Selector de diseños visuales */
-    .theme-selector {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .theme-option {
-      min-height: 78px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--card);
-      color: var(--text);
-      padding: 12px;
-      text-align: left;
-      cursor: pointer;
-      display: grid;
-      gap: 8px;
-      box-shadow: 0 14px 26px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
-    }
-    .theme-option strong {
-      display: block;
-      font-size: 13px;
-      line-height: 1.15;
-      letter-spacing: -.02em;
-    }
-    .theme-option small {
-      display: block;
-      color: var(--muted);
-      font-size: 10.5px;
-      line-height: 1.2;
-    }
-    .theme-option.active {
-      outline: 2px solid #f2c94c;
-      outline-offset: 2px;
-      border-color: rgba(242,201,76,.55) !important;
-    }
-    .theme-swatch {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-    }
-    .theme-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 4px 10px rgba(0,0,0,.20);
-    }
-    .theme-option[data-theme="neon"] .theme-dot:nth-child(1) { background: #00e676; }
-    .theme-option[data-theme="neon"] .theme-dot:nth-child(2) { background: #00a3ff; }
-    .theme-option[data-theme="neon"] .theme-dot:nth-child(3) { background: #8b5cf6; }
-    .theme-option[data-theme="carbon"] .theme-dot:nth-child(1) { background: #111111; }
-    .theme-option[data-theme="carbon"] .theme-dot:nth-child(2) { background: #d6a84f; }
-    .theme-option[data-theme="carbon"] .theme-dot:nth-child(3) { background: #ff8a3d; }
-    .theme-option[data-theme="light"] .theme-dot:nth-child(1) { background: #eff7ff; }
-    .theme-option[data-theme="light"] .theme-dot:nth-child(2) { background: #2563eb; }
-    .theme-option[data-theme="light"] .theme-dot:nth-child(3) { background: #00b894; }
-    .theme-option[data-theme="retro"] .theme-dot:nth-child(1) { background: #fef08a; }
-    .theme-option[data-theme="retro"] .theme-dot:nth-child(2) { background: #fb923c; }
-    .theme-option[data-theme="retro"] .theme-dot:nth-child(3) { background: #ec4899; }
-    .theme-option[data-theme="aurora"] .theme-dot:nth-child(1) { background: #a78bfa; }
-    .theme-option[data-theme="aurora"] .theme-dot:nth-child(2) { background: #22d3ee; }
-    .theme-option[data-theme="aurora"] .theme-dot:nth-child(3) { background: #34d399; }
-
-    /* Tema 01: Neón cristal */
-    body.theme-neon {
-      --bg: #07111f;
-      --card: rgba(15, 28, 48, 0.78);
-      --card2: rgba(20, 43, 74, 0.82);
-      --text: #f7fbff;
-      --muted: #9fb0c8;
-      --line: rgba(91, 211, 255, 0.18);
-      --green: #00e676;
-      --blue: #00a3ff;
-      --purple: #8b5cf6;
-      --orange: #ffb020;
-      --red: #ff4d6d;
-      --danger: #ff5b7c;
-      background:
-        radial-gradient(circle at 8% 8%, rgba(0, 163, 255, 0.24), transparent 30%),
-        radial-gradient(circle at 88% 2%, rgba(255, 176, 32, 0.18), transparent 30%),
-        radial-gradient(circle at 80% 70%, rgba(0, 230, 118, 0.14), transparent 32%),
-        linear-gradient(180deg, #08121f 0%, #08111d 45%, #050a12 100%) !important;
-    }
-    body.theme-neon .rainbow-title { background: linear-gradient(90deg, #00e5ff, #00e676, #ffe156, #ff7a00, #ff4d6d, #8b5cf6, #00e5ff); background-size: 350% 100%; -webkit-background-clip: text; background-clip: text; }
-    body.theme-neon .venta { background: linear-gradient(135deg, #00e676, #00a86b) !important; }
-    body.theme-neon .abono { background: linear-gradient(135deg, #00a3ff, #005dff) !important; }
-    body.theme-neon .historial { background: linear-gradient(135deg, #8b5cf6, #4f46e5) !important; }
-    body.theme-neon .editar { background: linear-gradient(135deg, #ffb020, #ff6b00) !important; }
-    body.theme-neon .stat:nth-child(1), body.theme-neon .profit-card:nth-child(1) { background: linear-gradient(135deg, rgba(0,163,255,.20), rgba(15,28,48,.78)) !important; }
-    body.theme-neon .stat:nth-child(2), body.theme-neon .profit-card:nth-child(2) { background: linear-gradient(135deg, rgba(255,77,109,.18), rgba(15,28,48,.78)) !important; }
-    body.theme-neon .stat:nth-child(3), body.theme-neon .profit-card:nth-child(3) { background: linear-gradient(135deg, rgba(0,230,118,.18), rgba(15,28,48,.78)) !important; }
-    body.theme-neon .stat:nth-child(4), body.theme-neon .profit-card:nth-child(4) { background: linear-gradient(135deg, rgba(139,92,246,.18), rgba(15,28,48,.78)) !important; }
-
-    /* Tema 02: Carbono lujo */
-    body.theme-carbon {
-      --bg: #020202;
-      --card: rgba(28, 28, 31, .94);
-      --card2: rgba(12, 13, 15, .92);
-      --text: #fff8ea;
-      --muted: #b7aea0;
-      --line: rgba(255, 204, 120, .22);
-      --green: #22c55e;
-      --blue: #d6a84f;
-      --purple: #44403c;
-      --orange: #ff8a3d;
-      --red: #ef4444;
-      --danger: #ff6464;
-      background:
-        radial-gradient(circle at 10% 4%, rgba(255, 198, 88, .18), transparent 34%),
-        radial-gradient(circle at 94% 8%, rgba(255, 99, 71, .10), transparent 30%),
-        linear-gradient(180deg, #0b0d10 0%, #020202 100%) !important;
-    }
-    body.theme-carbon .rainbow-title { background: linear-gradient(90deg, #ffe29b, #ffb23f, #ff6b35); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 26px rgba(255,177,64,.15); }
-    body.theme-carbon .tile, body.theme-carbon .product, body.theme-carbon .pay-option, body.theme-carbon .stat, body.theme-carbon .card, body.theme-carbon .name-row, body.theme-carbon .selection-box, body.theme-carbon .install-card, body.theme-carbon .hint, body.theme-carbon .sheet, body.theme-carbon .profit-card, body.theme-carbon .profit-section { border-color: rgba(255,204,120,.22) !important; box-shadow: 0 20px 45px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.06) !important; }
-    body.theme-carbon .venta { background: linear-gradient(145deg, #22c55e, #0f7a3a) !important; }
-    body.theme-carbon .abono { background: linear-gradient(145deg, #d6a84f, #8f5b18) !important; }
-    body.theme-carbon .historial { background: linear-gradient(145deg, #44403c, #171717) !important; }
-    body.theme-carbon .editar { background: linear-gradient(145deg, #ff8a3d, #9a3412) !important; }
-    body.theme-carbon .secondary-action, body.theme-carbon .mini-btn, body.theme-carbon .back { background: rgba(24,24,27,.92) !important; border-color: rgba(255,204,120,.22) !important; }
-    body.theme-carbon .big-action { background: linear-gradient(135deg, #fff8ea, #ffe2a8) !important; color: #1c1917 !important; }
-    body.theme-carbon .stat:nth-child(1), body.theme-carbon .profit-card:nth-child(1) { background: linear-gradient(145deg, rgba(214,168,79,.18), rgba(28,28,31,.94)) !important; }
-    body.theme-carbon .stat:nth-child(2), body.theme-carbon .profit-card:nth-child(2) { background: linear-gradient(145deg, rgba(255,99,71,.15), rgba(28,28,31,.94)) !important; }
-    body.theme-carbon .stat:nth-child(3), body.theme-carbon .profit-card:nth-child(3) { background: linear-gradient(145deg, rgba(34,197,94,.13), rgba(28,28,31,.94)) !important; }
-    body.theme-carbon .stat:nth-child(4), body.theme-carbon .profit-card:nth-child(4) { background: linear-gradient(145deg, rgba(120,113,108,.22), rgba(28,28,31,.94)) !important; }
-
-    /* Tema 03: Claro moderno */
-    body.theme-light {
-      --bg: #eaf2ff;
-      --card: rgba(255,255,255,.72);
-      --card2: rgba(255,255,255,.88);
-      --text: #132033;
-      --muted: #637088;
-      --line: rgba(60, 103, 150, .18);
-      --green: #00d084;
-      --blue: #2563eb;
-      --purple: #8b5cf6;
-      --orange: #f97316;
-      --red: #ef4444;
-      --danger: #dc2626;
-      background:
-        radial-gradient(circle at 10% 4%, rgba(41,121,255,.18), transparent 34%),
-        radial-gradient(circle at 94% 8%, rgba(255,183,77,.22), transparent 30%),
-        linear-gradient(180deg, #eff7ff 0%, #dfeeff 100%) !important;
-    }
-    body.theme-light .rainbow-title { background: linear-gradient(90deg, #0066ff, #00b894, #ff9f1c); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; text-shadow: none; }
-    body.theme-light .tile, body.theme-light .product, body.theme-light .pay-option, body.theme-light .stat, body.theme-light .card, body.theme-light .name-row, body.theme-light .selection-box, body.theme-light .install-card, body.theme-light .hint, body.theme-light .sheet, body.theme-light .profit-card, body.theme-light .profit-section { border-color: rgba(60,103,150,.16) !important; box-shadow: 0 18px 38px rgba(47,91,141,.18), inset 0 1px 0 rgba(255,255,255,.80) !important; }
-    body.theme-light input, body.theme-light select { background: rgba(255,255,255,.72) !important; color: #132033 !important; }
-    body.theme-light select option { background: #ffffff; color: #132033; }
-    body.theme-light .venta { background: linear-gradient(145deg, #00d084, #00a36c) !important; }
-    body.theme-light .abono { background: linear-gradient(145deg, #38bdf8, #2563eb) !important; }
-    body.theme-light .historial { background: linear-gradient(145deg, #8b5cf6, #4f46e5) !important; }
-    body.theme-light .editar { background: linear-gradient(145deg, #fbbf24, #f97316) !important; }
-    body.theme-light .secondary-action, body.theme-light .mini-btn, body.theme-light .back { background: rgba(255,255,255,.75) !important; border-color: rgba(60,103,150,.18) !important; color: #132033 !important; }
-    body.theme-light .big-action { background: linear-gradient(135deg, #132033, #315b9a) !important; color: #ffffff !important; }
-    body.theme-light .sheet { background: #f4f8ff !important; }
-    body.theme-light .modal { background: rgba(5,18,38,.42) !important; }
-    body.theme-light .stat:nth-child(1), body.theme-light .profit-card:nth-child(1) { background: linear-gradient(145deg, rgba(37,99,235,.12), rgba(255,255,255,.78)) !important; }
-    body.theme-light .stat:nth-child(2), body.theme-light .profit-card:nth-child(2) { background: linear-gradient(145deg, rgba(239,68,68,.10), rgba(255,255,255,.78)) !important; }
-    body.theme-light .stat:nth-child(3), body.theme-light .profit-card:nth-child(3) { background: linear-gradient(145deg, rgba(0,184,148,.12), rgba(255,255,255,.78)) !important; }
-    body.theme-light .stat:nth-child(4), body.theme-light .profit-card:nth-child(4) { background: linear-gradient(145deg, rgba(139,92,246,.12), rgba(255,255,255,.78)) !important; }
-
-    /* Tema 04: Kiosco retro */
-    body.theme-retro {
-      --bg: #1f1308;
-      --card: rgba(55,31,19,.82);
-      --card2: rgba(21,24,34,.88);
-      --text: #fff6e5;
-      --muted: #cfbfa4;
-      --line: rgba(251,191,36,.22);
-      --green: #84cc16;
-      --blue: #06b6d4;
-      --purple: #ec4899;
-      --orange: #facc15;
-      --red: #f43f5e;
-      --danger: #fb7185;
-      background:
-        repeating-linear-gradient(0deg, rgba(255,255,255,.035), rgba(255,255,255,.035) 1px, transparent 1px, transparent 4px),
-        radial-gradient(circle at 10% 4%, rgba(255,203,91,.22), transparent 34%),
-        linear-gradient(180deg, #2b160a 0%, #101016 52%, #08090d 100%) !important;
-    }
-    body.theme-retro .rainbow-title { background: linear-gradient(90deg, #fef08a, #fb923c, #f43f5e, #22d3ee); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; text-shadow: 4px 4px 0 rgba(0,0,0,.28); }
-    body.theme-retro .tile, body.theme-retro .product, body.theme-retro .pay-option, body.theme-retro .stat, body.theme-retro .card, body.theme-retro .name-row, body.theme-retro .selection-box, body.theme-retro .install-card, body.theme-retro .hint, body.theme-retro .sheet, body.theme-retro .profit-card, body.theme-retro .profit-section { border-color: rgba(251,191,36,.22) !important; border-radius: 22px !important; box-shadow: 0 12px 0 rgba(0,0,0,.18), 0 24px 34px rgba(0,0,0,.22) !important; }
-    body.theme-retro .venta { background: linear-gradient(145deg, #84cc16, #16a34a) !important; }
-    body.theme-retro .abono { background: linear-gradient(145deg, #06b6d4, #2563eb) !important; }
-    body.theme-retro .historial { background: linear-gradient(145deg, #ec4899, #7c3aed) !important; }
-    body.theme-retro .editar { background: linear-gradient(145deg, #facc15, #ea580c) !important; }
-    body.theme-retro .secondary-action, body.theme-retro .mini-btn, body.theme-retro .back { background: rgba(47,31,20,.72) !important; border-color: rgba(251,191,36,.22) !important; }
-    body.theme-retro .big-action { background: linear-gradient(135deg, #fff6e5, #facc15) !important; color: #24130a !important; }
-    body.theme-retro .stat:nth-child(1), body.theme-retro .profit-card:nth-child(1) { background: linear-gradient(145deg, rgba(6,182,212,.16), rgba(55,31,19,.82)) !important; }
-    body.theme-retro .stat:nth-child(2), body.theme-retro .profit-card:nth-child(2) { background: linear-gradient(145deg, rgba(244,63,94,.16), rgba(55,31,19,.82)) !important; }
-    body.theme-retro .stat:nth-child(3), body.theme-retro .profit-card:nth-child(3) { background: linear-gradient(145deg, rgba(132,204,22,.16), rgba(55,31,19,.82)) !important; }
-    body.theme-retro .stat:nth-child(4), body.theme-retro .profit-card:nth-child(4) { background: linear-gradient(145deg, rgba(236,72,153,.16), rgba(55,31,19,.82)) !important; }
-
-    /* Tema 05: Aurora premium */
-    body.theme-aurora {
-      --bg: #060514;
-      --card: rgba(255,255,255,.105);
-      --card2: rgba(255,255,255,.06);
-      --text: #f7f5ff;
-      --muted: #b2b7d8;
-      --line: rgba(202, 211, 255, .18);
-      --green: #34d399;
-      --blue: #60a5fa;
-      --purple: #c084fc;
-      --orange: #fb7185;
-      --red: #fb7185;
-      --danger: #fb7185;
-      background:
-        radial-gradient(circle at 10% 4%, rgba(99,102,241,.30), transparent 34%),
-        radial-gradient(circle at 94% 8%, rgba(236,72,153,.22), transparent 30%),
-        radial-gradient(circle at 50% 86%, rgba(16,185,129,.18), transparent 38%),
-        linear-gradient(180deg, #10143a 0%, #081125 38%, #020610 100%) !important;
-    }
-    body.theme-aurora .rainbow-title { background: linear-gradient(92deg, #a78bfa, #22d3ee, #34d399, #fbbf24); background-size: 240% 100%; -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 45px rgba(167,139,250,.20); }
-    body.theme-aurora .tile, body.theme-aurora .product, body.theme-aurora .pay-option, body.theme-aurora .stat, body.theme-aurora .card, body.theme-aurora .name-row, body.theme-aurora .selection-box, body.theme-aurora .install-card, body.theme-aurora .hint, body.theme-aurora .sheet, body.theme-aurora .profit-card, body.theme-aurora .profit-section { border-color: rgba(202,211,255,.18) !important; box-shadow: 0 22px 56px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.12) !important; }
-    body.theme-aurora .tile { border-radius: 34px; }
-    body.theme-aurora .venta { background: linear-gradient(145deg, #34d399, #059669 72%) !important; }
-    body.theme-aurora .abono { background: linear-gradient(145deg, #60a5fa, #4f46e5 78%) !important; }
-    body.theme-aurora .historial { background: linear-gradient(145deg, #c084fc, #7c3aed 72%) !important; }
-    body.theme-aurora .editar { background: linear-gradient(145deg, #fb7185, #f97316 80%) !important; }
-    body.theme-aurora .secondary-action, body.theme-aurora .mini-btn, body.theme-aurora .back { background: rgba(255,255,255,.09) !important; border-color: rgba(202,211,255,.18) !important; }
-    body.theme-aurora .big-action { background: linear-gradient(135deg, #ffffff, #e5e7ff) !important; color: #111827 !important; }
-    body.theme-aurora .stat:nth-child(1), body.theme-aurora .profit-card:nth-child(1) { background: linear-gradient(145deg, rgba(96,165,250,.17), rgba(255,255,255,.05)) !important; }
-    body.theme-aurora .stat:nth-child(2), body.theme-aurora .profit-card:nth-child(2) { background: linear-gradient(145deg, rgba(236,72,153,.16), rgba(255,255,255,.05)) !important; }
-    body.theme-aurora .stat:nth-child(3), body.theme-aurora .profit-card:nth-child(3) { background: linear-gradient(145deg, rgba(52,211,153,.16), rgba(255,255,255,.05)) !important; }
-    body.theme-aurora .stat:nth-child(4), body.theme-aurora .profit-card:nth-child(4) { background: linear-gradient(145deg, rgba(192,132,252,.17), rgba(255,255,255,.05)) !important; }
-
-  </style>
+</style>
 </head>
 <body>
   <main class="app">
@@ -1287,7 +1076,7 @@
       <div id="editPanelClients" class="edit-panel">
         <div class="panel-head">
           <h2>Clientes</h2>
-          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+          <button class="secondary-action" onclick="closeEditPanels()">← Editar</button>
         </div>
         <p class="edit-help">Agrega clientes con WhatsApp opcional: 8 dígitos o +56 9 9945 6548.</p>
         <div class="form">
@@ -1302,7 +1091,7 @@
       <div id="editPanelProducts" class="edit-panel">
         <div class="panel-head">
           <h2>Productos</h2>
-          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+          <button class="secondary-action" onclick="closeEditPanels()">← Editar</button>
         </div>
         <p class="edit-help">Define precio, costo y stock desde aquí. Si dejas el stock vacío, ese producto se podrá vender sin límite.</p>
         <div class="form product-add-grid">
@@ -1329,7 +1118,7 @@
       <div id="editPanelSettings" class="edit-panel">
         <div class="panel-head">
           <h2>Ajustes</h2>
-          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+          <button class="secondary-action" onclick="closeEditPanels()">← Editar</button>
         </div>
 
         <div class="label">Título principal</div>
@@ -1344,36 +1133,6 @@
         <div class="form">
           <input id="settingsProfitPin" type="password" inputmode="numeric" maxlength="4" placeholder="Nueva clave de 4 números" autocomplete="new-password" />
           <button class="secondary-action" onclick="saveProfitPinFromSettings()">Guardar clave</button>
-        </div>
-
-        <div class="label">Diseño de la app</div>
-        <p class="edit-help">Elige uno de los 5 estilos visuales. No cambia tus ventas, clientes ni productos.</p>
-        <div id="themeSelector" class="theme-selector">
-          <button type="button" class="theme-option" data-theme="neon" onclick="selectVisualTheme('neon')">
-            <span class="theme-swatch"><i class="theme-dot"></i><i class="theme-dot"></i><i class="theme-dot"></i></span>
-            <strong>Neón cristal</strong>
-            <small>Colorido actual</small>
-          </button>
-          <button type="button" class="theme-option" data-theme="carbon" onclick="selectVisualTheme('carbon')">
-            <span class="theme-swatch"><i class="theme-dot"></i><i class="theme-dot"></i><i class="theme-dot"></i></span>
-            <strong>Carbono lujo</strong>
-            <small>Oscuro dorado</small>
-          </button>
-          <button type="button" class="theme-option" data-theme="light" onclick="selectVisualTheme('light')">
-            <span class="theme-swatch"><i class="theme-dot"></i><i class="theme-dot"></i><i class="theme-dot"></i></span>
-            <strong>Claro moderno</strong>
-            <small>Limpio y luminoso</small>
-          </button>
-          <button type="button" class="theme-option" data-theme="retro" onclick="selectVisualTheme('retro')">
-            <span class="theme-swatch"><i class="theme-dot"></i><i class="theme-dot"></i><i class="theme-dot"></i></span>
-            <strong>Kiosco retro</strong>
-            <small>Cálido y marcado</small>
-          </button>
-          <button type="button" class="theme-option" data-theme="aurora" onclick="selectVisualTheme('aurora')">
-            <span class="theme-swatch"><i class="theme-dot"></i><i class="theme-dot"></i><i class="theme-dot"></i></span>
-            <strong>Aurora premium</strong>
-            <small>Suave y elegante</small>
-          </button>
         </div>
 
         <div class="label">Actualizaciones</div>
@@ -1394,7 +1153,7 @@
       <div id="editPanelBackup" class="edit-panel">
         <div class="panel-head">
           <h2>Respaldo</h2>
-          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+          <button class="secondary-action" onclick="closeEditPanels()">← Editar</button>
         </div>
         <p class="edit-help">Guarda un JSON para recuperar clientes, productos, costos, boletas y abonos.</p>
         <button class="secondary-action" onclick="guardarRespaldoJSON()">Guardar respaldo JSON</button>
@@ -1406,7 +1165,7 @@
       <div id="editPanelData" class="edit-panel">
         <div class="panel-head">
           <h2>Datos</h2>
-          <button class="secondary-action" onclick="closeEditPanels()">Cerrar</button>
+          <button class="secondary-action" onclick="closeEditPanels()">← Editar</button>
         </div>
         <p class="edit-help">Zona de peligro. Esto reinicia todo.</p>
         <button class="danger-action" onclick="resetAll()">Borrar todo</button>
@@ -1634,7 +1393,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "3.8";
+    const APP_VERSION = "2.9";
     const GITHUB_UPDATE_OWNER = "juancontreras1145";
     const GITHUB_UPDATE_REPO = "prisma-caja";
 
@@ -1648,8 +1407,7 @@
       nextReceiptNumber: 1,
       settings: {
         appTitle: "Prisma",
-        profitPin: "",
-        visualTheme: "neon"
+        profitPin: ""
       }
     };
 
@@ -1746,24 +1504,10 @@
       };
     }
 
-    const VISUAL_THEMES = {
-      neon: "Neón cristal",
-      carbon: "Carbono lujo",
-      light: "Claro moderno",
-      retro: "Kiosco retro",
-      aurora: "Aurora premium"
-    };
-
-    function sanitizeVisualTheme(value) {
-      const key = String(value || "neon").trim();
-      return Object.prototype.hasOwnProperty.call(VISUAL_THEMES, key) ? key : "neon";
-    }
-
     function normalizeSettings(settings = {}) {
       const appTitle = String(settings.appTitle || "Prisma").trim() || "Prisma";
       const profitPin = String(settings.profitPin || "").replace(/\D/g, "").slice(0, 4);
-      const visualTheme = sanitizeVisualTheme(settings.visualTheme || settings.theme || "neon");
-      return { appTitle, profitPin, visualTheme };
+      return { appTitle, profitPin };
     }
 
     function getSettings() {
@@ -1778,45 +1522,6 @@
       const titleEl = document.getElementById("appTitle");
       if (titleEl) titleEl.textContent = title;
       document.title = title;
-    }
-
-    function applyVisualTheme(theme) {
-      const selected = sanitizeVisualTheme(theme || getSettings().visualTheme);
-      document.body.classList.remove(
-        "theme-neon",
-        "theme-carbon",
-        "theme-light",
-        "theme-retro",
-        "theme-aurora"
-      );
-      document.body.classList.add("theme-" + selected);
-      const metaTheme = document.querySelector('meta[name="theme-color"]');
-      const colors = {
-        neon: "#07111f",
-        carbon: "#020202",
-        light: "#eaf2ff",
-        retro: "#1f1308",
-        aurora: "#060514"
-      };
-      if (metaTheme) metaTheme.setAttribute("content", colors[selected] || colors.neon);
-    }
-
-    function renderThemeSelector() {
-      const selected = sanitizeVisualTheme(getSettings().visualTheme);
-      document.querySelectorAll(".theme-option").forEach(button => {
-        const isActive = button.dataset.theme === selected;
-        button.classList.toggle("active", isActive);
-        button.setAttribute("aria-pressed", isActive ? "true" : "false");
-      });
-    }
-
-    function selectVisualTheme(theme) {
-      const selected = sanitizeVisualTheme(theme);
-      getSettings().visualTheme = selected;
-      persist();
-      applyVisualTheme(selected);
-      renderThemeSelector();
-      toast("Diseño aplicado: " + VISUAL_THEMES[selected]);
     }
 
     function normalizePin(value) {
@@ -2035,6 +1740,12 @@
       const openModals = [...document.querySelectorAll(".modal.show")];
       if (openModals.length) {
         openModals[openModals.length - 1].classList.remove("show");
+        return "handled";
+      }
+
+      const editScreen = document.getElementById("editar");
+      if (editScreen && editScreen.classList.contains("active") && editScreen.classList.contains("edit-subpage")) {
+        closeEditPanels();
         return "handled";
       }
 
@@ -3141,10 +2852,13 @@
       };
       const id = map[panel];
       if (!id) return;
+      const editScreen = document.getElementById("editar");
+      if (editScreen) editScreen.classList.add("edit-subpage");
       document.getElementById(id).classList.add("active");
       if (panel === "clients") renderEditClients();
       if (panel === "products") renderEditProducts();
       if (panel === "settings") renderSettingsPanel();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function closeEditPanels() {
@@ -3153,6 +2867,8 @@
         const el = document.getElementById(id);
         if (el) el.classList.remove("active");
       });
+      const editScreen = document.getElementById("editar");
+      if (editScreen) editScreen.classList.remove("edit-subpage");
     }
 
 
@@ -3163,8 +2879,6 @@
       const pinInput = document.getElementById("settingsProfitPin");
       if (titleInput) titleInput.value = settings.appTitle || "Prisma";
       if (pinInput) pinInput.value = "";
-      applyVisualTheme(settings.visualTheme);
-      renderThemeSelector();
       renderUpdatePanel();
     }
 
@@ -4779,7 +4493,6 @@
     }
 
     renderAppTitle();
-    applyVisualTheme();
     renderHomeStats();
     renderProducts();
   </script>
