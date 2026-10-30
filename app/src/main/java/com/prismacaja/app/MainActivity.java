@@ -626,11 +626,6 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void shareReceiptPdf(String receiptJson) {
-            activity.runOnUiThread(() -> ReceiptPdfShare.share(activity, receiptJson));
-        }
-
-        @JavascriptInterface
         public String getVersionName() {
             try {
                 return activity.getPackageManager()

@@ -3635,6 +3635,138 @@
 .candy-controls .candy-minor {font-size:12px; opacity:.88; line-height:1.4;}
 #candyBindModal select {width:100%; padding:14px; border-radius:12px; font-size:16px; margin:12px 0;}
 
+
+/* FIX5-BOLETA-COMPACTA-IMAGEN-20261030: solo afecta estas dos boletas. */
+#afterSaleModal.modal.show,
+#receiptModal.modal.show {
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)) !important;
+}
+#afterSaleModal.modal.show > .sheet,
+#receiptModal.modal.show > .sheet {
+  width: min(500px, 100%) !important;
+  max-height: calc(100dvh - 32px - env(safe-area-inset-bottom)) !important;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+  box-sizing: border-box;
+}
+/* Contraste adaptado al color real de cada tema; no modifica la boleta PNG. */
+#afterSaleModal .sheet, #receiptModal .sheet {
+  --receipt-ink: #142233;
+  --receipt-muted: #475569;
+}
+body[data-theme="carbon"] #afterSaleModal .sheet,
+body[data-theme="carbon"] #receiptModal .sheet,
+body[data-theme="galaxy"] #afterSaleModal .sheet,
+body[data-theme="galaxy"] #receiptModal .sheet,
+body[data-theme="ocean"] #afterSaleModal .sheet,
+body[data-theme="ocean"] #receiptModal .sheet,
+body[data-theme="berry"] #afterSaleModal .sheet,
+body[data-theme="berry"] #receiptModal .sheet {
+  --receipt-ink: #f8fafc;
+  --receipt-muted: #cbd5e1;
+}
+#afterSaleModal .sheet > h2,
+#receiptModal .sheet > h2 { flex: none; margin: 0 0 4px; font-size: 20px; color:var(--receipt-ink) !important; }
+#afterSaleModal .sheet > p.muted,
+#receiptModal .sheet > p.muted { flex: none; font-size: 12px; line-height: 1.3; margin: 0 0 8px; color:var(--receipt-muted) !important; }
+#afterSaleModal .compact-receipt,
+#receiptModal .compact-receipt {
+  flex: none;
+  border-radius: 15px;
+  padding: 12px 14px;
+  background: rgba(127,127,127,.11);
+  border: 1px solid var(--border, rgba(127,127,127,.24));
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--receipt-ink) !important;
+}
+#afterSaleModal .compact-receipt .client,
+#receiptModal .compact-receipt .client {
+  font-size: 15px; font-weight: 900;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#afterSaleModal .compact-receipt .sub,
+#receiptModal .compact-receipt .sub { font-size: 12px; opacity: .84; }
+#afterSaleModal .compact-receipt .amount,
+#receiptModal .compact-receipt .amount { font-size: 25px; font-weight: 950; letter-spacing: -.02em; }
+#afterSaleModal .compact-receipt .row-amount,
+#receiptModal .compact-receipt .row-amount { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+#afterSaleModal .compact-receipt .status,
+#receiptModal .compact-receipt .status { font-size: 12px; text-align: right; font-weight: 800; }
+#afterSaleModal .receipt-expand,
+#receiptModal .receipt-expand { min-height: 0; flex: 0 1 auto; margin-top: 8px; overflow: hidden; }
+#afterSaleModal .receipt-expand[open],
+#receiptModal .receipt-expand[open] { display: flex; flex-direction: column; }
+#afterSaleModal .receipt-expand summary,
+#receiptModal .receipt-expand summary {
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(127,127,127,.24));
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 850;
+  background: rgba(127,127,127,.09);
+  color: var(--receipt-ink) !important;
+}
+#afterSaleModal .receipt-expand summary::-webkit-details-marker,
+#receiptModal .receipt-expand summary::-webkit-details-marker { display: none; }
+#afterSaleModal .receipt-expand summary::after,
+#receiptModal .receipt-expand summary::after { content: '  ▾'; }
+#afterSaleModal .receipt-expand[open] summary::after,
+#receiptModal .receipt-expand[open] summary::after { content: '  ▴'; }
+#afterSaleModal .receipt-preview-wrap,
+#receiptModal .receipt-preview-wrap {
+  min-height: 0;
+  max-height: min(32dvh, 310px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 6px !important;
+  padding: 6px !important;
+  box-sizing: border-box;
+}
+#afterSaleModal .receipt-preview-wrap .receipt-card,
+#receiptModal .receipt-preview-wrap .receipt-card {
+  flex-shrink: 0;
+  min-width: 0;
+  width: min(360px, 100%);
+  box-sizing: border-box;
+}
+#afterSaleModal .after-sale-actions,
+#receiptModal .ticket-actions,
+#receiptModal .safe-delete-zone { flex-shrink: 0; }
+#afterSaleModal .after-sale-actions,
+#receiptModal .ticket-actions { gap: 6px; margin-top: 9px; }
+#afterSaleModal .after-sale-actions button,
+#receiptModal .ticket-actions button,
+#receiptModal .safe-delete-zone button {
+  margin-top: 0 !important;
+  padding: 10px 12px !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+}
+#receiptModal .safe-delete-zone {
+  padding-top: 6px !important;
+  margin-top: 7px !important;
+}
+@media (max-height: 680px) {
+  #afterSaleModal .receipt-preview-wrap,
+  #receiptModal .receipt-preview-wrap { max-height: 22dvh !important; }
+  #afterSaleModal.modal.show > .sheet,
+  #receiptModal.modal.show > .sheet { padding: 12px !important; }
+}
+
 </style>
   <!-- v5.2: fix real boletas cortadas, sello compacto inline -->
 </head>
@@ -3990,13 +4122,23 @@
       <h2>Venta guardada</h2>
       <p class="muted">La boleta quedó lista para compartir como imagen.</p>
 
-      <div class="receipt-preview-wrap">
-        <div id="afterSaleReceiptPreview"></div>
+      <div class="compact-receipt" aria-live="polite">
+        <div class="client">Cliente</div>
+        <div class="sub">Boleta</div>
+        <div class="row-amount">
+          <strong class="amount">$0</strong>
+          <span class="status">Pendiente</span>
+        </div>
       </div>
+      <details class="receipt-expand">
+        <summary>Ver boleta completa</summary>
+        <div class="receipt-preview-wrap">
+          <div id="afterSaleReceiptPreview"></div>
+        </div>
+      </details>
 
       <div class="after-sale-actions">
         <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
-        <button class="secondary-action" onclick="compartirPdfWhatsApp()">Compartir boleta PDF</button>
         <button class="big-action" onclick="closeModal('afterSaleModal'); go('home')">Volver al inicio</button>
       </div>
     </div>
@@ -4005,15 +4147,25 @@
   <div id="receiptModal" class="modal">
     <div class="sheet">
       <h2>Boleta</h2>
-      <p class="muted">Si el cliente tiene WhatsApp guardado, se intentará abrir directo su conversación. Si no tiene número, se abrirá compartir genérico.</p>
+      <p class="muted">Compartir como imagen PNG por WhatsApp.</p>
 
-      <div class="receipt-preview-wrap">
-        <div id="receiptPreview"></div>
+      <div class="compact-receipt" aria-live="polite">
+        <div class="client">Cliente</div>
+        <div class="sub">Boleta</div>
+        <div class="row-amount">
+          <strong class="amount">$0</strong>
+          <span class="status">Pendiente</span>
+        </div>
       </div>
+      <details class="receipt-expand">
+        <summary>Ver boleta completa</summary>
+        <div class="receipt-preview-wrap">
+          <div id="receiptPreview"></div>
+        </div>
+      </details>
 
       <div class="ticket-actions">
         <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
-        <button class="secondary-action" onclick="compartirPdfWhatsApp()">Compartir boleta PDF</button>
         <button class="secondary-action" onclick="closeModal('receiptModal')">Cerrar</button>
       </div>
     </div>
@@ -7077,7 +7229,29 @@
       setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
 
+    // FIX5: vista resumida; el PNG se genera de la venta completa, no de esta vista.
+    function prepareCompactReceiptModal(id) {
+      if (id !== "afterSaleModal" && id !== "receiptModal") return;
+      const modal = document.getElementById(id);
+      const summary = modal && modal.querySelector(".compact-receipt");
+      if (!summary) return;
+      const details = modal.querySelector(".receipt-expand");
+      if (details) details.open = false;
+      const sale = currentSale();
+      if (!sale) return;
+      const remaining = getSaleRemaining(sale);
+      const clientName = String(sale.clientName || "Cliente");
+      const bill = sale.accumulated ? "Boleta acumulada" : "Boleta " + formatReceiptNumber(sale.boletaNumber);
+      const status = remaining <= 0 ? "PAGADO"
+        : (Number(sale.amountPaid || 0) > 0 ? "Abonado · saldo " : "Fiado · saldo ") + formatMoney(remaining);
+      summary.querySelector(".client").textContent = clientName;
+      summary.querySelector(".sub").textContent = bill;
+      summary.querySelector(".amount").textContent = formatMoney(sale.total);
+      summary.querySelector(".status").textContent = status;
+    }
+
     function openModal(id) {
+      prepareCompactReceiptModal(id);
       document.getElementById(id).classList.add("show");
     }
 
@@ -7263,27 +7437,6 @@ function cancelCandyBind() {
   pendingCandyCode = "";
   closeModal("candyBindModal");
 }
-function compartirPdfWhatsApp() {
-  const sale = currentSale();
-  if (!sale) { toast("Selecciona una boleta"); return; }
-  if (!window.AndroidBridge || typeof AndroidBridge.shareReceiptPdf !== "function") {
-    toast("Para generar PDF necesitas la aplicación Android actualizada");
-    return;
-  }
-  AndroidBridge.shareReceiptPdf(JSON.stringify({
-    boletaNumber: sale.boletaNumber,
-    clientName: sale.clientName,
-    clientPhone: phoneForSale(sale),
-    createdAt: sale.createdAt,
-    items: sale.items,
-    total: sale.total,
-    amountPaid: sale.amountPaid || 0,
-    remaining: getSaleRemaining(sale),
-    status: getSaleStateText(sale),
-    method: sale.method || sale.lastPaymentMethod || ""
-  }));
-}
-
     applyVisualTheme();
     renderAppTitle();
     renderHomeStats();
