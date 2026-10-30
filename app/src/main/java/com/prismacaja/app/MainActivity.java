@@ -118,6 +118,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
+        com.prismacaja.app.MenuDulcesInjector.attach(this);
         super.onResume();
         setupBars();
     }
