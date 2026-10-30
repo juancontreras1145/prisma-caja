@@ -118,9 +118,40 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        com.prismacaja.app.MenuDulcesInjector.attach(this);
         super.onResume();
         setupBars();
+    }
+
+    private boolean candyScannerBusy = false;
+
+    private void scanCandyNative() {
+        if (candyScannerBusy) return;
+        candyScannerBusy = true;
+        com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions opts =
+                new com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(
+                  com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                  com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
+                  com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                  com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_E,
+                  com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_128)
+                .enableAutoZoom().build();
+        com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(this, opts).startScan()
+          .addOnSuccessListener(code -> {
+              candyScannerBusy = false;
+              String raw = code.getRawValue();
+              if (webView != null && raw != null)
+                  webView.evaluateJavascript("window.onCandyScanResult(" + JSONObject.quote(raw) + ")",null);
+          })
+          .addOnCanceledListener(() -> {
+              candyScannerBusy = false;
+              if (webView != null) webView.evaluateJavascript("window.onCandyScanError('cancelado')",null);
+          })
+          .addOnFailureListener(error -> {
+              candyScannerBusy = false;
+              Toast.makeText(this,"No se pudo abrir el lector. Usa ingreso manual.",Toast.LENGTH_LONG).show();
+              if (webView != null) webView.evaluateJavascript("window.onCandyScanError('error de cámara')",null);
+          });
     }
 
     private void setupBars() {
@@ -587,6 +618,16 @@ public class MainActivity extends Activity {
 
         AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public void scanCandyBarcode() {
+            activity.runOnUiThread(() -> activity.scanCandyNative());
+        }
+
+        @JavascriptInterface
+        public void shareReceiptPdf(String receiptJson) {
+            activity.runOnUiThread(() -> ReceiptPdfShare.share(activity, receiptJson));
         }
 
         @JavascriptInterface

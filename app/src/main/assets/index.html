@@ -3613,6 +3613,28 @@
     }
 
 
+/* El Kiosquito · Caja de Dulces integrada */
+#home .candy-home-entry {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 76px; margin: 24px 0 32px;
+  border: 1px solid rgba(255,255,255,.25); border-radius: 24px;
+  background: linear-gradient(110deg,#05bc96,#078ed1); color: white;
+  font-size: clamp(20px, 5vw, 28px); font-weight: 900;
+  box-shadow: 0 16px 32px rgba(0,130,135,.20);
+}
+#venta .candy-controls { display:none; margin: 10px 0 20px; padding:14px;
+  border:1px solid rgba(45,212,191,.28); border-radius:16px;
+  background:rgba(20,184,166,.09); }
+#venta .candy-controls.active {display:block;}
+.candy-controls .candy-scan-row { display:flex; gap:8px; margin-top:10px; }
+.candy-controls button {min-height:48px; border-radius:12px; border:0; font-weight:800; padding:8px 14px;}
+.candy-controls .candy-scan-btn {flex:1; background:#0891b2;color:#fff;}
+.candy-controls input[type=text] {flex:1; width:60%; min-width:0; padding:10px;
+  border:1px solid #94a3b8; border-radius:12px; font-size:16px;}
+.candy-controls label {display:flex; align-items:center; gap:8px; margin-top:14px; font-size:14px;}
+.candy-controls .candy-minor {font-size:12px; opacity:.88; line-height:1.4;}
+#candyBindModal select {width:100%; padding:14px; border-radius:12px; font-size:16px; margin:12px 0;}
+
 </style>
   <!-- v5.2: fix real boletas cortadas, sello compacto inline -->
 </head>
@@ -3638,6 +3660,7 @@
         <button class="tile historial" onclick="go('historial')"><span>Historial</span></button>
         <button class="tile editar" onclick="go('editar')"><span>Editar</span></button>
       </div>
+      <button class="candy-home-entry" onclick="openCandyPOS()">▦ &nbsp; Caja de Dulces</button>
     </section>
 
     <section id="venta" class="screen">
@@ -3646,6 +3669,20 @@
         <div class="title">Venta</div>
       </div>
 
+      <div class="candy-controls" id="candyControls">
+        <strong>Escanea y cobra dulces</strong>
+        <div class="candy-scan-row">
+          <button class="candy-scan-btn" onclick="startCandyScan()">📷 Escanear código</button>
+        </div>
+        <div class="candy-scan-row">
+          <input id="candyBarcodeInput" type="text" placeholder="EAN o pistola Bluetooth"
+                 autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();candyManualScan();}" />
+          <button onclick="candyManualScan()">Agregar</button>
+        </div>
+        <label><input id="candyContinuous" type="checkbox" /> Escaneo continuo</label>
+        <p class="candy-minor">Si un código no está registrado, selecciona el producto en mano para asociarlo una sola vez.
+        Elige después un cliente existente y marca Pagado o Fiado. Se guarda en el historial normal.</p>
+      </div>
       <div class="label">Elige productos</div>
       <div class="products" id="productButtons"></div>
 
@@ -3935,6 +3972,19 @@
   </div>
 
 
+  <div id="candyBindModal" class="modal">
+    <div class="sheet">
+      <h2>Asociar código de barras</h2>
+      <p class="muted">Código leído: <strong id="candyUnknownCode"></strong></p>
+      <p class="muted">Verifica que el código sea del dulce individual y no del display completo.</p>
+      <select id="candyProductSelect"></select>
+      <div class="ticket-actions">
+        <button class="big-action" onclick="bindCandyBarcode()">Guardar código y agregar</button>
+        <button class="secondary-action" onclick="cancelCandyBind()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="afterSaleModal" class="modal">
     <div class="sheet">
       <h2>Venta guardada</h2>
@@ -3946,6 +3996,7 @@
 
       <div class="after-sale-actions">
         <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
+        <button class="secondary-action" onclick="compartirPdfWhatsApp()">Compartir boleta PDF</button>
         <button class="big-action" onclick="closeModal('afterSaleModal'); go('home')">Volver al inicio</button>
       </div>
     </div>
@@ -3962,6 +4013,7 @@
 
       <div class="ticket-actions">
         <button class="wa-action" onclick="compartirImagenWhatsApp()">Compartir con cliente</button>
+        <button class="secondary-action" onclick="compartirPdfWhatsApp()">Compartir boleta PDF</button>
         <button class="secondary-action" onclick="closeModal('receiptModal')">Cerrar</button>
       </div>
     </div>
@@ -4435,8 +4487,10 @@
     }
 
     function openVenta() {
+      candyMode = false;
       selectedCart = {};
       go("venta");
+      updateCandyModeUI();
       updateSelectionUI();
     }
 
@@ -4524,6 +4578,10 @@
         price: Math.max(0, Number(product.price || 0)),
         cost: Math.max(0, Number(product.cost || product.unitCost || product.purchasePrice || 0)),
         color: product.color || cssColors[product.css] || "#2f80ed",
+        candy: product.candy === true,
+        barcodes: Array.isArray(product.barcodes)
+          ? [...new Set(product.barcodes.filter(x => typeof x === 'string' && x.length <= 40))]
+          : [],
         stock: normalizeStockValue(product.stock ?? product.inventory ?? product.qtyStock ?? product.quantityStock ?? null)
       };
     }
@@ -4622,6 +4680,7 @@
       }
 
       const visibleProducts = data.products.filter(product => {
+        if (candyMode && !product.candy) return false;
         const stock = productStock(product);
         return stock === null || stock > 0 || selectedCart[product.id];
       });
@@ -7066,6 +7125,164 @@
     function escapeJs(text) {
       return String(text).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
+
+// DULCES-INTEGRADOS: utiliza el mismo data.products, selectedCart,
+// data.clients, data.movements, boletas, fiados y abonos que Venta.
+const CANDY_PRESETS = [
+  ["super8","Super 8",400,280],
+  ["chokita","Chokita",500,323],
+  ["mani","Maní confitado",650,350],
+  ["alfajor","Alfajor Premium",700,380],
+  ["nikolo","Nikolo",500,255],
+  ["kegol","Kegol surtido",100,59],
+  ["turron","Turrón maní",550,300],
+  ["serranita","Serranita",400,189],
+  ["chocman","Chocman",350,175],
+  ["cerezas","Cerezas al coñac",400,283],
+  ["malva","Malva Choc",150,0],
+  ["bigtime","Bigtime refrescante",600,315],
+  ["inkat","Inkat",400,225],
+  ["cuchufli","Cuchuflí grande",200,0],
+  ["full","Full",300,165],
+  ["rocklets","Rocklets maní",600,320]
+];
+let candyMode = false;
+let pendingCandyCode = "";
+let candyScanInProgress = false;
+
+function ensureCandyCatalog() {
+  let changed = false;
+  CANDY_PRESETS.forEach(([key, name, price, cost], index) => {
+    const id = "prisma-dulce-" + key;
+    if (data.products.some(p => p.id === id)) return;
+    // No modificamos precios o existencias de productos creados por el usuario.
+    // Si ya hay uno exactamente igual, lo incorporamos al filtro de dulces.
+    const existing = data.products.find(p => normalize(p.name) === normalize(name) && Number(p.price) === price);
+    if (existing && !existing.candy) {
+      existing.candy = true;
+      if (!Array.isArray(existing.barcodes)) existing.barcodes = [];
+      changed = true;
+      return;
+    }
+    data.products.push({
+      id, name, price, cost, stock: null, candy: true,
+      color: ["#f97316","#6d28d9","#059669","#c026d3","#2563eb"][index % 5],
+      // El único EAN precargado es para Chokita 30 g; otras presentaciones difieren.
+      barcodes: key === "chokita" ? ["7613287755810"] : []
+    });
+    changed = true;
+  });
+  if (changed) persist();
+}
+function openCandyPOS() {
+  ensureCandyCatalog();
+  candyMode = true;
+  selectedCart = {};
+  go("venta");
+  updateCandyModeUI();
+  updateSelectionUI();
+}
+function updateCandyModeUI() {
+  const panel = document.getElementById("candyControls");
+  const title = document.querySelector("#venta .topbar .title");
+  if (panel) panel.classList.toggle("active", candyMode);
+  if (title) title.textContent = candyMode ? "Caja de Dulces" : "Venta";
+}
+function startCandyScan() {
+  if (!candyMode || candyScanInProgress) return;
+  if (!window.AndroidBridge || typeof AndroidBridge.scanCandyBarcode !== "function") {
+    toast("Este dispositivo no tiene lector nativo: ingresa el código manualmente");
+    return;
+  }
+  candyScanInProgress = true;
+  AndroidBridge.scanCandyBarcode();
+}
+function candyManualScan() {
+  const el = document.getElementById("candyBarcodeInput");
+  const raw = el ? el.value : "";
+  if (el) el.value = "";
+  onCandyScanResult(raw);
+}
+function onCandyScanResult(raw) {
+  candyScanInProgress = false;
+  if (!candyMode) return;
+  const code = String(raw || "").replace(/\s+/g, "");
+  if (!code) return;
+  if (!/^[0-9A-Za-z.-]{4,40}$/.test(code)) {
+    toast("Código inválido. Revisa los caracteres.");
+    return;
+  }
+  const product = data.products.find(p => p.candy && Array.isArray(p.barcodes) && p.barcodes.includes(code));
+  if (product) {
+    addProductToSelection(product.id);
+    toast(product.name + " · " + formatMoney(product.price));
+    const continuous = document.getElementById("candyContinuous");
+    if (continuous && continuous.checked) setTimeout(() => {
+      if (candyMode && !document.getElementById("candyBindModal").classList.contains("show")) startCandyScan();
+    }, 650);
+  } else {
+    pendingCandyCode = code;
+    const candidates = data.products.filter(p => p.candy);
+    const select = document.getElementById("candyProductSelect");
+    if (select) {
+      select.innerHTML = "";
+      candidates.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name + " · " + formatMoney(p.price);
+        select.appendChild(opt);
+      });
+    }
+    const text = document.getElementById("candyUnknownCode");
+    if (text) text.textContent = code;
+    openModal("candyBindModal");
+  }
+}
+function onCandyScanError(message) {
+  candyScanInProgress = false;
+  if (message && message !== "cancelado") toast("Lector: " + message);
+}
+function bindCandyBarcode() {
+  const id = document.getElementById("candyProductSelect").value;
+  const p = data.products.find(item => item.id === id && item.candy);
+  if (!p || !pendingCandyCode) return;
+  const existing = data.products.find(item => Array.isArray(item.barcodes) && item.barcodes.includes(pendingCandyCode));
+  if (existing && existing.id !== p.id) {
+    toast("Ese código ya está asociado con " + existing.name);
+    return;
+  }
+  if (!Array.isArray(p.barcodes)) p.barcodes = [];
+  if (!p.barcodes.includes(pendingCandyCode)) p.barcodes.push(pendingCandyCode);
+  pendingCandyCode = "";
+  persist();
+  closeModal("candyBindModal");
+  addProductToSelection(p.id);
+  toast("Código registrado para " + p.name);
+}
+function cancelCandyBind() {
+  pendingCandyCode = "";
+  closeModal("candyBindModal");
+}
+function compartirPdfWhatsApp() {
+  const sale = currentSale();
+  if (!sale) { toast("Selecciona una boleta"); return; }
+  if (!window.AndroidBridge || typeof AndroidBridge.shareReceiptPdf !== "function") {
+    toast("Para generar PDF necesitas la aplicación Android actualizada");
+    return;
+  }
+  AndroidBridge.shareReceiptPdf(JSON.stringify({
+    boletaNumber: sale.boletaNumber,
+    clientName: sale.clientName,
+    clientPhone: phoneForSale(sale),
+    createdAt: sale.createdAt,
+    items: sale.items,
+    total: sale.total,
+    amountPaid: sale.amountPaid || 0,
+    remaining: getSaleRemaining(sale),
+    status: getSaleStateText(sale),
+    method: sale.method || sale.lastPaymentMethod || ""
+  }));
+}
 
     applyVisualTheme();
     renderAppTitle();
